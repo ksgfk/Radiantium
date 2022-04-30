@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32421.90
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium", "Radiantium\Radiantium.csproj", "{82E07DBA-769F-48A7-A307-EA60B144DAC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium.Cli", "Radiantium.Cli\Radiantium.Cli.csproj", "{CE68BC36-18B1-4F04-A311-1DD993250CF5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{82E07DBA-769F-48A7-A307-EA60B144DAC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82E07DBA-769F-48A7-A307-EA60B144DAC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82E07DBA-769F-48A7-A307-EA60B144DAC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82E07DBA-769F-48A7-A307-EA60B144DAC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE68BC36-18B1-4F04-A311-1DD993250CF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE68BC36-18B1-4F04-A311-1DD993250CF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE68BC36-18B1-4F04-A311-1DD993250CF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE68BC36-18B1-4F04-A311-1DD993250CF5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {64AE3A9D-A654-4449-A6E5-C6B15980CE6F}
+	EndGlobalSection
+EndGlobal

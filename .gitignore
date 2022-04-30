@@ -1,0 +1,10 @@
+bin/
+obj/
+*.DotSettings
+*.user
+*.ppm
+*.png
+*.exr
+.idea/
+.vs/
+.vscode/
