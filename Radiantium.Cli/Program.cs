@@ -1,51 +1,46 @@
-﻿// See https://aka.ms/new-console-template for more information
-using Radiantium.Core;
+﻿using Radiantium.Core;
 using Radiantium.Offline;
+using Radiantium.Offline.Accelerators;
+using Radiantium.Offline.Shapes;
 using System.Numerics;
-
-Console.WriteLine("Hello, World!");
 
 const int w = 768;
 const int h = 768;
-
 Camera camera = new PerspectiveCamera(
-    45,
+    30,
     0.001f,
     100,
-    new Vector3(0, 2, 2),
-    new Vector3(0, 0, 0),
-    new Vector3(0, 1, 0),
+    new Vector3(-65.6055f, 47.5762f, 24.3583f),
+    new Vector3(-64.8161f, 47.2211f, 23.8576f),
+    new Vector3(0.299858f, 0.934836f, -0.190177f),
     w, h
 );
-Primitive b = new Box(new BoundingBox3F(new Vector3(-0.5f), new Vector3(0.5f)));
-Scene s = new Scene(b);
-Renderer r = new Renderer(s, camera, new Simple(), 1);
-await r.Start();
+TriangleModel model;
+{
+    using var reader = new WavefrontObjReader(File.OpenRead(@"D:\ProjectC++\nori\scenes\pa2\ajax.obj"));
+    reader.Read();
+    if (!string.IsNullOrWhiteSpace(reader.ErrorInfo)) { Console.WriteLine(reader.ErrorInfo); }
+    model = reader.AllFacesToModel();
+}
+TriangleMesh mesh = new TriangleMesh(Matrix4x4.Identity, model);
+var triList = mesh.ToTriangle();
+Aggregate agg = new Octree(triList.Select(t => new GeometricPrimitive(t)).Cast<Primitive>().ToList(), outBound: 2f, maxDepth: 12, maxCount: 4);
+Scene s = new Scene(agg);
+Renderer r = new Renderer(s, camera, new Simple(), 32);
+Task t = r.Start();
+t.Wait();
+Console.WriteLine(r.RenderUseTime.TotalMilliseconds);
 using var stream = File.OpenWrite(@"C:\Users\ksgfk\Desktop\test.png");
 r.RenderTarget.SavePng(stream);
-
-class Box : Primitive
-{
-    public override BoundingBox3F WorldBound { get; }
-
-    public Box(BoundingBox3F worldBound)
-    {
-        WorldBound = worldBound;
-    }
-
-    public override bool Intersect(Ray3F ray)
-    {
-        return WorldBound.Intersect(ray);
-    }
-}
 
 class Simple : Integrator
 {
     public override Color3F Li(Ray3F ray, Scene scene, Random rand)
     {
-        if (scene.Intersect(ray))
+        if (scene.Intersect(ray, out var inct))
         {
-            return new Color3F(1.0f);
+            Vector3 n = inct.N;
+            return new Color3F(MathF.Abs(n.X), MathF.Abs(n.Y), MathF.Abs(n.Z));
         }
         return new Color3F(0.0f);
     }

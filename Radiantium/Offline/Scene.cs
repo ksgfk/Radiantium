@@ -20,5 +20,10 @@ namespace Radiantium.Offline
         {
             return Aggregate.Intersect(ray);
         }
+
+        public bool Intersect(Ray3F ray, out Intersection inct)
+        {
+            return Aggregate.Intersect(ray, out inct);
+        }
     }
 }

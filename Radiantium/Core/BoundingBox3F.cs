@@ -1,10 +1,12 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using static System.MathF;
 using static System.Numerics.Vector3;
 
 namespace Radiantium.Core
 {
+    [DebuggerDisplay("Min = {Min}, Max = {Max}")]
     public struct BoundingBox3F
     {
         public Vector3 Min;
@@ -47,6 +49,13 @@ namespace Radiantium.Core
             return p.X > Min.X && p.X < Max.X &&
                 p.Y > Min.Y && p.Y < Max.Y &&
                 p.Z > Min.Z && p.Z < Max.Z;
+        }
+
+        public bool ContainsEqual(Vector3 p)
+        {
+            return p.X >= Min.X && p.X <= Max.X &&
+                p.Y >= Min.Y && p.Y <= Max.Y &&
+                p.Z >= Min.Z && p.Z <= Max.Z;
         }
 
         public bool Contains(BoundingBox3F box)
@@ -155,6 +164,44 @@ namespace Radiantium.Core
             if (tzMin > tMin) tMin = tzMin;
             if (tzMax < tMax) tMax = tzMax;
             return (tMin < ray.MaxT) && (tMax > 0);
+        }
+
+        public bool Intersect(Ray3F ray, out float minT, out float maxT)
+        {
+            bool dirIsNegX = ray.InvD.X < 0;
+            bool dirIsNegY = ray.InvD.Y < 0;
+            bool dirIsNegZ = ray.InvD.Z < 0;
+            float tMin = ((dirIsNegX ? Max : Min).X - ray.O.X) * ray.InvD.X;
+            float tMax = ((dirIsNegX ? Min : Max).X - ray.O.X) * ray.InvD.X;
+            float tyMin = ((dirIsNegY ? Max : Min).Y - ray.O.Y) * ray.InvD.Y;
+            float tyMax = ((dirIsNegY ? Min : Max).Y - ray.O.Y) * ray.InvD.Y;
+            tMax *= 1 + 2 * Gamma(3);
+            tyMax *= 1 + 2 * Gamma(3);
+            if (tMin > tyMax || tyMin > tMax)
+            {
+                minT = default; maxT = default;
+                return false;
+            }
+            if (tyMin > tMin) tMin = tyMin;
+            if (tyMax < tMax) tMax = tyMax;
+            float tzMin = ((dirIsNegZ ? Max : Min).Z - ray.O.Z) * ray.InvD.Z;
+            float tzMax = ((dirIsNegZ ? Min : Max).Z - ray.O.Z) * ray.InvD.Z;
+            tzMax *= 1 + 2 * Gamma(3);
+            if (tMin > tzMax || tzMin > tMax)
+            {
+                minT = default; maxT = default;
+                return false;
+            }
+            if (tzMin > tMin) tMin = tzMin;
+            if (tzMax < tMax) tMax = tzMax;
+            bool result = (tMin < ray.MaxT) && (tMax > 0);
+            minT = tMin; maxT = tMax;
+            return result;
+        }
+
+        public override string ToString()
+        {
+            return $"<Min = {Min}, Max = {Max}>";
         }
 
         public static ref Vector3 IndexerUnsafe(ref BoundingBox3F box, int i)

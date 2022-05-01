@@ -20,6 +20,8 @@ namespace Radiantium.Core
             UV = uv;
             if (indices.Length % 3 != 0) { throw new ArgumentException("invalid indices data"); }
             TriangleCount = indices.Length / 3;
+            if (Normal != null && Normal.Length != VertexCount) { throw new ArgumentException(nameof(normal)); }
+            if (UV != null && UV.Length != VertexCount) { throw new ArgumentException(nameof(uv)); }
         }
     }
 }

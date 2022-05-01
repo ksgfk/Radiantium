@@ -24,9 +24,9 @@ namespace Radiantium.Core
             public readonly int Z;
             internal Index3(int x, int y, int z)
             {
-                X = Math.Abs(x);
-                Y = Math.Abs(y);
-                Z = Math.Abs(z);
+                X = x;
+                Y = y;
+                Z = z;
             }
         }
         public readonly struct Face
@@ -58,10 +58,13 @@ namespace Radiantium.Core
         {
             get
             {
-                _errorInfo ??= _error.ToString();
-                if (string.IsNullOrWhiteSpace(_errorInfo))
+                if (_errorInfo == null)
                 {
-                    _errorInfo = string.Empty;
+                    _errorInfo = _error.ToString().Trim();
+                    if (string.IsNullOrWhiteSpace(_errorInfo))
+                    {
+                        _errorInfo = string.Empty;
+                    }
                 }
                 return _errorInfo;
             }
@@ -96,7 +99,7 @@ namespace Radiantium.Core
         {
             if (_disposed)
             {
-                throw new InvalidOperationException("已经释放");
+                throw new InvalidOperationException("this reader is disposed");
             }
             var allLine = 0;
             try
@@ -104,17 +107,17 @@ namespace Radiantium.Core
                 while (_reader.Peek() != -1)
                 {
                     var line = _reader.ReadLine();
+                    allLine++;
                     if (string.IsNullOrEmpty(line))
                     {
                         continue;
                     }
-                    allLine++;
                     Parse(line, allLine);
                 }
             }
             catch (Exception e)
             {
-                _error.Append(allLine).Append(':').Append(e.Message);
+                _error.Append("line ").Append(allLine).Append(": ").Append(e.Message);
             }
         }
 
@@ -122,11 +125,11 @@ namespace Radiantium.Core
         {
             if (_disposed)
             {
-                throw new InvalidOperationException("已经释放");
+                throw new InvalidOperationException("this reader is disposed");
             }
             if (!_parseTask.IsCompleted)
             {
-                throw new InvalidOperationException("已经在异步读取obj中");
+                throw new InvalidOperationException("this reader reading asynchronously");
             }
             _parseTask = ReadAsyncInternal();
             return _parseTask;
@@ -150,7 +153,7 @@ namespace Radiantium.Core
             }
             catch (Exception e)
             {
-                _error.Append(allLine).Append(':').Append(e.Message);
+                _error.Append("line ").Append(allLine).Append(": ").Append(e.Message);
             }
         }
 
@@ -270,12 +273,6 @@ namespace Radiantium.Core
             return succ;
         }
 
-        /// <summary>
-        /// 尝试从字符串切片（Span）中读取面信息
-        /// </summary>
-        /// <param name="span">字符串切片（Span）</param>
-        /// <param name="face">信息</param>
-        /// <returns>是否读取成功</returns>
         public static bool TryReadFace(ReadOnlySpan<char> span, out Face face)
         {
             var succ = TrySplit3(span, ' ', out var b);
@@ -313,7 +310,7 @@ namespace Radiantium.Core
                 var name = line[start..];
                 if (_objs.FindIndex(x => x.Name == name) >= 0)
                 {
-                    _error.Append(lineNum).Append(":重复的物体名字\n");
+                    _error.Append("line ").Append(lineNum).Append(": duplicate object name ").Append(name).Append('\n');
                 }
                 else
                 {
@@ -329,7 +326,7 @@ namespace Radiantium.Core
                 }
                 else
                 {
-                    _error.Append(lineNum).Append(":无法解析顶点坐标,默认(0,0,0)\n");
+                    _error.Append("line ").Append(lineNum).Append(": can't parse pos, use default (0, 0, 0)\n");
                     _vertices.Add(Vector3.Zero);
                 }
             }
@@ -346,7 +343,7 @@ namespace Radiantium.Core
                 }
                 else
                 {
-                    _error.Append(lineNum).Append(":无法解析面,忽略\n");
+                    _error.Append("line ").Append(lineNum).Append(": can't parse face, ignore\n");
                 }
             }
             else if (line.StartsWith("vt "))
@@ -358,7 +355,7 @@ namespace Radiantium.Core
                 }
                 else
                 {
-                    _error.Append(lineNum).Append(":无法解析纹理坐标,默认(0,0)\n");
+                    _error.Append("line ").Append(lineNum).Append(": can't parse uv, use default (0, 0)\n");
                     _texCoords.Add(Vector2.Zero);
                 }
             }
@@ -371,7 +368,7 @@ namespace Radiantium.Core
                 }
                 else
                 {
-                    _error.Append(lineNum).Append(":无法解析法线方向,默认(0,1,0)\n");
+                    _error.Append("line ").Append(lineNum).Append(": can't parse normal, use default (0, 1, 0)\n");
                     _normals.Add(Vector3.UnitY);
                 }
             }
@@ -390,11 +387,11 @@ namespace Radiantium.Core
             }
             else if (line.StartsWith("s "))
             {
-                //不支持平滑组
+                //ignore
             }
             else
             {
-                _error.Append(lineNum).Append(":不支持的参数,忽略\n");
+                _error.Append("line ").Append(lineNum).Append(": unknown command, ignore\n");
             }
         }
 
@@ -445,7 +442,7 @@ namespace Radiantium.Core
             }
         }
 
-        public TriangleModel ToModel()
+        public TriangleModel AllFacesToModel()
         {
             Dictionary<VertexHash, int> unique = new Dictionary<VertexHash, int>();
             List<Vector3> p = new List<Vector3>();
@@ -453,36 +450,33 @@ namespace Radiantium.Core
             List<Vector2> u = new List<Vector2>();
             List<int> ind = new List<int>();
             int count = 0;
-            foreach (var o in _objs)
+            for (int j = 0; j < Faces.Count; j++)
             {
-                foreach (var fi in o.Faces)
+                Face f = Faces[j];
+                for (int i = 0; i < 3; i++)
                 {
-                    var f = _faces[fi];
-                    for (int i = 0; i < 3; i++)
+                    VertexHash v = new VertexHash(
+                        MathExt.IndexerUnsafeReadonly(in f.Vertex.X, i),
+                        MathExt.IndexerUnsafeReadonly(in f.Normal.X, i),
+                        MathExt.IndexerUnsafeReadonly(in f.TexCoord.X, i)
+                    );
+                    if (!unique.TryGetValue(v, out int index))
                     {
-                        VertexHash v = new VertexHash(
-                            MathExt.IndexerUnsafeReadonly(in f.Vertex.X, i),
-                            MathExt.IndexerUnsafeReadonly(in f.Normal.X, i),
-                            MathExt.IndexerUnsafeReadonly(in f.TexCoord.X, i)
-                        );
-                        if (!unique.TryGetValue(v, out int index))
-                        {
-                            unique.Add(v, count);
-                            index = count;
-                            p.Add(Vertices[v.P]);
-                            if (Normals != null) { n.Add(Normals[v.N]); }
-                            if (TexCoords != null) { u.Add(TexCoords[v.T]); }
-                            count++;
-                        }
-                        ind.Add(index);
+                        unique.Add(v, count);
+                        index = count;
+                        p.Add(Vertices[v.P]);
+                        if (v.N >= 0) { n.Add(Normals[v.N]); }
+                        if (v.T >= 0) { u.Add(TexCoords[v.T]); }
+                        count++;
                     }
+                    ind.Add(index);
                 }
             }
             return new TriangleModel(
                 p.ToArray(),
                 ind.ToArray(),
-                n.Count > 0 ? n.ToArray() : Array.Empty<Vector3>(),
-                u.Count > 0 ? u.ToArray() : Array.Empty<Vector2>()
+                n.Count > 0 ? n.ToArray() : null,
+                u.Count > 0 ? u.ToArray() : null
             );
         }
     }

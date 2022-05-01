@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Radiantium.Cli": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_TC_QuickJitForLoops": "1",
+        "DOTNET_TieredPGO": "1",
+        "DOTNET_ReadyToRun": "0"
+      }
+    }
+  }
+}
