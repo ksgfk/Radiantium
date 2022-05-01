@@ -1,6 +1,7 @@
 ﻿using Radiantium.Core;
 using Radiantium.Offline;
 using Radiantium.Offline.Accelerators;
+using Radiantium.Offline.Integrators;
 using Radiantium.Offline.Shapes;
 using System.Numerics;
 
@@ -26,22 +27,9 @@ TriangleMesh mesh = new TriangleMesh(Matrix4x4.Identity, model);
 var triList = mesh.ToTriangle();
 Aggregate agg = new Octree(triList.Select(t => new GeometricPrimitive(t)).Cast<Primitive>().ToList(), outBound: 2f, maxDepth: 12, maxCount: 4);
 Scene s = new Scene(agg);
-Renderer r = new Renderer(s, camera, new Simple(), 32);
+Renderer r = new Renderer(s, camera, new AmbientOcclusion(), 256);
 Task t = r.Start();
 t.Wait();
 Console.WriteLine(r.RenderUseTime.TotalMilliseconds);
-using var stream = File.OpenWrite(@"C:\Users\ksgfk\Desktop\test.png");
-r.RenderTarget.SavePng(stream);
-
-class Simple : Integrator
-{
-    public override Color3F Li(Ray3F ray, Scene scene, Random rand)
-    {
-        if (scene.Intersect(ray, out var inct))
-        {
-            Vector3 n = inct.N;
-            return new Color3F(MathF.Abs(n.X), MathF.Abs(n.Y), MathF.Abs(n.Z));
-        }
-        return new Color3F(0.0f);
-    }
-}
+using var stream = File.OpenWrite(@"C:\Users\ksgfk\Desktop\test.exr");
+r.RenderTarget.SaveOpenExr(stream);

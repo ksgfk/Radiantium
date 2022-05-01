@@ -183,7 +183,7 @@ namespace Radiantium.Offline.Shapes
 
         public override ShapeSampleResult Sample(Random rand, out float pdf)
         {
-            Vector2 rng = rand.Next2F();
+            Vector2 rng = rand.NextVec2();
             float alpha = 1 - MathF.Sqrt(1 - rng.X);
             float beta = rng.Y * MathF.Sqrt(1 - rng.X);
             Vector3 bary = new Vector3(alpha, beta, (1 - alpha - beta));

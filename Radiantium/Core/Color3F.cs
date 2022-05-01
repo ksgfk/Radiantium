@@ -1,8 +1,10 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Radiantium.Core
 {
+    [DebuggerDisplay("<{R}, {G}, {B}>")]
     public struct Color3F
     {
         public float R;

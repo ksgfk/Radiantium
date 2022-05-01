@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using Radiantium.Core;
+using System.Numerics;
 
 namespace Radiantium.Offline
 {
@@ -33,6 +34,11 @@ namespace Radiantium.Offline
             T = t;
             Shape = shape ?? throw new ArgumentNullException(nameof(shape));
             Shading = shading;
+        }
+
+        public Ray3F SpawnRay(Vector3 d)
+        {
+            return new Ray3F(P, d, 0.001f);
         }
     }
 }

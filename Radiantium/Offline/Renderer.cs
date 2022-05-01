@@ -191,7 +191,7 @@ namespace Radiantium.Offline
                         {
                             int pointX = x + offsetX;
                             int pointY = y + offsetY;
-                            Vector2 samplePoint = new Vector2(pointX, pointY) + rand.Next2F();
+                            Vector2 samplePoint = new Vector2(pointX, pointY) + rand.NextVec2();
                             Ray3F ray = _camera.SampleRay(samplePoint);
                             var color = _integrator.Li(ray, _scene, rand);
                             if (!color.IsValid)

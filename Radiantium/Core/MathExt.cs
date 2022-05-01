@@ -51,7 +51,7 @@ namespace Radiantium.Core
             Vector3 dir = Vector3.Normalize(target - origin);
             Vector3 left = Vector3.Normalize(Vector3.Cross(Vector3.Normalize(up), dir));
             Vector3 realUp = Vector3.Normalize(Vector3.Cross(dir, left));
-            return new()//C#矩阵储存是行优先，乘法是列优先
+            return new() //C#矩阵储存是行优先，乘法是列优先
             {
                 M11 = left.X, M12 = left.Y, M13 = left.Z, M14 = 0,
                 M21 = realUp.X, M22 = realUp.Y, M23 = realUp.Z, M24 = 0,
