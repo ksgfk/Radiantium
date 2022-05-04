@@ -35,8 +35,16 @@ namespace Radiantium.Offline.Bxdf
             float f = BxdfUtility.FresnelDielectric(Coordinate.CosTheta(wo), EtaA, EtaB);
             if (rand.NextFloat() < f)
             {
+                if (Coordinate.CosTheta(wo) == 0)
+                {
+                    return new SampleBxdfResult();
+                }
                 Vector3 wi = new Vector3(-wo.X, -wo.Y, wo.Z);
                 Color3F fr = f * R / Coordinate.AbsCosTheta(wi);
+                //if (!fr.IsValid)
+                //{
+                //    Logger.Error($"???");
+                //}
                 return new SampleBxdfResult(wi, fr, f, BxdfType.Reflection | BxdfType.Specular);
             }
             else
@@ -45,13 +53,17 @@ namespace Radiantium.Offline.Bxdf
                 float etaI = entering ? EtaA : EtaB;
                 float etaT = entering ? EtaB : EtaA;
                 Vector3 n = entering ? new Vector3(0, 0, 1) : new Vector3(0, 0, -1);
-                if (!Refract(wo, n, etaI / etaT, out Vector3 wi))
+                if (!Refract(wo, n, etaI / etaT, out Vector3 wi) || Coordinate.CosTheta(wi) == 0.0f)
                 {
                     return new SampleBxdfResult();
                 }
                 Color3F ft = T * (1.0f - f);
                 ft *= (etaI * etaI) / (etaT * etaT);
                 ft /= Coordinate.AbsCosTheta(wi);
+                //if (!ft.IsValid)
+                //{
+                //    Logger.Error($"???");
+                //}
                 return new SampleBxdfResult(wi, ft, 1 - f, BxdfType.Transmission | BxdfType.Specular);
             }
         }

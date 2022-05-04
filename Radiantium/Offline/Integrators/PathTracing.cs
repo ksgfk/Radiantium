@@ -163,11 +163,19 @@ namespace Radiantium.Offline.Integrators
                     Light light = scene.Lights[rand.Next(scene.Lights.Length)];
                     float lightPdf = 1.0f / scene.Lights.Length;
                     radiance += coeff * EstimateDirect(scene, rand, light, inct, wo, sample) / lightPdf;
+                    //if (!coeff.IsValid)
+                    //{
+                    //    Logger.Error($"???");
+                    //}
                 }
                 isSpecularPath = (sample.Type & BxdfType.Specular) != 0;
                 if (sample.Pdf > 0.0f)
                 {
                     coeff *= sample.Fr * Coordinate.AbsCosTheta(sample.Wi) / sample.Pdf;
+                    //if (!coeff.IsValid)
+                    //{
+                    //    Logger.Error($"???");
+                    //}
                 }
                 ray = inct.SpawnRay(inct.ToWorld(sample.Wi));
                 Color3F rr = coeff;

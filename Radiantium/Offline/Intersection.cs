@@ -40,7 +40,7 @@ namespace Radiantium.Offline
 
         public Ray3F SpawnRay(Vector3 d)
         {
-            return new Ray3F(P, d, 0.001f);
+            return new Ray3F(P, d, 0.00001f);
         }
 
         public Color3F Le(Vector3 w)

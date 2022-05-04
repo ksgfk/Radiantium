@@ -79,7 +79,7 @@ namespace Radiantium.Offline.Accelerators
         private readonly List<Primitive> primitives;
         private readonly LinearBVHNode[] nodes;
 
-        public override BoundingBox3F WorldBound => throw new NotImplementedException();
+        public override BoundingBox3F WorldBound => nodes[0].bounds;
 
         public Bvh(List<Primitive> p, int maxPrimsInNode, SplitMethod splitMethod)
         {
