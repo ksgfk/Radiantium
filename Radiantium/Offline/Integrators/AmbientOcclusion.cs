@@ -31,7 +31,7 @@ namespace Radiantium.Offline.Integrators
                 pdf = Probability.SquareToUniformHemispherePdf(h);
             }
             Vector3 p = inct.Shading.ToWorld(h);
-            Ray3F shadowRay = inct.SpawnRay(p);
+            Ray3F shadowRay = inct.SpawnRay(Vector3.Normalize(p));
             if (scene.Intersect(shadowRay))
             {
                 return new Color3F(0.0f);

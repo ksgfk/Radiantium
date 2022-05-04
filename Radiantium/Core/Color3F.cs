@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Radiantium.Core
 {
     [DebuggerDisplay("<{R}, {G}, {B}>")]
-    public struct Color3F
+    public struct Color3F : IEquatable<Color3F>
     {
         public float R;
         public float G;
@@ -21,6 +22,8 @@ namespace Radiantium.Core
                 return true;
             }
         }
+
+        public static Color3F Black => new Color3F(0.0f);
 
         public Color3F(float r, float g, float b)
         {
@@ -45,6 +48,21 @@ namespace Radiantium.Core
 
         public float GetLuminance() { return R * 0.212671f + G * 0.715160f + B * 0.072169f; }
 
+        public bool Equals(Color3F other)
+        {
+            return R == other.R && G == other.G && B == other.B;
+        }
+
+        public override bool Equals([NotNullWhen(true)] object? obj)
+        {
+            return obj is Color3F c && Equals(c);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(R, G, B);
+        }
+
         public static Color3F operator +(Color3F l, Color3F r) { return new(l.R + r.R, l.G + r.G, l.B + r.B); }
         public static Color3F operator -(Color3F l, Color3F r) { return new(l.R - r.R, l.G - r.G, l.B - r.B); }
         public static Color3F operator *(Color3F l, Color3F r) { return new(l.R * r.R, l.G * r.G, l.B * r.B); }
@@ -57,6 +75,8 @@ namespace Radiantium.Core
         public static Color3F operator -(float l, Color3F r) { return new(l - r.R, l - r.G, l - r.B); }
         public static Color3F operator *(float l, Color3F r) { return new(l * r.R, l * r.G, l * r.B); }
         public static Color3F operator /(float l, Color3F r) { return new(l / r.R, l / r.G, l / r.B); }
+        public static bool operator ==(Color3F l, Color3F r) { return l.Equals(r); }
+        public static bool operator !=(Color3F l, Color3F r) { return !(l == r); }
 
         public override string ToString() { return $"<{R}, {G}, {B}>"; }
 

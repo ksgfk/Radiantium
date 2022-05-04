@@ -23,5 +23,12 @@ namespace Radiantium.Core
         {
             return O + t * D;
         }
+
+        public static Ray3F Transform(Ray3F ray, Matrix4x4 m)
+        {
+            Vector3 o = Vector3.Transform(ray.O, m);
+            Vector3 d = Vector3.Normalize(Vector3.TransformNormal(ray.D, m));
+            return new Ray3F(o, d, ray.MinT, ray.MaxT);
+        }
     }
 }

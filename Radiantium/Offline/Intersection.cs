@@ -22,12 +22,14 @@ namespace Radiantium.Offline
         public Vector3 P;
         public Vector2 UV;
         public float T;
-        public Shape Shape;
+        public Primitive Shape;
         public Coordinate Shading;
 
         public Vector3 N => Shading.Z;
+        public bool IsLight => Shape.Light != null;
+        public AreaLight Light => Shape.Light!;
 
-        public Intersection(Vector3 p, Vector2 uV, float t, Shape shape, Coordinate shading)
+        public Intersection(Vector3 p, Vector2 uV, float t, Primitive shape, Coordinate shading)
         {
             P = p;
             UV = uV;
@@ -39,6 +41,21 @@ namespace Radiantium.Offline
         public Ray3F SpawnRay(Vector3 d)
         {
             return new Ray3F(P, d, 0.001f);
+        }
+
+        public Color3F Le(Vector3 w)
+        {
+            return Shape.Light == null ? new Color3F(0.0f) : Shape.Light.L(this, w);
+        }
+
+        public Vector3 ToLocal(Vector3 v)
+        {
+            return Shading.ToLocal(v);
+        }
+
+        public Vector3 ToWorld(Vector3 v)
+        {
+            return Shading.ToWorld(v);
         }
     }
 }

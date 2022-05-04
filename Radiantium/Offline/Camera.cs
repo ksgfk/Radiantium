@@ -45,7 +45,7 @@ namespace Radiantium.Offline
 
         private void Update()
         {
-            _invResolve = new Vector2(1.0f) / new Vector2(ScreenX, ScreenX);
+            _invResolve = new Vector2(1.0f) / new Vector2(ScreenX, ScreenY);
             _aspect = ScreenX / (float)ScreenY;
 
             float recip = 1.0f / (Far - Near);//将相机空间中的向量投影到z=1的平面上
@@ -91,7 +91,7 @@ namespace Radiantium.Offline
             Vector3 dir = Vector3.Normalize(near);//归一化后就是射线方向了
             float invZ = 1.0f / dir.Z;
             Vector3 o = Vector3.Transform(Vector3.Zero, _cameraToWorld);
-            Vector3 d = Vector3.TransformNormal(dir, _cameraToWorld);
+            Vector3 d = Vector3.Normalize(Vector3.TransformNormal(dir, _cameraToWorld));
             return new Ray3F(o, d, Near * invZ, Far * invZ);
         }
     }

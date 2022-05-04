@@ -12,12 +12,28 @@ namespace Radiantium.Offline
 
         public Coordinate(Vector3 n)
         {
-            float sign = Sign(n.Z);
-            float a = -1.0f / (sign + n.Z);
-            float b = n.X * n.Y * a;
-            X = new Vector3(1.0f + sign * n.X * n.X * a, sign * b, -sign * n.X);
-            Y = new Vector3(b, sign + n.Y * n.Y * a, -n.Y);
+            //https://zhuanlan.zhihu.com/p/351071035
+            if (Abs(n.X) > Abs(n.Y))
+            {
+                X = new Vector3(-n.Z, 0, n.X) / Sqrt(n.X * n.X + n.Z * n.Z);
+            }
+            else
+            {
+                X = new Vector3(0, n.Z, -n.Y) / Sqrt(n.Y * n.Y + n.Z * n.Z);
+            }
+            Y = Cross(n, X);
             Z = n;
+            //fast version
+            //if (Abs(Abs(Dot(n, new Vector3(1, 0, 0))) - 1) < 0.1f)
+            //{
+            //    Y = Cross(n, new Vector3(0, 1, 0));
+            //}
+            //else
+            //{
+            //    Y = Cross(n, new Vector3(1, 0, 0));
+            //}
+            //X = Cross(Y, n);
+            //Z = n;
         }
 
         public Vector3 ToLocal(Vector3 v)
@@ -75,5 +91,10 @@ namespace Radiantium.Offline
         public static float SinPhi2(Vector3 v) { return Math.Clamp(v.Y * v.Y / SinTheta2(v), 0.0f, 1.0f); }
 
         public static float CosPhi2(Vector3 v) { return Math.Clamp(v.X * v.X / SinTheta2(v), 0.0f, 1.0f); }
+
+        public static bool SameHemisphere(Vector3 w, Vector3 wp)
+        {
+            return w.Z * wp.Z > 0;
+        }
     }
 }

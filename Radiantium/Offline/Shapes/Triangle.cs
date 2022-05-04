@@ -93,7 +93,7 @@ namespace Radiantium.Offline.Shapes
             SurfaceArea = 0.5f * Vector3.Cross(Pb - Pa, Pc - Pa).Length();
         }
 
-        public override Intersection GetIntersection(Ray3F ray, SurfacePoint surface)
+        public override ShapeIntersection GetIntersection(Ray3F ray, SurfacePoint surface)
         {
             Vector3 bary = new Vector3(1 - (surface.U + surface.V), surface.U, surface.V);
             Vector3 p = bary.X * Pa + bary.Y * Pb + bary.Z * Pc;
@@ -116,7 +116,7 @@ namespace Radiantium.Offline.Shapes
                 uv = bary.X * new Vector2(0) + bary.Y * new Vector2(1, 0) + bary.Z * new Vector2(1);
             }
             Coordinate coord = new Coordinate(n);
-            return new Intersection(p, uv, surface.T, this, coord);
+            return new ShapeIntersection(p, uv, surface.T, coord);
         }
 
         public override bool Intersect(Ray3F ray)
@@ -176,12 +176,12 @@ namespace Radiantium.Offline.Shapes
             return isInct;
         }
 
-        public override float Pdf(ShapeSampleResult inct)
+        public override float Pdf(ShapeIntersection inct)
         {
             return 1.0f / SurfaceArea;
         }
 
-        public override ShapeSampleResult Sample(Random rand, out float pdf)
+        public override ShapeIntersection Sample(Random rand, out float pdf)
         {
             Vector2 rng = rand.NextVec2();
             float alpha = 1 - MathF.Sqrt(1 - rng.X);
@@ -208,7 +208,7 @@ namespace Radiantium.Offline.Shapes
             }
             Coordinate coord = new Coordinate(n);
             pdf = 1.0f / SurfaceArea;
-            return new ShapeSampleResult(p, uv, this, coord);
+            return new ShapeIntersection(p, uv, 0, coord);
         }
     }
 }

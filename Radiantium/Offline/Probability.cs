@@ -20,12 +20,12 @@ namespace Radiantium.Offline
         //***************
         //* CDF and PDF *
         //***************
-        public static float UniformSquarePdf(in Vector2 sample)
+        public static float UniformSquarePdf(Vector2 sample)
         {
             return sample.X is >= 0 and <= 1 && sample.Y is >= 0 and <= 1 ? 1.0f : 0.0f;
         }
 
-        public static Vector2 SquareToTent(in Vector2 sample)
+        public static Vector2 SquareToTent(Vector2 sample)
         {
             static float Tent(float x)
             {
@@ -35,7 +35,7 @@ namespace Radiantium.Offline
             return new Vector2(Tent(sample.X), Tent(sample.Y));
         }
 
-        public static float SquareToTentPdf(in Vector2 p)
+        public static float SquareToTentPdf(Vector2 p)
         {
             static float TentPdf(float t)
             {
@@ -45,16 +45,16 @@ namespace Radiantium.Offline
             return TentPdf(p.X) * TentPdf(p.Y);
         }
 
-        public static Vector2 SquareToUniformDisk(in Vector2 sample)
+        public static Vector2 SquareToUniformDisk(Vector2 sample)
         {
             var radius = MathF.Sqrt(sample.X);
             var angle = sample.Y * MathF.PI * 2;
             return new Vector2(radius * MathF.Cos(angle), radius * MathF.Sin(angle));
         }
 
-        public static float SquareToUniformDiskPdf(in Vector2 p) { return p.Length() <= 1.0f ? 1 / MathF.PI : 0.0f; }
+        public static float SquareToUniformDiskPdf(Vector2 p) { return p.Length() <= 1.0f ? 1 / MathF.PI : 0.0f; }
 
-        public static Vector3 SquareToUniformSphere(in Vector2 sample)
+        public static Vector3 SquareToUniformSphere(Vector2 sample)
         {
             var phi = sample.X * MathF.PI * 2;
             var theta = MathF.Acos(1 - 2 * sample.Y);
@@ -65,12 +65,12 @@ namespace Radiantium.Offline
             return new Vector3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
         }
 
-        public static float SquareToUniformSpherePdf(in Vector3 v)
+        public static float SquareToUniformSpherePdf(Vector3 v)
         {
             return MathF.Abs(v.Length() - 1.0f) <= float.Epsilon ? 1 / (4 * MathF.PI) : 0.0f;
         }
 
-        public static Vector3 SquareToUniformHemisphere(in Vector2 sample)
+        public static Vector3 SquareToUniformHemisphere(Vector2 sample)
         {
             var phi = sample.X * MathF.PI * 2;
             var theta = MathF.Acos(1 - sample.Y);
@@ -81,25 +81,25 @@ namespace Radiantium.Offline
             return new Vector3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
         }
 
-        public static float SquareToUniformHemispherePdf(in Vector3 v)
+        public static float SquareToUniformHemispherePdf(Vector3 v)
         {
             return MathF.Abs(v.Length() - 1.0f) <= float.Epsilon && v.Z >= 0 ? 1 / (2 * MathF.PI) : 0.0f;
         }
 
-        public static Vector3 SquareToCosineHemisphere(in Vector2 sample)
+        public static Vector3 SquareToCosineHemisphere(Vector2 sample)
         {
-            Vector2 bottom = SquareToUniformDisk(in sample);
+            Vector2 bottom = SquareToUniformDisk(sample);
             var x = bottom.X;
             var y = bottom.Y;
             return new Vector3(x, y, MathF.Sqrt(1 - x * x - y * y));
         }
 
-        public static float SquareToCosineHemispherePdf(in Vector3 v)
+        public static float SquareToCosineHemispherePdf(Vector3 v)
         {
             return MathF.Abs(v.Length() - 1.0f) <= float.Epsilon && v.Z >= 0 ? v.Z / (MathF.PI) : 0.0f;
         }
 
-        public static Vector3 SquareToBeckmann(in Vector2 sample, float alpha)
+        public static Vector3 SquareToBeckmann(Vector2 sample, float alpha)
         {
             var phi = MathF.PI * 2 * sample.X;
             var theta = MathF.Atan(MathF.Sqrt(-alpha * alpha * MathF.Log(1 - sample.Y)));
@@ -113,7 +113,7 @@ namespace Radiantium.Offline
             return new Vector3(x, y, z);
         }
 
-        public static float SquareToBeckmannPdf(in Vector3 m, float alpha)
+        public static float SquareToBeckmannPdf(Vector3 m, float alpha)
         {
             if (m.Z <= 0)
             {
@@ -128,7 +128,7 @@ namespace Radiantium.Offline
             return azimuthal * longitudinal;
         }
 
-        public static Vector3 SquareToGGX(in Vector2 sample, float alpha)
+        public static Vector3 SquareToGGX(Vector2 sample, float alpha)
         {
             float phi = 2.0f * MathF.PI * sample.X;
             float theta = MathF.Acos(MathF.Sqrt((1.0f - sample.Y) / (1.0f + (alpha * alpha - 1.0f) * sample.Y)));
@@ -137,7 +137,7 @@ namespace Radiantium.Offline
             return new Vector3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
         }
 
-        public static float SquareToGGXPdf(in Vector3 m, float alpha)
+        public static float SquareToGGXPdf(Vector3 m, float alpha)
         {
             float cosTheta = m.Z;
             if (m.Z <= 0)

@@ -117,7 +117,7 @@ namespace Radiantium.Core
 
         public static BoundingBox3F Union(BoundingBox3F b, BoundingBox3F box)
         {
-            return new BoundingBox3F(Min(b.Min, box.Min), Max(b.Max, box.Min));
+            return new BoundingBox3F(Min(b.Min, box.Min), Max(b.Max, box.Max));
         }
 
         public int GetLargestAxis()
@@ -135,6 +135,15 @@ namespace Radiantium.Core
                 (index & (1 << 1)) == 0 ? Min.Y : Max.Y,
                 (index & (1 << 2)) == 0 ? Min.Z : Max.Z
             );
+        }
+
+        public Vector3 Offset(Vector3 p)
+        {
+            Vector3 o = p - Min;
+            if (Max.X > Min.X) o.X /= Max.X - Min.X;
+            if (Max.Y > Min.Y) o.Y /= Max.Y - Min.Y;
+            if (Max.Z > Min.Z) o.Z /= Max.Z - Min.Z;
+            return o;
         }
 
         private static float Gamma(int n)
@@ -202,6 +211,35 @@ namespace Radiantium.Core
         public override string ToString()
         {
             return $"<Min = {Min}, Max = {Max}>";
+        }
+
+        public int MaximumExtent()
+        {
+            Vector3 d = Diagonal;
+            if (d.X > d.Y && d.X > d.Z)
+                return 0;
+            else if (d.Y > d.Z)
+                return 1;
+            else
+                return 2;
+        }
+
+        public void Transform(Matrix4x4 m)
+        {
+            this = Transform(this, m);
+        }
+
+        public static BoundingBox3F Transform(BoundingBox3F b, Matrix4x4 m)
+        {
+            BoundingBox3F result = new BoundingBox3F(Vector3.Transform(new Vector3(b.Min.X, b.Min.Y, b.Min.Z), m));
+            result.ExpendBy(Vector3.Transform(new Vector3(b.Max.X, b.Min.Y, b.Min.Z), m));
+            result.ExpendBy(Vector3.Transform(new Vector3(b.Min.X, b.Max.Y, b.Min.Z), m));
+            result.ExpendBy(Vector3.Transform(new Vector3(b.Min.X, b.Min.Y, b.Max.Z), m));
+            result.ExpendBy(Vector3.Transform(new Vector3(b.Min.X, b.Max.Y, b.Max.Z), m));
+            result.ExpendBy(Vector3.Transform(new Vector3(b.Max.X, b.Max.Y, b.Min.Z), m));
+            result.ExpendBy(Vector3.Transform(new Vector3(b.Max.X, b.Min.Y, b.Max.Z), m));
+            result.ExpendBy(Vector3.Transform(new Vector3(b.Max.X, b.Max.Y, b.Max.Z), m));
+            return result;
         }
 
         public static ref Vector3 IndexerUnsafe(ref BoundingBox3F box, int i)
