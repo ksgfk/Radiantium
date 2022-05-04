@@ -76,22 +76,6 @@ namespace Radiantium.Core
             return true;
         }
 
-        public static Vector3 Refract(Vector3 wi, Vector3 n, float eta)
-        {
-            float cosThetaI = Dot(wi, n);
-            if (cosThetaI < 0)
-            {
-                eta = 1.0f / eta;
-            }
-            float cosThetaTSqr = 1 - (1 - cosThetaI * cosThetaI) * (eta * eta);
-            if (cosThetaTSqr <= 0.0f)
-            {
-                return new Vector3(0.0f);
-            }
-            float sign = cosThetaI >= 0.0f ? 1.0f : -1.0f;
-            return n * (-cosThetaI * eta + sign * Sqrt(cosThetaTSqr)) + wi * eta;
-        }
-
         //******************
         //* Linear Algebra *
         //******************

@@ -25,6 +25,10 @@ namespace Radiantium.Offline.Bxdf
 
         public SampleBxdfResult Sample(Vector3 wo, Random rand)
         {
+            if (Coordinate.AbsCosTheta(wo) == 0)
+            {
+                return new SampleBxdfResult();
+            }
             Vector3 wi = new Vector3(-wo.X, -wo.Y, wo.Z);
             Color3F fr = R / Coordinate.AbsCosTheta(wi);
             return new SampleBxdfResult(wi, fr, 1.0f, Type);

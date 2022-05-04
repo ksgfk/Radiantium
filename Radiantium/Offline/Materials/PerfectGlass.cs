@@ -10,7 +10,7 @@ namespace Radiantium.Offline.Materials
         public Color3F T { get; }
         public float EtaA { get; }
         public float EtaB { get; }
-        public override BxdfType Type => BxdfType.Transmission | BxdfType.Specular;
+        public override BxdfType Type => BxdfType.Specular | BxdfType.Transmission | BxdfType.Specular;
 
         public PerfectGlass(Color3F r, Color3F t, float etaA, float etaB)
         {

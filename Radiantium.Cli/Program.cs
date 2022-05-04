@@ -43,11 +43,13 @@ var ls = lightP.Select(t =>
 var resL = leftP.Concat(rightP).Concat(otherP).Concat(lightP).Cast<Primitive>().ToList();
 resL.Add(new GeometricPrimitive(new Sphere(0.35f, Matrix4x4.CreateTranslation(0.5f, 0.35f, 0.2f)), new PerfectGlass(new Color3F(1),new Color3F(1), 1, 1.5f)));
 resL.Add(new GeometricPrimitive(new Sphere(0.35f, Matrix4x4.CreateTranslation(-0.5f, 0.35f, -0.25f)), new PrefectMirror(new Color3F(1))));
+//resL.Add(new GeometricPrimitive(new Sphere(0.35f, Matrix4x4.CreateTranslation(0.5f, 0.35f, 0.2f)), new DiffuseReflection(new Color3F(0.5f))));
+//resL.Add(new GeometricPrimitive(new Sphere(0.35f, Matrix4x4.CreateTranslation(-0.5f, 0.35f, -0.25f)), new DiffuseReflection(new Color3F(0.5f))));
 
 //Aggregate agg = new Octree(resL, outBound: 2, maxDepth: 10, maxCount: 10);
 Aggregate agg = new Bvh(resL, 1, SplitMethod.SAH);
 Scene s = new Scene(agg, ls, Array.Empty<Light>());
-Renderer r = new Renderer(s, camera, new PathTracing(9, 1.0f, PathTracingMethod.OnlyBxdf), 256);
+Renderer r = new Renderer(s, camera, new PathTracing(9, 1.0f, PathTracingMethod.Nee), 256);
 //Renderer r = new Renderer(s, camera, new AmbientOcclusion(), 32);
 Task t = r.Start();
 t.Wait();
