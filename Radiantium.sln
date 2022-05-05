@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium", "Radiantium\Radiantium.csproj", "{82E07DBA-769F-48A7-A307-EA60B144DAC0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Radiantium.Cli", "Radiantium.Cli\Radiantium.Cli.csproj", "{CE68BC36-18B1-4F04-A311-1DD993250CF5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium.Cli", "Radiantium.Cli\Radiantium.Cli.csproj", "{CE68BC36-18B1-4F04-A311-1DD993250CF5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium.Core", "Radiantium.Core\Radiantium.Core.csproj", "{34A6692F-DD56-43AC-91FA-4AE04BFC7F55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium.Offline", "Radiantium.Offline\Radiantium.Offline.csproj", "{3689FFF2-C365-443E-8DF5-3AFE4B83630E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium.Realtime", "Radiantium.Realtime\Radiantium.Realtime.csproj", "{6155DA7F-1935-46FF-A358-590E766393AD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +17,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{82E07DBA-769F-48A7-A307-EA60B144DAC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{82E07DBA-769F-48A7-A307-EA60B144DAC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{82E07DBA-769F-48A7-A307-EA60B144DAC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{82E07DBA-769F-48A7-A307-EA60B144DAC0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CE68BC36-18B1-4F04-A311-1DD993250CF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CE68BC36-18B1-4F04-A311-1DD993250CF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE68BC36-18B1-4F04-A311-1DD993250CF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE68BC36-18B1-4F04-A311-1DD993250CF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34A6692F-DD56-43AC-91FA-4AE04BFC7F55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34A6692F-DD56-43AC-91FA-4AE04BFC7F55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34A6692F-DD56-43AC-91FA-4AE04BFC7F55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34A6692F-DD56-43AC-91FA-4AE04BFC7F55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3689FFF2-C365-443E-8DF5-3AFE4B83630E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3689FFF2-C365-443E-8DF5-3AFE4B83630E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3689FFF2-C365-443E-8DF5-3AFE4B83630E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3689FFF2-C365-443E-8DF5-3AFE4B83630E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6155DA7F-1935-46FF-A358-590E766393AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6155DA7F-1935-46FF-A358-590E766393AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6155DA7F-1935-46FF-A358-590E766393AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6155DA7F-1935-46FF-A358-590E766393AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
