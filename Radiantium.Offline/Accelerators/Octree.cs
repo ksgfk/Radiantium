@@ -43,7 +43,7 @@ namespace Radiantium.Offline.Accelerators
         int _leafCount;
         int _nodeCount;
 
-        public override BoundingBox3F WorldBound => throw new NotImplementedException();
+        public override BoundingBox3F WorldBound => _tree[0].Bound;
 
         public Octree(List<Primitive> primitives, int maxDepth = 10, int maxCount = 10, float outBound = 1)
         {
@@ -143,8 +143,6 @@ namespace Radiantium.Offline.Accelerators
             bool anyHit = false;
             nowInct.T = float.MaxValue;
             StaticStack<int> q = new StaticStack<int>(stackalloc int[StackSize]);
-            Span<float> miT = stackalloc float[8];
-            Span<int> md = stackalloc int[16];
             q.Push(0);
             while (q.Count > 0)
             {
@@ -168,7 +166,7 @@ namespace Radiantium.Offline.Accelerators
                 }
                 else //node
                 {
-                    for (int i = 0; i < n.NodeCount; i++)
+                    for (int i = 0; i < n.NodeCount; i++) //TODO: sort by T?
                     {
                         if (_tree[n.NextHead + i].Bound.Intersect(ray))
                         {
@@ -233,7 +231,7 @@ namespace Radiantium.Offline.Accelerators
                         break;
                     }
                 }
-                if (!isInsert) //obj too big
+                if (!isInsert) //primitive too big
                 {
                     for (int j = 0; j < 8; j++)
                     {
@@ -244,7 +242,7 @@ namespace Radiantium.Offline.Accelerators
                     }
                 }
             }
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++) //recalculate bounding box
             {
                 BoundingBox3F realBound = new BoundingBox3F();
                 for (int j = 0; j < childData[i].Count; j++)
