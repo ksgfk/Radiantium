@@ -143,6 +143,7 @@ namespace Radiantium.Offline.Accelerators
             bool anyHit = false;
             nowInct.T = float.MaxValue;
             StaticStack<int> q = new StaticStack<int>(stackalloc int[StackSize]);
+            //Span<(float, int)> heap = stackalloc (float, int)[10];
             q.Push(0);
             while (q.Count > 0)
             {
@@ -173,6 +174,47 @@ namespace Radiantium.Offline.Accelerators
                             q.Push(n.NextHead + i);
                         }
                     }
+
+                    //int heapCount = 1;
+                    //for (int i = 0; i < n.NodeCount; i++)
+                    //{
+                    //    if (_tree[n.NextHead + i].Bound.Intersect(ray, out float minT, out _))
+                    //    {
+                    //        int ptr = n.NextHead + i;
+                    //        int newNode = heapCount++;
+                    //        heap[newNode] = (minT, ptr);
+                    //        int parent = newNode / 2;
+                    //        while (newNode > 1 && heap[newNode].Item1 < heap[parent].Item1)
+                    //        {
+                    //            var t = heap[newNode];
+                    //            heap[newNode] = heap[parent];
+                    //            heap[parent] = t;
+                    //            newNode = parent;
+                    //            parent /= 2;
+                    //        }
+                    //    }
+                    //}
+                    //for (int i = 1; i < heapCount; i++)
+                    //{
+                    //    q.Push(heap[i].Item2);
+                    //}
+                    ////for (int i = heapCount - 1; i > 0; i--)
+                    ////{
+                    ////    q.Push(heap[1].Item2);
+                    ////    heap[1] = heap[i];
+                    ////    int x = 1;
+                    ////    int cnt = i - 1;
+                    ////    while (x * 2 <= cnt)
+                    ////    {
+                    ////        int t = x * 2;
+                    ////        if (t + 1 <= cnt && heap[t + 1].Item1 > heap[t].Item1) t++;
+                    ////        if (heap[t].Item1 <= heap[x].Item1) break;
+                    ////        var temp = heap[x];
+                    ////        heap[x] = heap[t];
+                    ////        heap[t] = temp;
+                    ////        x = t;
+                    ////    }
+                    ////}
                 }
             }
             inct = anyHit ? nowInct : default;

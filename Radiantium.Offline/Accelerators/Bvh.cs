@@ -14,27 +14,27 @@ namespace Radiantium.Offline.Accelerators
         [StructLayout(LayoutKind.Explicit, Size = 32)]
         private struct LinearBVHNode
         {
-            [FieldOffset(0)] public BoundingBox3F bounds;
-            [FieldOffset(24)] public int primitivesOffset;
-            [FieldOffset(24)] public int secondChildOffset;
-            [FieldOffset(28)] public ushort nPrimitives;
-            [FieldOffset(30)] public byte axis;
+            [FieldOffset(0)] public BoundingBox3F Bounds;
+            [FieldOffset(24)] public int PrimitivesIndex;
+            [FieldOffset(24)] public int SecondChildIndex;
+            [FieldOffset(28)] public ushort PrimitiveCount;
+            [FieldOffset(30)] public byte Axis;
         }
 
         private class BVHBuildNode
         {
-            public BoundingBox3F bounds;
+            public BoundingBox3F Bounds;
             public BVHBuildNode Left;
             public BVHBuildNode Right;
-            public int splitAxis;
-            public int firstPrimOffset;
-            public int nPrimitives;
+            public int SplitAxis;
+            public int FirstPrimIndex;
+            public int PrimitiveCount;
 
             public BVHBuildNode(int first, int n, BoundingBox3F b)
             {
-                firstPrimOffset = first;
-                nPrimitives = n;
-                bounds = b;
+                FirstPrimIndex = first;
+                PrimitiveCount = n;
+                Bounds = b;
                 Left = null!;
                 Right = null!;
             }
@@ -43,49 +43,49 @@ namespace Radiantium.Offline.Accelerators
             {
                 Left = left;
                 Right = right;
-                bounds = BoundingBox3F.Union(left.bounds, right.bounds);
-                splitAxis = axis;
-                nPrimitives = 0;
+                Bounds = BoundingBox3F.Union(left.Bounds, right.Bounds);
+                SplitAxis = axis;
+                PrimitiveCount = 0;
             }
         }
 
         private class BVHPrimitiveInfo
         {
-            public int primitiveNumber;
-            public BoundingBox3F bounds;
-            public Vector3 centroid;
+            public int PrimitiveNumber;
+            public BoundingBox3F Bounds;
+            public Vector3 Centroid;
             public BVHPrimitiveInfo(int primitiveNumber, BoundingBox3F bounds)
             {
-                this.primitiveNumber = primitiveNumber;
-                this.bounds = bounds;
-                centroid = 0.5f * bounds.Min + 0.5f * bounds.Max;
+                PrimitiveNumber = primitiveNumber;
+                Bounds = bounds;
+                Centroid = 0.5f * bounds.Min + 0.5f * bounds.Max;
             }
         }
 
         private struct BucketInfo
         {
-            public int count;
-            public BoundingBox3F bounds;
+            public int Count;
+            public BoundingBox3F Bounds;
 
             public BucketInfo()
             {
-                count = 0;
-                bounds = new BoundingBox3F();
+                Count = 0;
+                Bounds = new BoundingBox3F();
             }
         }
 
-        private readonly int maxPrimsInNode;
-        private readonly SplitMethod splitMethod;
-        private readonly List<Primitive> primitives;
-        private readonly LinearBVHNode[] nodes;
+        private readonly int _maxPrimsInNode;
+        private readonly SplitMethod _splitMethod;
+        private readonly List<Primitive> _primitives;
+        private readonly LinearBVHNode[] _nodes;
 
-        public override BoundingBox3F WorldBound => nodes[0].bounds;
+        public override BoundingBox3F WorldBound => _nodes[0].Bounds;
 
         public Bvh(List<Primitive> p, int maxPrimsInNode, SplitMethod splitMethod)
         {
-            this.maxPrimsInNode = maxPrimsInNode;
-            this.splitMethod = splitMethod;
-            primitives = p;
+            _maxPrimsInNode = maxPrimsInNode;
+            _splitMethod = splitMethod;
+            _primitives = p;
             List<BVHPrimitiveInfo> primitiveInfo = new List<BVHPrimitiveInfo>(p.Count);
             for (int i = 0; i < p.Count; i++)
             {
@@ -94,8 +94,8 @@ namespace Radiantium.Offline.Accelerators
             int totalNodes = 0;
             List<Primitive> orderedPrims = new List<Primitive>(p.Count);
             BVHBuildNode root = RecursiveBuild(primitiveInfo, 0, p.Count, ref totalNodes, orderedPrims);
-            primitives = orderedPrims;
-            nodes = new LinearBVHNode[totalNodes];
+            _primitives = orderedPrims;
+            _nodes = new LinearBVHNode[totalNodes];
             int offset = 0;
             FlattenBVHTree(root, ref offset);
         }
@@ -110,14 +110,14 @@ namespace Radiantium.Offline.Accelerators
             int toVisitOffset = 0, currentNodeIndex = 0;
             while (true)
             {
-                ref LinearBVHNode node = ref nodes[currentNodeIndex];
-                if (node.bounds.Intersect(ray))
+                ref LinearBVHNode node = ref _nodes[currentNodeIndex];
+                if (node.Bounds.Intersect(ray))
                 {
-                    if (node.nPrimitives > 0)
+                    if (node.PrimitiveCount > 0)
                     {
-                        for (int i = 0; i < node.nPrimitives; ++i)
+                        for (int i = 0; i < node.PrimitiveCount; ++i)
                         {
-                            if (primitives[node.primitivesOffset + i].Intersect(ray))
+                            if (_primitives[node.PrimitivesIndex + i].Intersect(ray))
                             {
                                 return true;
                             }
@@ -127,14 +127,14 @@ namespace Radiantium.Offline.Accelerators
                     }
                     else
                     {
-                        if (dirIsNeg[node.axis])
+                        if (dirIsNeg[node.Axis])
                         {
                             nodesToVisit[toVisitOffset++] = currentNodeIndex + 1;
-                            currentNodeIndex = node.secondChildOffset;
+                            currentNodeIndex = node.SecondChildIndex;
                         }
                         else
                         {
-                            nodesToVisit[toVisitOffset++] = node.secondChildOffset;
+                            nodesToVisit[toVisitOffset++] = node.SecondChildIndex;
                             currentNodeIndex = currentNodeIndex + 1;
                         }
                     }
@@ -161,14 +161,14 @@ namespace Radiantium.Offline.Accelerators
             bool anyHit = false;
             while (true)
             {
-                ref LinearBVHNode node = ref nodes[currentNodeIndex];
-                if (node.bounds.Intersect(ray))
+                ref LinearBVHNode node = ref _nodes[currentNodeIndex];
+                if (node.Bounds.Intersect(ray))
                 {
-                    if (node.nPrimitives > 0)
+                    if (node.PrimitiveCount > 0)
                     {
-                        for (int i = 0; i < node.nPrimitives; ++i)
+                        for (int i = 0; i < node.PrimitiveCount; ++i)
                         {
-                            if (primitives[node.primitivesOffset + i].Intersect(ray, out var thisInct))
+                            if (_primitives[node.PrimitivesIndex + i].Intersect(ray, out var thisInct))
                             {
                                 anyHit = true;
                                 if (thisInct.T < nowInct.T)
@@ -183,14 +183,14 @@ namespace Radiantium.Offline.Accelerators
                     }
                     else
                     {
-                        if (dirIsNeg[node.axis])
+                        if (dirIsNeg[node.Axis])
                         {
                             nodesToVisit[toVisitOffset++] = currentNodeIndex + 1;
-                            currentNodeIndex = node.secondChildOffset;
+                            currentNodeIndex = node.SecondChildIndex;
                         }
                         else
                         {
-                            nodesToVisit[toVisitOffset++] = node.secondChildOffset;
+                            nodesToVisit[toVisitOffset++] = node.SecondChildIndex;
                             currentNodeIndex = currentNodeIndex + 1;
                         }
                     }
@@ -216,7 +216,7 @@ namespace Radiantium.Offline.Accelerators
             BVHBuildNode node;
             for (int i = start; i < end; i++)
             {
-                bounds.Union(primitiveInfo[i].bounds);
+                bounds.Union(primitiveInfo[i].Bounds);
             }
             int nPrimitives = end - start;
             if (nPrimitives == 1)
@@ -224,8 +224,8 @@ namespace Radiantium.Offline.Accelerators
                 int firstPrimOffset = orderedPrims.Count;
                 for (int i = start; i < end; i++)
                 {
-                    int primNum = primitiveInfo[i].primitiveNumber;
-                    orderedPrims.Add(primitives[primNum]);
+                    int primNum = primitiveInfo[i].PrimitiveNumber;
+                    orderedPrims.Add(_primitives[primNum]);
                 }
                 node = new BVHBuildNode(firstPrimOffset, nPrimitives, bounds);
                 return node;
@@ -235,7 +235,7 @@ namespace Radiantium.Offline.Accelerators
                 BoundingBox3F centroidBounds = new BoundingBox3F();
                 for (int i = start; i < end; i++)
                 {
-                    centroidBounds.ExpendBy(primitiveInfo[i].centroid);
+                    centroidBounds.ExpendBy(primitiveInfo[i].Centroid);
                 }
                 int dim = centroidBounds.MaximumExtent();
                 int mid = (start + end) / 2;
@@ -244,15 +244,15 @@ namespace Radiantium.Offline.Accelerators
                     int firstPrimOffset = orderedPrims.Count;
                     for (int i = start; i < end; i++)
                     {
-                        int primNum = primitiveInfo[i].primitiveNumber;
-                        orderedPrims.Add(primitives[primNum]);
+                        int primNum = primitiveInfo[i].PrimitiveNumber;
+                        orderedPrims.Add(_primitives[primNum]);
                     }
                     node = new BVHBuildNode(firstPrimOffset, nPrimitives, bounds);
                     return node;
                 }
                 else
                 {
-                    switch (splitMethod)
+                    switch (_splitMethod)
                     {
                         case SplitMethod.SAH:
                             {
@@ -261,8 +261,8 @@ namespace Radiantium.Offline.Accelerators
                                     mid = (start + end) / 2;
                                     primitiveInfo.Sort(start, nPrimitives, Comparer<BVHPrimitiveInfo>.Create((l, r) =>
                                     {
-                                        var lv = IndexerUnsafe(ref l.centroid, dim);
-                                        var rv = IndexerUnsafe(ref r.centroid, dim);
+                                        var lv = IndexerUnsafe(ref l.Centroid, dim);
+                                        var rv = IndexerUnsafe(ref r.Centroid, dim);
                                         if (lv == rv) return 0;
                                         return lv < rv ? -1 : 1;
                                     }));
@@ -273,15 +273,15 @@ namespace Radiantium.Offline.Accelerators
                                     Span<BucketInfo> buckets = stackalloc BucketInfo[nBuckets];
                                     for (int i = 0; i < nBuckets; i++)
                                     {
-                                        buckets[i].bounds = new BoundingBox3F();
+                                        buckets[i].Bounds = new BoundingBox3F();
                                     }
                                     for (int i = start; i < end; i++)
                                     {
-                                        var offset = centroidBounds.Offset(primitiveInfo[i].centroid);
+                                        var offset = centroidBounds.Offset(primitiveInfo[i].Centroid);
                                         int b = (int)(nBuckets * IndexerUnsafe(ref offset.X, dim));
                                         if (b == nBuckets) b = nBuckets - 1;
-                                        buckets[b].count++;
-                                        buckets[b].bounds.Union(primitiveInfo[i].bounds);
+                                        buckets[b].Count++;
+                                        buckets[b].Bounds.Union(primitiveInfo[i].Bounds);
                                     }
                                     Span<float> cost = stackalloc float[nBuckets - 1];
                                     for (int i = 0; i < nBuckets - 1; i++)
@@ -292,13 +292,13 @@ namespace Radiantium.Offline.Accelerators
                                         int count1 = 0;
                                         for (int j = 0; j <= i; j++)
                                         {
-                                            b0.Union(buckets[j].bounds);
-                                            count0 += buckets[j].count;
+                                            b0.Union(buckets[j].Bounds);
+                                            count0 += buckets[j].Count;
                                         }
                                         for (int j = i + 1; j < nBuckets; j++)
                                         {
-                                            b1.Union(buckets[j].bounds);
-                                            count1 += buckets[j].count;
+                                            b1.Union(buckets[j].Bounds);
+                                            count1 += buckets[j].Count;
                                         }
                                         cost[i] = 1 + (count0 * b0.SurfaceArea + count1 * b1.SurfaceArea) / bounds.SurfaceArea;
                                     }
@@ -315,11 +315,11 @@ namespace Radiantium.Offline.Accelerators
                                     }
 
                                     float leafCost = nPrimitives;
-                                    if (nPrimitives > maxPrimsInNode || minCost < leafCost)
+                                    if (nPrimitives > _maxPrimsInNode || minCost < leafCost)
                                     {
                                         mid = Partition(primitiveInfo, start, end - 1, pi =>
                                         {
-                                            var offset = centroidBounds.Offset(pi.centroid);
+                                            var offset = centroidBounds.Offset(pi.Centroid);
                                             int b = (int)(nBuckets * IndexerUnsafe(ref offset, dim));
                                             return b <= minCostSplitBucket;
                                         });
@@ -329,8 +329,8 @@ namespace Radiantium.Offline.Accelerators
                                         int firstPrimOffset = orderedPrims.Count;
                                         for (int i = start; i < end; i++)
                                         {
-                                            int primNum = primitiveInfo[i].primitiveNumber;
-                                            orderedPrims.Add(primitives[primNum]);
+                                            int primNum = primitiveInfo[i].PrimitiveNumber;
+                                            orderedPrims.Add(_primitives[primNum]);
                                         }
                                         node = new BVHBuildNode(firstPrimOffset, nPrimitives, bounds);
                                         return node;
@@ -343,15 +343,15 @@ namespace Radiantium.Offline.Accelerators
                                 float pmid = (IndexerUnsafe(ref centroidBounds.Max, dim) + IndexerUnsafe(ref centroidBounds.Min, dim)) / 2;
                                 mid = Partition(primitiveInfo, start, end, pi =>
                                 {
-                                    return IndexerUnsafe(ref pi.centroid, dim) < pmid;
+                                    return IndexerUnsafe(ref pi.Centroid, dim) < pmid;
                                 });
                                 if (mid == start || mid == end)
                                 {
                                     mid = (start + end) / 2;
                                     primitiveInfo.Sort(start, nPrimitives, Comparer<BVHPrimitiveInfo>.Create((l, r) =>
                                     {
-                                        var lv = IndexerUnsafe(ref l.centroid, dim);
-                                        var rv = IndexerUnsafe(ref r.centroid, dim);
+                                        var lv = IndexerUnsafe(ref l.Centroid, dim);
+                                        var rv = IndexerUnsafe(ref r.Centroid, dim);
                                         if (lv == rv) return 0;
                                         return lv < rv ? -1 : 1;
                                     }));
@@ -363,8 +363,8 @@ namespace Radiantium.Offline.Accelerators
                                 mid = (start + end) / 2;
                                 primitiveInfo.Sort(start, nPrimitives, Comparer<BVHPrimitiveInfo>.Create((l, r) =>
                                 {
-                                    var lv = IndexerUnsafe(ref l.centroid, dim);
-                                    var rv = IndexerUnsafe(ref r.centroid, dim);
+                                    var lv = IndexerUnsafe(ref l.Centroid, dim);
+                                    var rv = IndexerUnsafe(ref r.Centroid, dim);
                                     if (lv == rv) return 0;
                                     return lv < rv ? -1 : 1;
                                 }));
@@ -383,20 +383,20 @@ namespace Radiantium.Offline.Accelerators
 
         private int FlattenBVHTree(BVHBuildNode node, ref int offset)
         {
-            ref LinearBVHNode linearNode = ref nodes[offset];
-            linearNode.bounds = node.bounds;
+            ref LinearBVHNode linearNode = ref _nodes[offset];
+            linearNode.Bounds = node.Bounds;
             int myOffset = offset++;
-            if (node.nPrimitives > 0)
+            if (node.PrimitiveCount > 0)
             {
-                linearNode.primitivesOffset = node.firstPrimOffset;
-                linearNode.nPrimitives = (ushort)node.nPrimitives;
+                linearNode.PrimitivesIndex = node.FirstPrimIndex;
+                linearNode.PrimitiveCount = (ushort)node.PrimitiveCount;
             }
             else
             {
-                linearNode.axis = (byte)node.splitAxis;
-                linearNode.nPrimitives = 0;
+                linearNode.Axis = (byte)node.SplitAxis;
+                linearNode.PrimitiveCount = 0;
                 FlattenBVHTree(node.Left, ref offset);
-                linearNode.secondChildOffset = FlattenBVHTree(node.Right, ref offset);
+                linearNode.SecondChildIndex = FlattenBVHTree(node.Right, ref offset);
             }
             return myOffset;
         }

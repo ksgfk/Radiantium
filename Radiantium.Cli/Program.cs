@@ -7,8 +7,9 @@ using Radiantium.Offline.Materials;
 using Radiantium.Offline.Shapes;
 using System.Numerics;
 
-const int w = 800;
-const int h = 600;
+const int w = 768;
+const int h = 768;
+/*
 Camera camera = new PerspectiveCamera(
     27.7856f,
     0.001f,
@@ -22,7 +23,8 @@ Camera camera = new PerspectiveCamera(
     new Vector3(0, 1, 0),
     w, h
 );
-
+*/
+/*
 var left = GetTriangle(@"D:\ProjectC#\Pursuit\Scene\cbox\meshes\leftwall.obj");
 var right = GetTriangle(@"D:\ProjectC#\Pursuit\Scene\cbox\meshes\rightwall.obj");
 var other = GetTriangle(@"D:\ProjectC#\Pursuit\Scene\cbox\meshes\walls.obj");
@@ -61,11 +63,33 @@ resL.Add(new InstancedPrimitive(bunnyAgg, new InstancedTransform(bunnyC), new Pr
 
 var bunnyD = Matrix4x4.CreateRotationY(MathExt.Radian(60)) * Matrix4x4.CreateScale(3.5f) * Matrix4x4.CreateTranslation(0.6f, 0.5f, -0.2f);
 resL.Add(new InstancedPrimitive(bunnyAgg, new InstancedTransform(bunnyD), new DiffuseReflection(new Color3F(0.5f))));
+*/
 
-//Aggregate agg = new Octree(resL, outBound: 2, maxDepth: 10, maxCount: 10);
-Aggregate agg = new Bvh(resL, 1, SplitMethod.SAH);
+Camera camera = new PerspectiveCamera(
+    30,
+    0.001f,
+    100,
+    new Vector3(-65.6055f,
+        47.5762f,
+        24.3583f),
+    new Vector3(-64.8161f,
+        47.2211f,
+        23.8576f),
+    new Vector3(0.299858f,
+        0.934836f,
+        -0.190177f),
+    w, h
+);
+var ajax = GetTriangle(@"D:\ProjectC#\Pursuit\Scene\ajax\ajax.obj");
+var ajaxP = ajax.Select(t => new GeometricPrimitive(t));
+var resL = ajaxP.Cast<Primitive>().ToList();
+var ls = Array.Empty<Light>();
+
+Aggregate agg = new Octree(resL, outBound: 2, maxDepth: 10, maxCount: 10);
+//Aggregate agg = new Bvh(resL, 1, SplitMethod.SAH);
 Scene s = new Scene(agg, ls, Array.Empty<Light>());
-Renderer r = new Renderer(s, camera, new PathTracing(12, 1.0f, PathTracingMethod.Mis), 512);
+//Renderer r = new Renderer(s, camera, new PathTracing(12, 1.0f, PathTracingMethod.Mis), 512);
+Renderer r = new Renderer(s, camera, new Normal(), 32);
 //Renderer r = new Renderer(s, camera, new AmbientOcclusion(), 64);
 Task t = r.Start();
 t.Wait();
@@ -86,4 +110,16 @@ static List<Triangle> GetTriangle(string path)
     TriangleModel model1 = GetModel(path);
     TriangleMesh mesh1 = new TriangleMesh(Matrix4x4.Identity, model1);
     return mesh1.ToTriangle();
+}
+
+class Normal : Integrator
+{
+    public override Color3F Li(Ray3F ray, Scene scene, Random rand)
+    {
+        if (scene.Intersect(ray, out var inct))
+        {
+            return new Color3F(Vector3.Abs(inct.N));
+        }
+        return new Color3F();
+    }
 }

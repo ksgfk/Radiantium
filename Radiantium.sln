@@ -5,11 +5,13 @@ VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Radiantium.Cli", "Radiantium.Cli\Radiantium.Cli.csproj", "{CE68BC36-18B1-4F04-A311-1DD993250CF5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium.Core", "Radiantium.Core\Radiantium.Core.csproj", "{34A6692F-DD56-43AC-91FA-4AE04BFC7F55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Radiantium.Core", "Radiantium.Core\Radiantium.Core.csproj", "{34A6692F-DD56-43AC-91FA-4AE04BFC7F55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium.Offline", "Radiantium.Offline\Radiantium.Offline.csproj", "{3689FFF2-C365-443E-8DF5-3AFE4B83630E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Radiantium.Offline", "Radiantium.Offline\Radiantium.Offline.csproj", "{3689FFF2-C365-443E-8DF5-3AFE4B83630E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium.Realtime", "Radiantium.Realtime\Radiantium.Realtime.csproj", "{6155DA7F-1935-46FF-A358-590E766393AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Radiantium.Realtime", "Radiantium.Realtime\Radiantium.Realtime.csproj", "{6155DA7F-1935-46FF-A358-590E766393AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Radiantium.Editor", "Radiantium.Editor\Radiantium.Editor.csproj", "{F702C5E9-AAF6-4593-B882-2CC9EBB7E198}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{6155DA7F-1935-46FF-A358-590E766393AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6155DA7F-1935-46FF-A358-590E766393AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6155DA7F-1935-46FF-A358-590E766393AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F702C5E9-AAF6-4593-B882-2CC9EBB7E198}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F702C5E9-AAF6-4593-B882-2CC9EBB7E198}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F702C5E9-AAF6-4593-B882-2CC9EBB7E198}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F702C5E9-AAF6-4593-B882-2CC9EBB7E198}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

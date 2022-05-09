@@ -8,7 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Silk.NET.GLFW" Version="2.15.0" />
+    <PackageReference Include="Silk.NET.Input.Glfw" Version="2.15.0" />
     <PackageReference Include="Silk.NET.OpenGL" Version="2.15.0" />
+    <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.15.0" />
+    <PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.15.0" />
   </ItemGroup>
 
   <ItemGroup>
