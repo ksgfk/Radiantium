@@ -1,9 +1,6 @@
 ﻿using Radiantium.Core;
 using Radiantium.Offline;
 using Radiantium.Offline.Accelerators;
-using Radiantium.Offline.Integrators;
-using Radiantium.Offline.Lights;
-using Radiantium.Offline.Materials;
 using Radiantium.Offline.Shapes;
 using System.Numerics;
 

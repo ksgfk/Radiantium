@@ -5,6 +5,8 @@ using Silk.NET.Windowing;
 
 namespace Radiantium.Editor
 {
+    //TODO: 不行了, 这坨屎山玩意写不下去的, 绝对不可能写下去的
+    //得重新设计一遍
     public class EditorApplication
     {
         readonly AssetManager _asset;
