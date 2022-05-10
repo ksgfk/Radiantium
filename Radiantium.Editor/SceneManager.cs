@@ -4,6 +4,7 @@ namespace Radiantium.Editor
 {
     public class SceneManager
     {
+        readonly EditorApplication _app;
         readonly SceneObject _root;
         readonly List<SceneObject> _flattenObjs;
         readonly Stack<SceneObject> _dfsCollectStack;
@@ -12,9 +13,10 @@ namespace Radiantium.Editor
         public SceneObject Root => _root;
         public List<SceneObject> AllObjects => _flattenObjs;
 
-        public SceneManager()
+        public SceneManager(EditorApplication app)
         {
-            _root = new SceneObject();
+            _app = app ?? throw new ArgumentNullException(nameof(app));
+            _root = new SceneObject(_app);
             _flattenObjs = new List<SceneObject>();
             _dfsCollectStack = new Stack<SceneObject>();
             _destroyQueue = new Queue<SceneObject>();
@@ -87,6 +89,14 @@ namespace Radiantium.Editor
         public void AfterUpdate()
         {
             _flattenObjs.Clear();
+        }
+
+        public void Reset()
+        {
+            foreach (SceneObject o in Root.Children)
+            {
+                DestroyObject(o);
+            }
         }
     }
 }

@@ -109,4 +109,31 @@ namespace Radiantium.Realtime.Graphics.OpenGL
             SubData(MemoryMarshal.AsBytes(data), start * sizeof(ushort));
         }
     }
+
+    public class UniformBufferOpenGL<T> : BufferOpenGL where T : unmanaged
+    {
+        public UniformBufferOpenGL(GL gl) : base(gl) { }
+
+        public unsafe void Storage()
+        {
+            Storage(sizeof(T), BufferStorageMask.DynamicStorageBit);
+        }
+
+        public void SubData(ref T data)
+        {
+            SubData(MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref data, 1)), 0);
+        }
+
+        public void BindRange(uint index, uint offset, uint size)
+        {
+            _gl.BindBufferRange(BufferTargetARB.UniformBuffer, index, _handle, (int)offset, size);
+            DebugOpenGL.Check(_gl);
+        }
+
+        public void BindBase(uint index)
+        {
+            _gl.BindBufferBase(BufferTargetARB.UniformBuffer, index, _handle);
+            DebugOpenGL.Check(_gl);
+        }
+    }
 }

@@ -6,6 +6,7 @@
         readonly LinkedList<SceneObject> _children;
         readonly List<EditorComponent> _components;
         readonly Transform _transform;
+        readonly EditorApplication _app;
         SceneObject? _parent;
         string _name;
         int _depth;
@@ -18,8 +19,9 @@
         public int Depth { get => _depth; internal set => _depth = value; }
         public bool IsMarkDestroy { get => _isMarkDestroy; internal set => _isMarkDestroy = value; }
         public List<EditorComponent> Components => _components;
+        public EditorApplication App => _app;
 
-        internal SceneObject()
+        internal SceneObject(EditorApplication app)
         {
             _nodeInParent = null!;
             _children = new LinkedList<SceneObject>();
@@ -28,6 +30,7 @@
             _name = "root";
             _transform = new Transform(this);
             _components.Add(_transform);
+            _app = app ?? throw new ArgumentNullException(nameof(app));
         }
 
         public SceneObject(SceneObject parent, string name = "")
@@ -42,6 +45,8 @@
 
             _transform = new Transform(this);
             _components.Add(_transform);
+
+            _app = _parent.App;
         }
 
         public void SetParent(SceneObject parent)

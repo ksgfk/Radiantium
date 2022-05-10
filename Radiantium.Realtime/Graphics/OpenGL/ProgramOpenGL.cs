@@ -35,6 +35,12 @@ namespace Radiantium.Realtime.Graphics.OpenGL
             DebugOpenGL.Check(_gl);
         }
 
+        public void UniformBlockBinding(uint uboIndex, uint bindingPoint)
+        {
+            _gl.UniformBlockBinding(_handle, uboIndex, bindingPoint);
+            DebugOpenGL.Check(_gl);
+        }
+
         public void Link(ShaderOpenGL[] shaders)
         {
             foreach (var shader in shaders)
