@@ -137,9 +137,9 @@ namespace Radiantium.Offline
             if (anyHit)
             {
                 Vector3 p = Vector3.Transform(modelInct.P, toWorld);
-                Vector3 n = Vector3.TransformNormal(modelInct.N, toWorld);
+                Vector3 n = Vector3.Normalize(Vector3.TransformNormal(modelInct.N, toWorld));
                 Coordinate coord = new Coordinate(n);
-                inct = new Intersection(p, modelInct.UV, modelInct.T, this, coord);
+                inct = new Intersection(p, modelInct.UV, Vector3.Distance(ray.O, p), this, coord);
             }
             else
             {

@@ -81,7 +81,7 @@ namespace Radiantium.Cli
                     }
                     if (instanced.HasKey("shapes"))
                     {
-                        foreach (IConfigParamProvider shape in config.GetSubParams("shapes"))
+                        foreach (IConfigParamProvider shape in instanced.GetSubParams("shapes"))
                         {
                             builder.AddInstancedShape(index, shape);
                         }

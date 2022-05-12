@@ -37,7 +37,7 @@
     {
       "type": "model",
       "name": "ajax",
-      "location": "ajax.obj"
+      "location": "../assets/ajax.obj"
     }
   ],
   "scene": [

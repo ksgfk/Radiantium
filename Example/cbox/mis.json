@@ -37,22 +37,22 @@
     {
       "type": "model",
       "name": "walls",
-      "location": "meshes/walls.obj"
+      "location": "../assets/cbox/walls.obj"
     },
     {
       "type": "model",
       "name": "rightwall",
-      "location": "meshes/rightwall.obj"
+      "location": "../assets/cbox/rightwall.obj"
     },
     {
       "type": "model",
       "name": "leftwall",
-      "location": "meshes/leftwall.obj"
+      "location": "../assets/cbox/leftwall.obj"
     },
     {
       "type": "model",
       "name": "light",
-      "location": "meshes/light.obj"
+      "location": "../assets/cbox/light.obj"
     }
   ],
   "scene": [

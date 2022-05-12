@@ -214,7 +214,7 @@ namespace Radiantium.Offline.Config
         public string GetPath(string location)
         {
             if (File.Exists(location)) { return location; }
-            string path = Path.Combine(_searchPath, location);
+            string path = Path.GetFullPath(Path.Combine(_searchPath, location));
             if (!File.Exists(path)) { throw new FileNotFoundException($"invalid location {location}"); }
             return path;
         }

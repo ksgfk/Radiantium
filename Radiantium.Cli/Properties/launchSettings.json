@@ -2,7 +2,7 @@
   "profiles": {
     "Radiantium.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "D:\\ProjectCSharp\\Radiantium\\Example\\cbox\\mis.json",
+      "commandLineArgs": "D:\\ProjectCSharp\\Radiantium\\Example\\cbox\\teapot.json",
       "environmentVariables": {
         "DOTNET_TC_QuickJitForLoops": "1",
         "DOTNET_TieredPGO": "1",
