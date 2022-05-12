@@ -37,6 +37,7 @@ namespace Radiantium.Cli
             string workDir = Path.GetDirectoryName(sceneConfigPath)!;
             string workSpaceName = Path.GetFileNameWithoutExtension(sceneConfigPath);
             RendererBuilder builder = new RendererBuilder(workDir, workSpaceName);
+            builder.SetDefaultBuilders();
             if (config.HasKey("renderer"))
             {
                 builder.SetRenderer(config.GetSubParam("renderer"));

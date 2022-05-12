@@ -4,18 +4,95 @@ using Radiantium.Offline.Integrators;
 using Radiantium.Offline.Lights;
 using Radiantium.Offline.Materials;
 using Radiantium.Offline.Shapes;
+using Radiantium.Offline.Textures;
 using System.Diagnostics;
 using System.Numerics;
 
 namespace Radiantium.Offline.Config
 {
+    public static class RendererBuilderExtension
+    {
+        public static void SetDefaultBuilders(this RendererBuilder builder)
+        {
+            builder.AddShapeBuilder("sphere", (_, mat, param) => new Sphere(param.ReadFloat("radius", 0.5f), mat));
+            builder.AddIntegratorBuilder("ao", (_, param) => new AmbientOcclusion(param.ReadBool("is_cos_weight", true)));
+            builder.AddIntegratorBuilder("path", (_, param) =>
+            {
+                int maxDepth = param.ReadInt32("max_depth", 5);
+                float rrThreshold = param.ReadFloat("rr_threshold", 1.0f);
+                PathTracingMethod method = Enum.Parse<PathTracingMethod>(param.ReadString("method", "Mis"));
+                return new PathTracing(maxDepth, rrThreshold, method);
+            });
+            builder.AddAccelBuilder("bvh", (_, p, param) => new Bvh(p, param.ReadInt32("max_prim", 1), Enum.Parse<SplitMethod>(param.ReadString("split", "SAH"))));
+            builder.AddMaterialBuilder("diffuse", (_, images, param) =>
+             {
+                 Texture2D kd = param.ReadTex2D("kd", builder, new Color3F(0.5f));
+                 return new DiffuseReflection(kd);
+             });
+            builder.AddMaterialBuilder("perfect_glass", (builder, images, param) =>
+            {
+                Texture2D r = param.ReadTex2D("r", builder, new Color3F(1));
+                Texture2D t = param.ReadTex2D("t", builder, new Color3F(1));
+                float etaA = param.ReadFloat("etaA", 1.000277f);
+                float etaB = param.ReadFloat("etaB", 1.5046f);
+                return new PerfectGlass(r, t, etaA, etaB);
+            });
+            builder.AddMaterialBuilder("perfect_mirror", (_, images, param) =>
+            {
+                Texture2D r = param.ReadTex2D("r", builder, new Color3F(1));
+                return new PerfectMirror(r);
+            });
+            builder.AddAreaLightBuilder("diffuse_area", (_, shape, param) =>
+            {
+                Vector3 le = param.ReadVec3Float("le", new Vector3(1));
+                return new DiffuseAreaLight(shape, new Color3F(le));
+            });
+        }
+
+        public static Texture2D ReadTex2D(this IConfigParamProvider param,
+            string key,
+            RendererBuilder builder,
+            Color3F defaultValue)
+        {
+            if (!param.HasKey(key)) { return new ConstColorTexture2D(defaultValue); }
+            ConfigParamType type = param.GetParamType(key);
+            if (type == ConfigParamType.Vec3)
+            {
+                Vector3 color = param.ReadVec3Float(key, new Vector3());
+                return new ConstColorTexture2D(new Color3F(color));
+            }
+            else
+            {
+                IConfigParamProvider cfg = param.GetSubParam(key);
+                if (!cfg.HasKey("type")) { throw new ArgumentException("no key type"); }
+                string t = cfg.ReadString("type", null);
+                if (t == "image")
+                {
+                    if (!cfg.HasKey("name")) { throw new ArgumentException("no key name"); }
+                    string name = cfg.ReadString("name", null);
+                    IConfigParamProvider? samplerConfig = null;
+                    if (cfg.HasKey("sampler"))
+                    {
+                        samplerConfig = cfg.GetSubParam("sampler");
+                    }
+                    return new ImageTexture2D(builder.LoadedImages[name].Image, builder.CreateTextureSampler(samplerConfig));
+                }
+                else
+                {
+                    return builder.CreateTexture2D(cfg);
+                }
+            }
+        }
+    }
+
     public class RendererBuilder
     {
-        public delegate Aggregate AccelBuilder(IReadOnlyList<Primitive> primitives, IConfigParamProvider param);
-        public delegate Shape ShapeBuilder(Matrix4x4 modelToWorld, IConfigParamProvider param);
-        public delegate Material MaterialBuilder(IConfigParamProvider param);
-        public delegate AreaLight AreaLightBuilder(Shape shape, IConfigParamProvider param);
-        public delegate Integrator IntegratorBuilder(IConfigParamProvider param);
+        public delegate Aggregate AccelBuilder(RendererBuilder builder, IReadOnlyList<Primitive> primitives, IConfigParamProvider param);
+        public delegate Shape ShapeBuilder(RendererBuilder builder, Matrix4x4 modelToWorld, IConfigParamProvider param);
+        public delegate Material MaterialBuilder(RendererBuilder builder, Dictionary<string, ImageEntry> images, IConfigParamProvider param);
+        public delegate AreaLight AreaLightBuilder(RendererBuilder builder, Shape shape, IConfigParamProvider param);
+        public delegate Integrator IntegratorBuilder(RendererBuilder builder, IConfigParamProvider param);
+        public delegate Texture2D Texture2DBuilder(RendererBuilder builder, IConfigParamProvider param);
 
         public record ModelEntry(string Name, string Location, TriangleModel Model)
         {
@@ -56,6 +133,7 @@ namespace Radiantium.Offline.Config
         readonly Dictionary<string, AreaLightBuilder> _areaLightBuilder;
         readonly Dictionary<string, ShapeBuilder> _shapeBuilder;
         readonly Dictionary<string, IntegratorBuilder> _integratorBuilder;
+        readonly Dictionary<string, Texture2DBuilder> _tex2dBuilder;
 
         readonly List<IConfigParamProvider> _modelConfigs;
         readonly List<IConfigParamProvider> _imageConfigs;
@@ -68,6 +146,13 @@ namespace Radiantium.Offline.Config
         IConfigParamProvider? _sceneAccelConfig;
         IConfigParamProvider? _rendererConfig;
         IConfigParamProvider? _outputConfig;
+        Dictionary<string, ModelEntry> _models = null!;
+        Dictionary<string, ImageEntry> _images = null!;
+        Aggregate[] _inst = null!;
+
+        public IReadOnlyDictionary<string, ModelEntry> LoadedModels => _models;
+        public IReadOnlyDictionary<string, ImageEntry> LoadedImages => _images;
+        public IReadOnlyList<Aggregate> CompleteIns => _inst;
 
         public RendererBuilder(string searchPath, string workSpaceName)
         {
@@ -79,52 +164,19 @@ namespace Radiantium.Offline.Config
             _areaLightBuilder = new Dictionary<string, AreaLightBuilder>();
             _shapeBuilder = new Dictionary<string, ShapeBuilder>();
             _integratorBuilder = new Dictionary<string, IntegratorBuilder>();
+            _tex2dBuilder = new Dictionary<string, Texture2DBuilder>();
 
             _modelConfigs = new List<IConfigParamProvider>();
             _imageConfigs = new List<IConfigParamProvider>();
             _instances = new List<InstancedPrimitivesEntry>();
             _root = new List<SceneEntityEntry>();
             _entities = new List<SceneEntityEntry>();
-
-            AddShapeBuilder("sphere", (mat, param) => new Sphere(param.ReadFloat("radius", 0.5f), mat));
-            AddIntegratorBuilder("ao", param => new AmbientOcclusion(param.ReadBool("is_cos_weight", true)));
-            AddIntegratorBuilder("path", param =>
-            {
-                int maxDepth = param.ReadInt32("max_depth", 5);
-                float rrThreshold = param.ReadFloat("rr_threshold", 1.0f);
-                PathTracingMethod method = Enum.Parse<PathTracingMethod>(param.ReadString("method", "Mis"));
-                return new PathTracing(maxDepth, rrThreshold, method);
-            });
-            AddAccelBuilder("bvh", (p, param) => new Bvh(p, param.ReadInt32("max_prim", 1), Enum.Parse<SplitMethod>(param.ReadString("split", "SAH"))));
-            AddMaterialBuilder("diffuse", param =>
-            {
-                Vector3 kd = param.ReadVec3Float("kd", new Vector3(0.5f));
-                return new DiffuseReflection(new Color3F(kd));
-            });
-            AddMaterialBuilder("perfect_glass", param =>
-            {
-                Vector3 r = param.ReadVec3Float("r", new Vector3(1));
-                Vector3 t = param.ReadVec3Float("t", new Vector3(1));
-                float etaA = param.ReadFloat("etaA", 1.000277f);
-                float etaB = param.ReadFloat("etaB", 1.5046f);
-                return new PerfectGlass(new Color3F(r), new Color3F(t), etaA, etaB);
-            });
-            AddMaterialBuilder("perfect_mirror", param =>
-            {
-                Vector3 r = param.ReadVec3Float("r", new Vector3(1));
-                return new PerfectMirror(new Color3F(r));
-            });
-            AddAreaLightBuilder("diffuse_area", (shape, param) =>
-            {
-                Vector3 le = param.ReadVec3Float("le", new Vector3(1));
-                return new DiffuseAreaLight(shape, new Color3F(le));
-            });
         }
 
         public Shape CreateShape(Matrix4x4 modelToWorld, IConfigParamProvider param)
         {
             if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
-            return _shapeBuilder[param.ReadString("type", null)](modelToWorld, param);
+            return _shapeBuilder[param.ReadString("type", null)](this, modelToWorld, param);
         }
 
         public Aggregate CreateAccelerator(IReadOnlyList<Primitive> primitives, IConfigParamProvider? param)
@@ -137,27 +189,27 @@ namespace Radiantium.Offline.Config
             else
             {
                 if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
-                result = _accelBuilder[param.ReadString("type", null)](primitives, param);
+                result = _accelBuilder[param.ReadString("type", null)](this, primitives, param);
             }
             return result;
         }
 
-        public Material CreateMaterial(IConfigParamProvider param)
+        public Material CreateMaterial(Dictionary<string, ImageEntry> images, IConfigParamProvider param)
         {
             if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
-            return _materialBuilder[param.ReadString("type", null)](param);
+            return _materialBuilder[param.ReadString("type", null)](this, images, param);
         }
 
         public AreaLight CreateAreaLight(Shape shape, IConfigParamProvider param)
         {
             if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
-            return _areaLightBuilder[param.ReadString("type", null)](shape, param);
+            return _areaLightBuilder[param.ReadString("type", null)](this, shape, param);
         }
 
         public Integrator CreateIntegrator(IConfigParamProvider param)
         {
             if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
-            return _integratorBuilder[param.ReadString("type", null)](param);
+            return _integratorBuilder[param.ReadString("type", null)](this, param);
         }
 
         public Camera CreateCamera(IConfigParamProvider param)
@@ -209,6 +261,31 @@ namespace Radiantium.Offline.Config
                     savePath: param.ReadString("save_path", _searchPath),
                     saveName: param.ReadString("save_name", _workSpaceName));
             }
+        }
+
+        public Texture2D CreateTexture2D(IConfigParamProvider param)
+        {
+            if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
+            return _tex2dBuilder[param.ReadString("type", null)](this, param);
+        }
+
+        public TextureSampler CreateTextureSampler(IConfigParamProvider? param)
+        {
+            WrapMode wrap = WrapMode.Clamp;
+            FilterMode filter = FilterMode.Nearest;
+            if (param == null)
+            {
+                return new TextureSampler(wrap, filter);
+            }
+            if (param.HasKey("wrap"))
+            {
+                wrap = Enum.Parse<WrapMode>(param.ReadString("wrap", "Clamp"));
+            }
+            if (param.HasKey("filter"))
+            {
+                filter = Enum.Parse<FilterMode>(param.ReadString("filter", "Nearest"));
+            }
+            return new TextureSampler(wrap, filter);
         }
 
         public string GetPath(string location)
@@ -442,6 +519,11 @@ namespace Radiantium.Offline.Config
             _shapeBuilder.Add(name, builder);
         }
 
+        public void AddTex2DBuilder(string name, Texture2DBuilder builder)
+        {
+            _tex2dBuilder.Add(name, builder);
+        }
+
         private static TriangleModel FindTriangleMode(Dictionary<string, ModelEntry> m, IConfigParamProvider param)
         {
             if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
@@ -466,34 +548,34 @@ namespace Radiantium.Offline.Config
 
         public (Renderer, ResultOutput) Build()
         {
-            Dictionary<string, ModelEntry> models = _modelConfigs.Select(param =>
-            {
-                if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
-                if (!param.HasKey("location")) { throw new ArgumentException("no key location"); }
-                return LoadModel(param.ReadString("name", null),
-                    param.ReadString("location", null),
-                    param.ReadBool("is_store_sub_model", false),
-                    param.ReadBool("will_gen_normal", false));
-            }).ToDictionary(m => m.Name, m => m);
+            _models = _modelConfigs.Select(param =>
+           {
+               if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
+               if (!param.HasKey("location")) { throw new ArgumentException("no key location"); }
+               return LoadModel(param.ReadString("name", null),
+                   param.ReadString("location", null),
+                   param.ReadBool("is_store_sub_model", false),
+                   param.ReadBool("will_gen_normal", false));
+           }).ToDictionary(m => m.Name, m => m);
 
-            Dictionary<string, ImageEntry> images = _imageConfigs.Select(param =>
-            {
-                if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
-                if (!param.HasKey("location")) { throw new ArgumentException("no key location"); }
-                return LoadImage(param.ReadString("name", null),
-                    param.ReadString("location", null),
-                    param.ReadBool("is_flip_y", true),
-                    param.ReadBool("is_cast_to_linear", true));
-            }).ToDictionary(m => m.Name, m => m);
+            _images = _imageConfigs.Select(param =>
+           {
+               if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
+               if (!param.HasKey("location")) { throw new ArgumentException("no key location"); }
+               return LoadImage(param.ReadString("name", null),
+                   param.ReadString("location", null),
+                   param.ReadBool("is_flip_y", true),
+                   param.ReadBool("is_cast_to_linear", true));
+           }).ToDictionary(m => m.Name, m => m);
 
-            Aggregate[] instances = _instances.Select(entry =>
+            _inst = _instances.Select(entry =>
             {
                 var shapes = entry.ShapeConfigs
                 .Select(param => CreateShape(Matrix4x4.Identity, param))
                 .Select(shape => new ShapeWrapperPrimitive(shape))
                 .Cast<Primitive>();
                 var triangles = entry.ModelConfigs
-                .Select(param => FindTriangleMode(models, param))
+                .Select(param => FindTriangleMode(_models, param))
                 .Select(model => new TriangleMesh(Matrix4x4.Identity, model))
                 .SelectMany(mesh => mesh.ToTriangle())
                 .Select(triangle => new ShapeWrapperPrimitive(triangle))
@@ -520,19 +602,19 @@ namespace Radiantium.Offline.Config
             Primitive[] primitives = _entities.SelectMany(e =>
             {
                 if (e.MaterialConfig == null) { throw new ArgumentException("must has material"); }
-                Material material = CreateMaterial(e.MaterialConfig);
+                Material material = CreateMaterial(_images, e.MaterialConfig);
                 var shape = e.Shapes
                 .Select(param => CreateShape(e.ModelToWorld, param))
                 .Select(shape => new GeometricPrimitive(shape, material) { Light = e.LightConfig == null ? null : CreateAreaLight(shape, e.LightConfig) })
                 .Cast<Primitive>();
                 var triangles = e.Models
-                .Select(param => FindTriangleMode(models, param))
+                .Select(param => FindTriangleMode(_models, param))
                 .Select(model => new TriangleMesh(e.ModelToWorld, model))
                 .SelectMany(mesh => mesh.ToTriangle())
                 .Select(triangle => new GeometricPrimitive(triangle, material) { Light = e.LightConfig == null ? null : CreateAreaLight(triangle, e.LightConfig) })
                 .Cast<Primitive>();
                 var instanced = e.Instances
-                .Select(i => new InstancedPrimitive(instances[i.Index], new InstancedTransform(e.ModelToWorld), material))
+                .Select(i => new InstancedPrimitive(_inst[i.Index], new InstancedTransform(e.ModelToWorld), material))
                 .Cast<Primitive>();
                 return shape.Concat(triangles).Concat(instanced);
             }).ToArray();

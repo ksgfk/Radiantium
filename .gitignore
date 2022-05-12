@@ -9,4 +9,4 @@ obj/
 .vs/
 .vscode/
 
-Example/ajax/ajax.obj
+!Example/assets/*.png

@@ -6,27 +6,27 @@ namespace Radiantium.Offline.Materials
 {
     public class DiffuseReflection : Material
     {
-        public Color3F Kd { get; }
+        public Texture2D Kd { get; }
         public override BxdfType Type => BxdfType.Reflection | BxdfType.Diffuse;
 
-        public DiffuseReflection(Color3F kd)
+        public DiffuseReflection(Texture2D kd)
         {
             Kd = kd;
         }
 
-        public override Color3F Fr(Vector3 wo, Vector3 wi)
+        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            return new LambertianReflectionBrdf(Kd).Fr(wo, wi);
+            return new LambertianReflectionBrdf(Kd.Sample(inct.UV)).Fr(wo, wi);
         }
 
-        public override float Pdf(Vector3 wo, Vector3 wi)
+        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            return new LambertianReflectionBrdf(Kd).Pdf(wo, wi);
+            return new LambertianReflectionBrdf(Kd.Sample(inct.UV)).Pdf(wo, wi);
         }
 
-        public override SampleBxdfResult Sample(Vector3 wo, Random rand)
+        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
         {
-            return new LambertianReflectionBrdf(Kd).Sample(wo, rand);
+            return new LambertianReflectionBrdf(Kd.Sample(inct.UV)).Sample(wo, rand);
         }
     }
 }

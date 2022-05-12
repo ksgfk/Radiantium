@@ -46,7 +46,7 @@ namespace Radiantium.Offline.Integrators
                 {
                     radiance += coeff * inct.Le(-ray.D);
                 }
-                (Vector3 wi, Color3F fr, float pdf, BxdfType _) = inct.Shape.Material.Sample(inct.ToLocal(-ray.D), rand);
+                (Vector3 wi, Color3F fr, float pdf, BxdfType _) = inct.Shape.Material.Sample(inct.ToLocal(-ray.D), inct, rand);
                 if (pdf > 0.0f)
                 {
                     coeff *= fr * Coordinate.AbsCosTheta(wi) / pdf;
@@ -85,7 +85,7 @@ namespace Radiantium.Offline.Integrators
                         radiance += coeff * inct.Le(wo);
                     }
                 }
-                (Vector3 wi, Color3F fr, float pdf, BxdfType type) = inct.Shape.Material.Sample(inct.ToLocal(wo), rand);
+                (Vector3 wi, Color3F fr, float pdf, BxdfType type) = inct.Shape.Material.Sample(inct.ToLocal(wo), inct, rand);
                 if ((type & BxdfType.Specular) == 0)
                 {
                     Light light = scene.Lights[rand.Next(scene.Lights.Length)];
@@ -132,7 +132,7 @@ namespace Radiantium.Offline.Integrators
                 {
                     return new Color3F(0);
                 }
-                Color3F fr = inct.Shape.Material.Fr(inct.ToLocal(wo), inct.ToLocal(wi));
+                Color3F fr = inct.Shape.Material.Fr(inct.ToLocal(wo), inct.ToLocal(wi), inct);
                 return fr * li * Coordinate.AbsCosTheta(inct.ToLocal(wi)) / pdf;
             }
         }
@@ -157,7 +157,7 @@ namespace Radiantium.Offline.Integrators
                 {
                     break;
                 }
-                SampleBxdfResult sample = inct.Shape.Material.Sample(inct.ToLocal(wo), rand);
+                SampleBxdfResult sample = inct.Shape.Material.Sample(inct.ToLocal(wo), inct, rand);
                 if ((sample.Type & BxdfType.Specular) == 0)
                 {
                     Light light = scene.Lights[rand.Next(scene.Lights.Length)];
@@ -200,8 +200,8 @@ namespace Radiantium.Offline.Integrators
                 float scatteringPdf = 0.0f;
                 if (lightPdf > 0.0f && lightLi != Color3F.Black)
                 {
-                    Color3F fr = inct.Shape.Material.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi));
-                    scatteringPdf = inct.Shape.Material.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi));
+                    Color3F fr = inct.Shape.Material.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                    scatteringPdf = inct.Shape.Material.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
                     if (fr != Color3F.Black)
                     {
                         fr *= Coordinate.AbsCosTheta(inct.ToLocal(lightWi));

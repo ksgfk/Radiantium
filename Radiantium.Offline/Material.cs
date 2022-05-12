@@ -7,10 +7,10 @@ namespace Radiantium.Offline
     {
         public abstract BxdfType Type { get; }
 
-        public abstract Color3F Fr(Vector3 wo, Vector3 wi);
+        public abstract Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct);
 
-        public abstract SampleBxdfResult Sample(Vector3 wo, Random rand);
+        public abstract SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand);
 
-        public abstract float Pdf(Vector3 wo, Vector3 wi);
+        public abstract float Pdf(Vector3 wo, Vector3 wi, Intersection inct);
     }
 }
