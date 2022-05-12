@@ -25,12 +25,6 @@ namespace Radiantium.Offline
             Material = material ?? throw new ArgumentNullException(nameof(shape));
         }
 
-        public GeometricPrimitive(Shape shape) // this is only for InstancedPrimitive
-        {
-            Shape = shape ?? throw new ArgumentNullException(nameof(shape));
-            Material = null!;
-        }
-
         public override bool Intersect(Ray3F ray)
         {
             return Shape.Intersect(ray);
@@ -78,12 +72,45 @@ namespace Radiantium.Offline
         }
     }
 
+    public class ShapeWrapperPrimitive : Primitive
+    {
+        public Shape Shape { get; }
+        public override Material Material => throw new NotSupportedException("wrapper hasn't material");
+        public override AreaLight? Light { get => null; set => throw new NotSupportedException("wrapper can't set light"); }
+        public override BoundingBox3F WorldBound => Shape.WorldBound;
+
+        public ShapeWrapperPrimitive(Shape shape)
+        {
+            Shape = shape ?? throw new ArgumentNullException(nameof(shape));
+        }
+
+        public override bool Intersect(Ray3F ray)
+        {
+            return Shape.Intersect(ray);
+        }
+
+        public override bool Intersect(Ray3F ray, out Intersection inct)
+        {
+            bool isHit = Shape.Intersect(ray, out SurfacePoint surface);
+            if (isHit)
+            {
+                ShapeIntersection shape = Shape.GetIntersection(ray, surface);
+                inct = new Intersection(shape.P, shape.UV, shape.T, this, shape.Shading);
+            }
+            else
+            {
+                inct = default;
+            }
+            return isHit;
+        }
+    }
+
     public class InstancedPrimitive : Primitive
     {
         public Primitive Instanced { get; }
         public InstancedTransform Transform { get; }
         public override Material Material { get; }
-        public override AreaLight? Light { get; set; }
+        public override AreaLight? Light { get => null; set => throw new NotSupportedException("InstancedPrimitive can't set light"); }
         public override BoundingBox3F WorldBound { get; }
 
         public InstancedPrimitive(Primitive instanced, InstancedTransform transform, Material material)

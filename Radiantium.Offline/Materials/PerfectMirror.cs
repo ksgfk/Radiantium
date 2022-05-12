@@ -4,12 +4,12 @@ using System.Numerics;
 
 namespace Radiantium.Offline.Materials
 {
-    public class PrefectMirror : Material
+    public class PerfectMirror : Material
     {
         public Color3F R { get; }
         public override BxdfType Type => BxdfType.Reflection | BxdfType.Specular;
 
-        public PrefectMirror(Color3F r)
+        public PerfectMirror(Color3F r)
         {
             R = r;
         }

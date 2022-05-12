@@ -45,7 +45,7 @@ namespace Radiantium.Offline.Accelerators
 
         public override BoundingBox3F WorldBound => _tree[0].Bound;
 
-        public Octree(List<Primitive> primitives, int maxDepth = 10, int maxCount = 10, float outBound = 1)
+        public Octree(IReadOnlyList<Primitive> primitives, int maxDepth = 10, int maxCount = 10, float outBound = 1)
         {
             _maxDepth = maxDepth;
             _maxCount = maxCount;
@@ -222,7 +222,7 @@ namespace Radiantium.Offline.Accelerators
         }
 
         private Node? RecursionBuild(
-            List<Primitive> primitives,
+            IReadOnlyList<Primitive> primitives,
             List<int> primIndex,
             BoundingBox3F innerBound,
             BoundingBox3F outBound,

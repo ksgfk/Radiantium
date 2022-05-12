@@ -8,9 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Radiantium.Core\Radiantium.Core.csproj" />
     <ProjectReference Include="..\Radiantium.Offline\Radiantium.Offline.csproj" />
-    <ProjectReference Include="..\Radiantium.Realtime\Radiantium.Realtime.csproj" />
   </ItemGroup>
 
 </Project>

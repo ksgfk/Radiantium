@@ -76,12 +76,12 @@ namespace Radiantium.Offline.Accelerators
 
         private readonly int _maxPrimsInNode;
         private readonly SplitMethod _splitMethod;
-        private readonly List<Primitive> _primitives;
+        private readonly IReadOnlyList<Primitive> _primitives;
         private readonly LinearBVHNode[] _nodes;
 
         public override BoundingBox3F WorldBound => _nodes[0].Bounds;
 
-        public Bvh(List<Primitive> p, int maxPrimsInNode, SplitMethod splitMethod)
+        public Bvh(IReadOnlyList<Primitive> p, int maxPrimsInNode, SplitMethod splitMethod)
         {
             _maxPrimsInNode = maxPrimsInNode;
             _splitMethod = splitMethod;

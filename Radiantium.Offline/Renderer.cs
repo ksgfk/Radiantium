@@ -162,7 +162,7 @@ namespace Radiantium.Offline
                 return;
             }
             _isRendering = true;
-            Logger.Info("Rendering...");
+            Logger.Info("[Offline.Renderer] -> Rendering...");
             _timer.Restart();
             var option = GetOption();
             ParallelLoopResult result = Parallel.For(0, _gen.BlockCount, option, RenderTask);
@@ -196,7 +196,7 @@ namespace Radiantium.Offline
                             var color = _integrator.Li(ray, _scene, rand);
                             if (!color.IsValid)
                             {
-                                Logger.Warn($"Invalid color:{color}");
+                                Logger.Warn($"[Offline.Renderer] -> Invalid color:{color}");
                                 color = new Color3F(0.0f);
                             }
                             _renderTarget.RefRGB(pointX, pointY) += color / _sampleCount;

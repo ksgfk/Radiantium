@@ -138,13 +138,13 @@ namespace Radiantium.Editor
             sw.Stop();
             Logger.Info($"[Asset] load model: {fullPath}");
             Logger.Info($"[Asset] use time: {sw.ElapsedMilliseconds} ms");
-            Logger.Info($"[Asset] vertex count: {reader.Vertices.Count}, face: {reader.Faces.Count}");
+            Logger.Info($"[Asset] vertex count: {reader.Positions.Count}, face: {reader.Faces.Count}");
             if (!string.IsNullOrWhiteSpace(reader.ErrorInfo))
             {
                 Logger.Info($"[Asset] reader warning: ");
                 Logger.Error($"  {reader.ErrorInfo}");
             }
-            var allFaces = reader.AllFacesToModel();
+            var allFaces = reader.ToModel();
             _assets[path] = new AssetModel(path, allFaces); //TODO: sub objects
             return allFaces;
         }

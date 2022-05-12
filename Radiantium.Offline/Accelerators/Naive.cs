@@ -4,10 +4,10 @@ namespace Radiantium.Offline.Accelerators
 {
     public class Naive : Aggregate
     {
-        public List<Primitive> Primitives { get; }
+        public IReadOnlyList<Primitive> Primitives { get; }
         public override BoundingBox3F WorldBound { get; }
 
-        public Naive(List<Primitive> primitives)
+        public Naive(IReadOnlyList<Primitive> primitives)
         {
             Primitives = primitives ?? throw new ArgumentNullException(nameof(primitives));
 

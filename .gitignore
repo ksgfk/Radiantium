@@ -8,3 +8,5 @@ obj/
 .idea/
 .vs/
 .vscode/
+
+Example/ajax/ajax.obj

@@ -114,7 +114,7 @@ namespace Radiantium.Core
             }
         }
 
-        public static ColorBuffer LoadImageFromPath(string path, bool isFlipY)
+        public static ColorBuffer LoadImageFromPath(string path, bool isFlipY, bool isCastToLinear)
         {
             try
             {
@@ -156,7 +156,7 @@ namespace Radiantium.Core
                         buffer.RefRGB(i, j) /= Quantum.Max;
                     }
                 }
-                if (!IsHdr(path)) //不是HDR图像的话转换到线性空间
+                if (isCastToLinear)
                 {
                     for (int i = 0; i < width; i++)
                     {

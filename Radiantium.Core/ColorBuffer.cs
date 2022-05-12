@@ -12,6 +12,7 @@ namespace Radiantium.Core
         public int Width => _width;
         public int Height => _height;
         public int Channel => _channel;
+        public long UsedMemory => _buffer.Length * 4;
 
         public ColorBuffer(int width, int height, int channel)
         {

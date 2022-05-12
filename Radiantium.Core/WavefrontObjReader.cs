@@ -70,7 +70,7 @@ namespace Radiantium.Core
             }
         }
 
-        public List<Vector3> Vertices => _vertices;
+        public List<Vector3> Positions => _vertices;
         public List<Vector3> Normals => _normals;
         public List<Vector2> TexCoords => _texCoords;
         public List<Face> Faces => _faces;
@@ -442,7 +442,7 @@ namespace Radiantium.Core
             }
         }
 
-        public TriangleModel AllFacesToModel()
+        private TriangleModel ToModel(IReadOnlyList<Face> faces, bool willGenNormal)
         {
             Dictionary<VertexHash, int> unique = new Dictionary<VertexHash, int>();
             List<Vector3> p = new List<Vector3>();
@@ -452,7 +452,7 @@ namespace Radiantium.Core
             int count = 0;
             for (int j = 0; j < Faces.Count; j++)
             {
-                Face f = Faces[j];
+                Face f = faces[j];
                 for (int i = 0; i < 3; i++)
                 {
                     VertexHash v = new VertexHash(
@@ -464,12 +464,32 @@ namespace Radiantium.Core
                     {
                         unique.Add(v, count);
                         index = count;
-                        p.Add(Vertices[v.P]);
+                        p.Add(Positions[v.P]);
                         if (v.N >= 0) { n.Add(Normals[v.N]); }
+                        else if (willGenNormal) { n.Add(new Vector3()); }
                         if (v.T >= 0) { u.Add(TexCoords[v.T]); }
                         count++;
                     }
                     ind.Add(index);
+                }
+            }
+            if (willGenNormal && Normals.Count == 0)
+            {
+                int triangleCount = ind.Count / 3;
+                for (int i = 0; i < triangleCount; i++)
+                {
+                    Vector3 na = n[ind[i * 3 + 0]];
+                    Vector3 nb = n[ind[i * 3 + 0]];
+                    Vector3 nc = n[ind[i * 3 + 0]];
+
+                    Vector3 a = p[ind[i * 3 + 0]];
+                    Vector3 b = p[ind[i * 3 + 1]];
+                    Vector3 c = p[ind[i * 3 + 2]];
+                    Vector3 nor = Vector3.Normalize(Vector3.Cross(b - a, c - a));
+
+                    n[ind[i * 3 + 0]] = na == Vector3.Zero ? nor : Vector3.Normalize(nor + na);
+                    n[ind[i * 3 + 1]] = nb == Vector3.Zero ? nor : Vector3.Normalize(nor + nb);
+                    n[ind[i * 3 + 2]] = nc == Vector3.Zero ? nor : Vector3.Normalize(nor + nc);
                 }
             }
             return new TriangleModel(
@@ -478,6 +498,19 @@ namespace Radiantium.Core
                 n.Count > 0 ? n.ToArray() : null,
                 u.Count > 0 ? u.ToArray() : null
             );
+        }
+
+        public TriangleModel ToModel(string objName, bool willGenNormal = false)
+        {
+            int index = _objs.FindIndex(x => x.Name == objName);
+            if (index < 0) { throw new ArgumentException($"can't find {objName}"); }
+            Face[] face = _objs[index].Faces.Select(i => _faces[i]).ToArray();
+            return ToModel(face, willGenNormal);
+        }
+
+        public TriangleModel ToModel(bool willGenNormal = false)
+        {
+            return ToModel(Faces, willGenNormal);
         }
     }
 }

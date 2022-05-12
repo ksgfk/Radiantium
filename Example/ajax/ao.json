@@ -1,0 +1,56 @@
+{
+  "renderer": {
+    "spp": 4
+  },
+  "integrator": {
+    "type": "ao"
+  },
+  "camera": {
+    "type": "perspective",
+    "screen": [
+      768,
+      768
+    ],
+    "fov": 30,
+    "far": 1000,
+    "origin": [
+      -65.6055,
+      47.5762,
+      24.3583
+    ],
+    "target": [
+      -64.8161,
+      47.2211,
+      23.8576
+    ],
+    "up": [
+      0.299858,
+      0.934836,
+      -0.190177
+    ]
+  },
+  "accel": {
+    "type": "bvh"
+  },
+  "output": {},
+  "assets": [
+    {
+      "type": "model",
+      "name": "ajax",
+      "location": "ajax.obj"
+    }
+  ],
+  "scene": [
+    {
+      "material": {
+        "type": "diffuse"
+      },
+      "shapes": [
+        {
+          "type": "model",
+          "name": "ajax"
+        }
+      ]
+    }
+  ]
+}

@@ -41,10 +41,6 @@ namespace Radiantium.Offline.Bxdf
                 }
                 Vector3 wi = new Vector3(-wo.X, -wo.Y, wo.Z);
                 Color3F fr = f * R / Coordinate.AbsCosTheta(wi);
-                //if (!fr.IsValid)
-                //{
-                //    Logger.Error($"???");
-                //}
                 return new SampleBxdfResult(wi, fr, f, BxdfType.Reflection | BxdfType.Specular);
             }
             else
@@ -60,10 +56,6 @@ namespace Radiantium.Offline.Bxdf
                 Color3F ft = T * (1.0f - f);
                 ft *= (etaI * etaI) / (etaT * etaT);
                 ft /= Coordinate.AbsCosTheta(wi);
-                //if (!ft.IsValid)
-                //{
-                //    Logger.Error($"???");
-                //}
                 return new SampleBxdfResult(wi, ft, 1 - f, BxdfType.Transmission | BxdfType.Specular);
             }
         }

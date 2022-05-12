@@ -11,6 +11,16 @@ namespace Radiantium.Core
         public int TriangleCount { get; }
         public int VertexCount => Position.Length;
         public int IndexCount => Indices.Length;
+        public long UsedMemory
+        {
+            get
+            {
+                return Position.Length * 12 +
+                    ((Normal == null) ? 0 : (Normal.Length * 12)) +
+                    ((UV == null) ? 0 : (UV.Length * 8)) +
+                    Indices.Length * 4;
+            }
+        }
 
         public TriangleModel(Vector3[] position, int[] indices, Vector3[]? normal = null, Vector2[]? uv = null)
         {
