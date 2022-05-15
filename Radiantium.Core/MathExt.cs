@@ -76,6 +76,16 @@ namespace Radiantium.Core
             return true;
         }
 
+        public static Vector3 SphericalCoordinates(float theta, float phi)
+        {
+            (float sinTheta, float cosTheta) = SinCos(theta);
+            (float sinPhi, float cosPhi) = SinCos(phi);
+            return new Vector3(
+                cosPhi * sinTheta,
+                sinPhi * sinTheta,
+                cosTheta);
+        }
+
         //******************
         //* Linear Algebra *
         //******************
@@ -131,6 +141,24 @@ namespace Radiantium.Core
                 list[first] = list[last];
                 list[last] = temp;
                 first++;
+            }
+        }
+
+        //**********
+        //* Thread *
+        //**********
+        public static float InterlockedAdd(ref float local, float value)
+        {
+            float t = local;
+            while (true)
+            {
+                float currentValue = t;
+                float newValue = currentValue + value;
+                t = Interlocked.CompareExchange(ref local, newValue, currentValue);
+                if (t == currentValue)
+                {
+                    return newValue;
+                }
             }
         }
     }

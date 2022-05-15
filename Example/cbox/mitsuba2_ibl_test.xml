@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='utf-8'?>
+<scene version="2.0.0">
+    <integrator type="path">
+        <integer name="max_depth" value="-1"/>
+    </integrator>
+
+    <shape type="obj">
+        <string name="filename" value="../assets/cbox/walls.obj"/>
+        <bsdf type="diffuse">
+            <rgb name="reflectance" value="0.725,0.71,0.68"/>
+        </bsdf>
+    </shape>
+    <shape type="obj">
+        <string name="filename" value="../assets/cbox/leftwall.obj"/>
+        <bsdf type="diffuse">
+            <rgb name="reflectance" value="0.630,0.065,0.05"/>
+        </bsdf>
+    </shape>
+    <shape type="obj">
+        <string name="filename" value="../assets/cbox/rightwall.obj"/>
+        <bsdf type="diffuse">
+            <rgb name="reflectance" value="0.161,0.133,0.427"/>
+        </bsdf>
+    </shape>
+    <shape type="sphere">
+        <float name="radius" value="0.35"/>
+        <point name="center" value="-0.5,0.35,-0.25"/>
+        <bsdf type="conductor">
+            <string name="material" value="none"/>
+        </bsdf>
+    </shape>
+    <shape type="sphere">
+        <float name="radius" value="0.35"/>
+        <point name="center" value="0.5,0.35,0.2"/>
+        <bsdf type="dielectric">
+        </bsdf>
+    </shape>
+
+    <default name="spp" value="256"/>
+
+    <sensor type="perspective">
+        <float name="near_clip" value="0.01"/>
+        <float name="far_clip" value="100"/>
+        <float name="fov" value="27.7856"/>
+
+        <transform name="to_world">
+            <lookat target="0,0.893051,4.41198"
+                    origin="0,0.919769,5.41159"
+                    up    ="0.0, 1.0, 0.0"/>
+        </transform>
+
+        <film type="hdrfilm">
+            <rfilter type="box"/>
+            <integer name="width" value="800"/>
+            <integer name="height" value="600"/>
+			      <string name="pixel_format" value="rgb"/>
+			      <string name="component_format" value="float32"/>
+        </film>
+
+        <sampler type="independent">
+            <integer name="sample_count" value="$spp"/>
+        </sampler>
+    </sensor>
+
+    <emitter type="envmap">
+		    <string name="filename" value="../assets/museum.exr"/>
+        <transform name="to_world">
+            <rotate y="1" angle="90"/>
+        </transform>
+	  </emitter>
+</scene>

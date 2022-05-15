@@ -27,41 +27,47 @@ namespace Radiantium.Offline
 
         public Color3F Sample(float x, float y, Texture2D tex)
         {
-            static float WrapCoord(float a, WrapMode mode)
-            {
-                return mode switch
-                {
-                    WrapMode.Clamp => Math.Clamp(a, 0, 1),
-                    WrapMode.Repeat => a - MathF.Truncate(a),
-                    _ => a,
-                };
-            }
-
-            float realX = Math.Clamp(WrapCoord(x, _wrap) * tex.Width, 0, tex.Width - 1);
-            float realY = Math.Clamp(WrapCoord(y, _wrap) * tex.Height, 0, tex.Height - 1);
-
+            float u = Wrapper(x, _wrap);
+            float v = Wrapper(y, _wrap);
+            int width = tex.Width;
+            int height = tex.Height;
+            float fu = u * (width - 1);
+            float fv = v * (height - 1);
+            int pu = (int)fu;
+            int pv = (int)fv;
             switch (_filter)
             {
                 case FilterMode.Nearest:
-                    return tex.Read((int)realX, (int)realY);
+                    return tex.Read(pu, pv);
                 case FilterMode.Linear:
                     {
-                        int lowX = (int)MathF.Truncate(realX);
-                        int highX = Math.Clamp(lowX + 1, 0, tex.Width - 1);
-                        int lowY = (int)MathF.Truncate(realY);
-                        int highY = Math.Clamp(lowY + 1, 0, tex.Height - 1);
-                        Color3F a = tex.Read(lowX, lowY);
-                        Color3F b = tex.Read(highX, lowY);
-                        Color3F c = tex.Read(lowX, highY);
-                        Color3F d = tex.Read(highX, highY);
-                        float xWeight = realX - MathF.Truncate(realX);
-                        Color3F xLerpA = a * xWeight + b * (1.0f - xWeight);
-                        Color3F xLerpB = c * xWeight + d * (1.0f - xWeight);
-                        float yWeight = realY - MathF.Truncate(realY);
-                        return xLerpA * yWeight + xLerpB * (1.0f - yWeight);
+                        int dpu = (fu > pu + 0.5f) ? 1 : -1;
+                        int dpv = (fv > pv + 0.5f) ? 1 : -1;
+                        int apu = Math.Clamp(pu + dpu, 0, width - 1);
+                        int apv = Math.Clamp(pv + dpv, 0, height - 1);
+                        float du = MathF.Min(MathF.Abs(fu - pu - 0.5f), 1);
+                        float dv = MathF.Min(MathF.Abs(fv - pv - 0.5f), 1);
+                        Color3F u0v0 = tex.Read(pu, pv);
+                        Color3F u1v0 = tex.Read(apu, pv);
+                        Color3F u0v1 = tex.Read(pu, apv);
+                        Color3F u1v1 = tex.Read(apu, apv);
+                        return (u0v0 * (1 - du) + u1v0 * du) * (1 - dv) + (u0v1 * (1 - du) + u1v1 * du) * dv;
                     }
                 default:
-                    return tex.Read((int)realX, (int)realY);
+                    return tex.Read(pu, pv);
+            }
+
+            static float Wrapper(float a, WrapMode mode)
+            {
+                switch (mode)
+                {
+                    case WrapMode.Clamp:
+                        return Math.Clamp(a, 0, 1);
+                    case WrapMode.Repeat:
+                        return Math.Clamp(a - MathF.Floor(a), 0, 1);
+                    default:
+                        return a;
+                }
             }
         }
     }

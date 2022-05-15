@@ -17,6 +17,11 @@ namespace Radiantium.Offline
             return new Vector2((float)rand.NextDouble(), (float)rand.NextDouble());
         }
 
+        public static Vector3 NextVec3(this Random rand)
+        {
+            return new Vector3((float)rand.NextDouble(), (float)rand.NextDouble(), (float)rand.NextDouble());
+        }
+
         //***************
         //* CDF and PDF *
         //***************

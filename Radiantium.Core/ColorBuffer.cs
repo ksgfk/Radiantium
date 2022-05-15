@@ -24,6 +24,14 @@ namespace Radiantium.Core
 
         private int GetIndex(int x, int y)
         {
+            if (x < 0 || x >= _width)
+            {
+                throw new ArgumentOutOfRangeException(nameof(x), $"x value {x}, max {_width}");
+            }
+            if (y < 0 || y >= _height)
+            {
+                throw new ArgumentOutOfRangeException(nameof(y), $"y value {y}, max {_height}");
+            }
             return (x * _height + y) * _channel;
         }
 

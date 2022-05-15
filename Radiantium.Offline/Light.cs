@@ -46,6 +46,11 @@ namespace Radiantium.Offline
         public abstract LightSampleResult SampleLi(Intersection inct, Random rand);
 
         public abstract float PdfLi(Intersection inct, Vector3 wi);
+
+        public virtual Color3F Le(Ray3F ray)
+        {
+            return new Color3F(0.0f);
+        }
     }
 
     public abstract class AreaLight : Light
@@ -53,5 +58,20 @@ namespace Radiantium.Offline
         public sealed override LightType Type => LightType.Area;
 
         public abstract Color3F L(Intersection inct, Vector3 w);
+    }
+
+    public abstract class InfiniteLight : Light
+    {
+        public float WorldRadius { get; private set; }
+        public Vector3 WorldCenter { get; private set; }
+        public sealed override LightType Type => LightType.Infinite;
+
+        public virtual void Preprocess(Scene scene)
+        {
+            BoundingBox3F bound = scene.Aggregate.WorldBound;
+            WorldCenter = bound.Center;
+            float length = bound.Diagonal.Length();
+            WorldRadius = length / 2.0f;
+        }
     }
 }

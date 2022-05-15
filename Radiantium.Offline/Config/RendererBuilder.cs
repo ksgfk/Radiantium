@@ -18,13 +18,15 @@ namespace Radiantium.Offline.Config
             builder.AddIntegratorBuilder("ao", (_, param) => new AmbientOcclusion(param.ReadBool("is_cos_weight", true)));
             builder.AddIntegratorBuilder("path", (_, param) =>
             {
-                int maxDepth = param.ReadInt32("max_depth", 5);
-                float rrThreshold = param.ReadFloat("rr_threshold", 1.0f);
-                PathTracingMethod method = Enum.Parse<PathTracingMethod>(param.ReadString("method", "Mis"));
-                return new PathTracing(maxDepth, rrThreshold, method);
+                int maxDepth = param.ReadInt32("max_depth", -1);
+                int minDepth = param.ReadInt32("min_depth", 3);
+                float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
+                PathSampleMethod method = Enum.Parse<PathSampleMethod>(param.ReadString("method", "Mis"));
+                return new PathTracing(maxDepth, minDepth, rrThreshold, method);
             });
             builder.AddAccelBuilder("bvh", (_, p, param) => new Bvh(p, param.ReadInt32("max_prim", 1), Enum.Parse<SplitMethod>(param.ReadString("split", "SAH"))));
-            builder.AddMaterialBuilder("diffuse", (_, images, param) =>
+            builder.AddAccelBuilder("octree", (_, p, param) => new Octree(p, param.ReadInt32("max_depth", 10), param.ReadInt32("max_count", 10), param.ReadFloat("out_bound", 2.0f)));
+            builder.AddMaterialBuilder("diffuse", (builder, images, param) =>
              {
                  Texture2D kd = param.ReadTex2D("kd", builder, new Color3F(0.5f));
                  return new DiffuseReflection(kd);
@@ -37,7 +39,7 @@ namespace Radiantium.Offline.Config
                 float etaB = param.ReadFloat("etaB", 1.5046f);
                 return new PerfectGlass(r, t, etaA, etaB);
             });
-            builder.AddMaterialBuilder("perfect_mirror", (_, images, param) =>
+            builder.AddMaterialBuilder("perfect_mirror", (builder, images, param) =>
             {
                 Texture2D r = param.ReadTex2D("r", builder, new Color3F(1));
                 return new PerfectMirror(r);
@@ -46,6 +48,11 @@ namespace Radiantium.Offline.Config
             {
                 Vector3 le = param.ReadVec3Float("le", new Vector3(1));
                 return new DiffuseAreaLight(shape, new Color3F(le));
+            });
+            builder.AddInfiniteLightBuilder("infinite", (builder, mat, param) =>
+            {
+                Texture2D img = param.ReadTex2D("le", builder, new Color3F(0));
+                return new InfiniteAreaLight(mat, img);
             });
         }
 
@@ -91,6 +98,7 @@ namespace Radiantium.Offline.Config
         public delegate Shape ShapeBuilder(RendererBuilder builder, Matrix4x4 modelToWorld, IConfigParamProvider param);
         public delegate Material MaterialBuilder(RendererBuilder builder, Dictionary<string, ImageEntry> images, IConfigParamProvider param);
         public delegate AreaLight AreaLightBuilder(RendererBuilder builder, Shape shape, IConfigParamProvider param);
+        public delegate InfiniteLight InfiniteLightBuilder(RendererBuilder builder, Matrix4x4 modelToWorld, IConfigParamProvider param);
         public delegate Integrator IntegratorBuilder(RendererBuilder builder, IConfigParamProvider param);
         public delegate Texture2D Texture2DBuilder(RendererBuilder builder, IConfigParamProvider param);
 
@@ -131,6 +139,7 @@ namespace Radiantium.Offline.Config
         readonly Dictionary<string, AccelBuilder> _accelBuilder;
         readonly Dictionary<string, MaterialBuilder> _materialBuilder;
         readonly Dictionary<string, AreaLightBuilder> _areaLightBuilder;
+        readonly Dictionary<string, InfiniteLightBuilder> _infLightBuilder;
         readonly Dictionary<string, ShapeBuilder> _shapeBuilder;
         readonly Dictionary<string, IntegratorBuilder> _integratorBuilder;
         readonly Dictionary<string, Texture2DBuilder> _tex2dBuilder;
@@ -162,6 +171,7 @@ namespace Radiantium.Offline.Config
             _accelBuilder = new Dictionary<string, AccelBuilder>();
             _materialBuilder = new Dictionary<string, MaterialBuilder>();
             _areaLightBuilder = new Dictionary<string, AreaLightBuilder>();
+            _infLightBuilder = new Dictionary<string, InfiniteLightBuilder>();
             _shapeBuilder = new Dictionary<string, ShapeBuilder>();
             _integratorBuilder = new Dictionary<string, IntegratorBuilder>();
             _tex2dBuilder = new Dictionary<string, Texture2DBuilder>();
@@ -194,16 +204,22 @@ namespace Radiantium.Offline.Config
             return result;
         }
 
-        public Material CreateMaterial(Dictionary<string, ImageEntry> images, IConfigParamProvider param)
+        public Material CreateMaterial(IConfigParamProvider param)
         {
             if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
-            return _materialBuilder[param.ReadString("type", null)](this, images, param);
+            return _materialBuilder[param.ReadString("type", null)](this, _images, param);
         }
 
         public AreaLight CreateAreaLight(Shape shape, IConfigParamProvider param)
         {
             if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
             return _areaLightBuilder[param.ReadString("type", null)](this, shape, param);
+        }
+
+        public InfiniteLight CreateInfiniteLight(Matrix4x4 modelToWorld, IConfigParamProvider param)
+        {
+            if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
+            return _infLightBuilder[param.ReadString("type", null)](this, modelToWorld, param);
         }
 
         public Integrator CreateIntegrator(IConfigParamProvider param)
@@ -524,12 +540,17 @@ namespace Radiantium.Offline.Config
             _tex2dBuilder.Add(name, builder);
         }
 
-        private static TriangleModel FindTriangleMode(Dictionary<string, ModelEntry> m, IConfigParamProvider param)
+        public void AddInfiniteLightBuilder(string name, InfiniteLightBuilder builder)
+        {
+            _infLightBuilder.Add(name, builder);
+        }
+
+        public TriangleModel FindTriangleModel(IConfigParamProvider param)
         {
             if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
             string name = param.ReadString("name", null);
             string? child = param.ReadString("child", null);
-            ModelEntry entry = m[name];
+            ModelEntry entry = _models[name];
             TriangleModel? model;
             if (child == null)
             {
@@ -562,25 +583,35 @@ namespace Radiantium.Offline.Config
            {
                if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
                if (!param.HasKey("location")) { throw new ArgumentException("no key location"); }
+               string location = param.ReadString("location", null);
+               bool isCastToLinear = param.ReadBool("is_cast_to_linear", !TextureUtility.IsHdr(location));
                return LoadImage(param.ReadString("name", null),
-                   param.ReadString("location", null),
+                   location,
                    param.ReadBool("is_flip_y", true),
-                   param.ReadBool("is_cast_to_linear", true));
+                   isCastToLinear);
            }).ToDictionary(m => m.Name, m => m);
 
             _inst = _instances.Select(entry =>
             {
-                var shapes = entry.ShapeConfigs
-                .Select(param => CreateShape(Matrix4x4.Identity, param))
-                .Select(shape => new ShapeWrapperPrimitive(shape))
-                .Cast<Primitive>();
-                var triangles = entry.ModelConfigs
-                .Select(param => FindTriangleMode(_models, param))
-                .Select(model => new TriangleMesh(Matrix4x4.Identity, model))
-                .SelectMany(mesh => mesh.ToTriangle())
-                .Select(triangle => new ShapeWrapperPrimitive(triangle))
-                .Cast<Primitive>();
-                Aggregate accel = CreateAccelerator(shapes.Concat(triangles).ToArray(), entry.AggregateConfig);
+                List<Primitive> primitives = new List<Primitive>();
+                foreach (IConfigParamProvider param in entry.ShapeConfigs)
+                {
+                    Shape shape = CreateShape(Matrix4x4.Identity, param);
+                    ShapeWrapperPrimitive wrapper = new ShapeWrapperPrimitive(shape);
+                    primitives.Add(wrapper);
+                }
+                foreach (IConfigParamProvider param in entry.ModelConfigs)
+                {
+                    TriangleModel model = FindTriangleModel(param);
+                    TriangleMesh mesh = new TriangleMesh(Matrix4x4.Identity, model);
+                    List<Triangle> triangles = mesh.ToTriangle();
+                    foreach (Triangle triangle in triangles)
+                    {
+                        ShapeWrapperPrimitive wrapper = new ShapeWrapperPrimitive(triangle);
+                        primitives.Add(wrapper);
+                    }
+                }
+                Aggregate accel = CreateAccelerator(primitives, entry.AggregateConfig);
                 return accel;
             }).ToArray();
 
@@ -599,35 +630,66 @@ namespace Radiantium.Offline.Config
                 foreach (SceneEntityEntry child in e.Children) { bfsQ.Enqueue(child); }
             }
 
-            Primitive[] primitives = _entities.SelectMany(e =>
+            List<Primitive> primitives = new List<Primitive>();
+            List<Light> lights = new List<Light>();
+            List<InfiniteLight> infiniteLights = new List<InfiniteLight>();
+            foreach (SceneEntityEntry e in _entities)
             {
-                if (e.MaterialConfig == null) { throw new ArgumentException("must has material"); }
-                Material material = CreateMaterial(_images, e.MaterialConfig);
-                var shape = e.Shapes
-                .Select(param => CreateShape(e.ModelToWorld, param))
-                .Select(shape => new GeometricPrimitive(shape, material) { Light = e.LightConfig == null ? null : CreateAreaLight(shape, e.LightConfig) })
-                .Cast<Primitive>();
-                var triangles = e.Models
-                .Select(param => FindTriangleMode(_models, param))
-                .Select(model => new TriangleMesh(e.ModelToWorld, model))
-                .SelectMany(mesh => mesh.ToTriangle())
-                .Select(triangle => new GeometricPrimitive(triangle, material) { Light = e.LightConfig == null ? null : CreateAreaLight(triangle, e.LightConfig) })
-                .Cast<Primitive>();
-                var instanced = e.Instances
-                .Select(i => new InstancedPrimitive(_inst[i.Index], new InstancedTransform(e.ModelToWorld), material))
-                .Cast<Primitive>();
-                return shape.Concat(triangles).Concat(instanced);
-            }).ToArray();
-
-            Light[] areaLights = primitives
-                .Where(p => p.Light != null)
-                .Select(p => p.Light!)
-                .Cast<Light>()
-                .ToArray();
+                if (e.MaterialConfig == null) //infinite light
+                {
+                    if (e.LightConfig == null)
+                    {
+                        continue;
+                    }
+                    InfiniteLight light = CreateInfiniteLight(e.ModelToWorld, e.LightConfig);
+                    lights.Add(light);
+                    infiniteLights.Add(light);
+                }
+                else //scene object
+                {
+                    Material material = CreateMaterial(e.MaterialConfig);
+                    foreach (IConfigParamProvider param in e.Shapes)
+                    {
+                        Shape shape = CreateShape(e.ModelToWorld, param);
+                        GeometricPrimitive prim = new GeometricPrimitive(shape, material)
+                        {
+                            Light = e.LightConfig == null ? null : CreateAreaLight(shape, e.LightConfig)
+                        };
+                        if (prim.Light != null)
+                        {
+                            lights.Add(prim.Light);
+                        }
+                        primitives.Add(prim);
+                    }
+                    foreach (IConfigParamProvider param in e.Models)
+                    {
+                        TriangleModel model = FindTriangleModel(param);
+                        TriangleMesh mesh = new TriangleMesh(e.ModelToWorld, model);
+                        List<Triangle> triangles = mesh.ToTriangle();
+                        foreach (Triangle triangle in triangles)
+                        {
+                            GeometricPrimitive prim = new GeometricPrimitive(triangle, material)
+                            {
+                                Light = e.LightConfig == null ? null : CreateAreaLight(triangle, e.LightConfig)
+                            };
+                            if (prim.Light != null)
+                            {
+                                lights.Add(prim.Light);
+                            }
+                            primitives.Add(prim);
+                        }
+                    }
+                    foreach (InstancedPrimitivesEntry entry in e.Instances)
+                    {
+                        InstancedPrimitive prim = new InstancedPrimitive(_inst[entry.Index], new InstancedTransform(e.ModelToWorld), material);
+                        primitives.Add(prim);
+                    }
+                }
+            }
 
             Aggregate aggregate = CreateAccelerator(primitives, _sceneAccelConfig);
 
-            Scene scene = new Scene(aggregate, areaLights, Array.Empty<Light>());
+            Scene scene = new Scene(aggregate, lights.ToArray(), infiniteLights.ToArray());
 
             Integrator integrator = CreateIntegrator(_integratorConfig!);
 

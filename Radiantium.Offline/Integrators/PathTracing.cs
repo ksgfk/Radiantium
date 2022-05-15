@@ -6,9 +6,9 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Integrators
 {
-    public enum PathTracingMethod
+    public enum PathSampleMethod
     {
-        OnlyBxdf,
+        Bxdf,
         Nee,
         Mis
     }
@@ -16,12 +16,14 @@ namespace Radiantium.Offline.Integrators
     public class PathTracing : Integrator
     {
         public int MaxDepth { get; }
+        public int MinDepth { get; }
         public float RRThreshold { get; }
-        public PathTracingMethod Method { get; }
+        public PathSampleMethod Method { get; }
 
-        public PathTracing(int maxDepth, float rrThreshold, PathTracingMethod method)
+        public PathTracing(int maxDepth, int minDepth, float rrThreshold, PathSampleMethod method)
         {
             MaxDepth = maxDepth;
+            MinDepth = minDepth;
             RRThreshold = rrThreshold;
             Method = method;
         }
@@ -38,29 +40,38 @@ namespace Radiantium.Offline.Integrators
             Color3F coeff = new(1.0f);
             for (int bounces = 0; ; bounces++)
             {
-                if (!scene.Intersect(ray, out var inct) || bounces >= MaxDepth)
+                if (!scene.Intersect(ray, out var inct))
+                {
+                    radiance += coeff * scene.EvalAllInfiniteLights(ray);
+                    break;
+                }
+                if (MaxDepth != -1 && bounces >= MaxDepth)
                 {
                     break;
                 }
+                Vector3 wo = -ray.D;
                 if (inct.IsLight)
                 {
-                    radiance += coeff * inct.Le(-ray.D);
+                    radiance += coeff * inct.Le(wo);
                 }
                 (Vector3 wi, Color3F fr, float pdf, BxdfType _) = inct.Shape.Material.Sample(inct.ToLocal(-ray.D), inct, rand);
                 if (pdf > 0.0f)
                 {
                     coeff *= fr * Coordinate.AbsCosTheta(wi) / pdf;
                 }
-                ray = inct.SpawnRay(inct.ToWorld(wi));
-                Color3F rr = coeff;
-                if (MaxElement(rr) < RRThreshold && bounces > 3)
+                else
                 {
-                    float q = Max(0.05f, 1 - MaxElement(rr));
-                    if (rand.NextFloat() < q)
+                    break;
+                }
+                ray = inct.SpawnRay(inct.ToWorld(wi));
+                if (bounces > MinDepth)
+                {
+                    float q = Min(MaxElement(coeff), RRThreshold);
+                    if (rand.NextFloat() > q)
                     {
                         break;
                     }
-                    coeff /= 1 - q;
+                    coeff /= q;
                 }
             }
             return radiance;
@@ -73,44 +84,54 @@ namespace Radiantium.Offline.Integrators
             bool isSpecularPath = true;
             for (int bounces = 0; ; bounces++)
             {
-                if (!scene.Intersect(ray, out var inct) || bounces >= MaxDepth)
-                {
-                    break;
-                }
+                bool isHit = scene.Intersect(ray, out Intersection inct);
                 Vector3 wo = -ray.D;
-                if (inct.IsLight)
+                if (bounces == 0 || isSpecularPath)
                 {
-                    if (isSpecularPath)
+                    if (isHit)
                     {
                         radiance += coeff * inct.Le(wo);
                     }
+                    else
+                    {
+                        radiance += coeff * scene.EvalAllInfiniteLights(ray);
+                    }
+                }
+                if (!isHit)
+                {
+                    break;
+                }
+                if (MaxDepth != -1 && bounces >= MaxDepth)
+                {
+                    break;
                 }
                 (Vector3 wi, Color3F fr, float pdf, BxdfType type) = inct.Shape.Material.Sample(inct.ToLocal(wo), inct, rand);
-                if ((type & BxdfType.Specular) == 0)
+                isSpecularPath = (type & BxdfType.Specular) != 0;
+                if (!isSpecularPath)
                 {
-                    Light light = scene.Lights[rand.Next(scene.Lights.Length)];
-                    float lightPdf = 1.0f / scene.Lights.Length;
-                    radiance += coeff * EstimateLight(scene, rand, light, inct, wo) / lightPdf;
-                    isSpecularPath = false;
-                }
-                else
-                {
-                    isSpecularPath = true;
+                    float lightPdf = scene.SampleLight(rand, out Light light);
+                    if (lightPdf > 0.0f)
+                    {
+                        radiance += coeff * EstimateLight(scene, rand, light, inct, wo) / lightPdf;
+                    }
                 }
                 if (pdf > 0.0f)
                 {
                     coeff *= fr * Coordinate.AbsCosTheta(wi) / pdf;
                 }
-                ray = inct.SpawnRay(inct.ToWorld(wi));
-                Color3F rr = coeff;
-                if (MaxElement(rr) < RRThreshold && bounces > 3)
+                else
                 {
-                    float q = Max(0.05f, 1 - MaxElement(rr));
-                    if (rand.NextFloat() < q)
+                    break;
+                }
+                ray = inct.SpawnRay(inct.ToWorld(wi));
+                if (bounces > MinDepth)
+                {
+                    float q = Min(MaxElement(coeff), RRThreshold);
+                    if (rand.NextFloat() > q)
                     {
                         break;
                     }
-                    coeff /= 1 - q;
+                    coeff /= q;
                 }
             }
             return radiance;
@@ -152,41 +173,46 @@ namespace Radiantium.Offline.Integrators
                     {
                         radiance += coeff * inct.Le(wo);
                     }
+                    else
+                    {
+                        radiance += coeff * scene.EvalAllInfiniteLights(ray);
+                    }
                 }
-                if (!isHit || bounces >= MaxDepth)
+                if (!isHit)
+                {
+                    break;
+                }
+                if (MaxDepth != -1 && bounces >= MaxDepth)
                 {
                     break;
                 }
                 SampleBxdfResult sample = inct.Shape.Material.Sample(inct.ToLocal(wo), inct, rand);
-                if ((sample.Type & BxdfType.Specular) == 0)
-                {
-                    Light light = scene.Lights[rand.Next(scene.Lights.Length)];
-                    float lightPdf = 1.0f / scene.Lights.Length;
-                    radiance += coeff * EstimateDirect(scene, rand, light, inct, wo, sample) / lightPdf;
-                    //if (!coeff.IsValid)
-                    //{
-                    //    Logger.Error($"???");
-                    //}
-                }
                 isSpecularPath = (sample.Type & BxdfType.Specular) != 0;
+                if (!isSpecularPath)
+                {
+                    float lightPdf = scene.SampleLight(rand, out Light light);
+                    if (lightPdf > 0.0f)
+                    {
+                        radiance += coeff * EstimateDirect(scene, rand, light, inct, wo, sample) / lightPdf;
+                    }
+                }
                 if (sample.Pdf > 0.0f)
                 {
                     coeff *= sample.Fr * Coordinate.AbsCosTheta(sample.Wi) / sample.Pdf;
-                    //if (!coeff.IsValid)
-                    //{
-                    //    Logger.Error($"???");
-                    //}
+                }
+                else
+                {
+                    break;
                 }
                 ray = inct.SpawnRay(inct.ToWorld(sample.Wi));
-                Color3F rr = coeff;
-                if (MaxElement(rr) < RRThreshold && bounces > 3)
+                if (bounces > MinDepth)
                 {
-                    float q = Max(0.05f, 1 - MaxElement(rr));
-                    if (rand.NextFloat() < q)
+                    float q = Min(MaxElement(coeff), RRThreshold);
+                    if (rand.NextFloat() > q)
                     {
                         break;
                     }
-                    coeff /= 1 - q;
+                    coeff /= q;
                 }
             }
             return radiance;
@@ -264,9 +290,9 @@ namespace Radiantium.Offline.Integrators
         {
             return Method switch
             {
-                PathTracingMethod.OnlyBxdf => OnlySampleBxdf(ray, scene, rand),
-                PathTracingMethod.Nee => NextEventEstimation(ray, scene, rand),
-                PathTracingMethod.Mis => Mis(ray, scene, rand),
+                PathSampleMethod.Bxdf => OnlySampleBxdf(ray, scene, rand),
+                PathSampleMethod.Nee => NextEventEstimation(ray, scene, rand),
+                PathSampleMethod.Mis => Mis(ray, scene, rand),
                 _ => Color3F.Black
             };
         }

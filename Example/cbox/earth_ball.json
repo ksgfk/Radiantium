@@ -4,7 +4,10 @@
   },
   "integrator": {
     "type": "path",
-    "max_depth": 12
+    "method": "Mis",
+    "max_depth": -1,
+    "min_depth": 9,
+    "rr_threshold": 0.99
   },
   "camera": {
     "type": "perspective",
@@ -139,7 +142,10 @@
         "type": "diffuse",
         "kd": {
           "type": "image",
-          "name": "earth_full"
+          "name": "earth_full",
+          "sampler": {
+            "filter": "Linear"
+          }
         }
       },
       "shapes": [
