@@ -67,12 +67,10 @@
   ],
   "instanced": [
     {
-      "shapes": [
-        {
-          "type": "model",
-          "name": "teapot"
-        }
-      ]
+      "shape": {
+        "type": "model",
+        "name": "teapot"
+      }
     }
   ],
   "scene": [
@@ -85,12 +83,10 @@
           0.68
         ]
       },
-      "shapes": [
-        {
-          "type": "model",
-          "name": "walls"
-        }
-      ]
+      "shape": {
+        "type": "model",
+        "name": "walls"
+      }
     },
     {
       "material": {
@@ -101,12 +97,10 @@
           0.427
         ]
       },
-      "shapes": [
-        {
-          "type": "model",
-          "name": "rightwall"
-        }
-      ]
+      "shape": {
+        "type": "model",
+        "name": "rightwall"
+      }
     },
     {
       "material": {
@@ -117,23 +111,19 @@
           0.05
         ]
       },
-      "shapes": [
-        {
-          "type": "model",
-          "name": "leftwall"
-        }
-      ]
+      "shape": {
+        "type": "model",
+        "name": "leftwall"
+      }
     },
     {
       "material": {
         "type": "diffuse"
       },
-      "shapes": [
-        {
-          "type": "model",
-          "name": "light"
-        }
-      ],
+      "shape": {
+        "type": "model",
+        "name": "light"
+      },
       "light": {
         "type": "diffuse_area",
         "le": [
@@ -147,12 +137,9 @@
       "material": {
         "type": "perfect_glass"
       },
-      "shapes": [],
-      "instanced": [
-        {
-          "id": 0
-        }
-      ],
+      "instanced": {
+        "id": 0
+      },
       "transform": {
         "position": [
           -0.45,
@@ -178,12 +165,9 @@
       "material": {
         "type": "perfect_mirror"
       },
-      "shapes": [],
-      "instanced": [
-        {
-          "id": 0
-        }
-      ],
+      "instanced": {
+        "id": 0
+      },
       "transform": {
         "position": [
           0.55,

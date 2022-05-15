@@ -80,12 +80,10 @@ namespace Radiantium.Cli
                     {
                         builder.SetInstancedAccelerator(index, instanced.GetSubParam("accel"));
                     }
-                    if (instanced.HasKey("shapes"))
+                    if (instanced.HasKey("shape"))
                     {
-                        foreach (IConfigParamProvider shape in instanced.GetSubParams("shapes"))
-                        {
-                            builder.AddInstancedShape(index, shape);
-                        }
+                        IConfigParamProvider shape = instanced.GetSubParam("shape");
+                        builder.AddInstancedShape(index, shape);
                     }
                 }
             }
@@ -110,20 +108,16 @@ namespace Radiantium.Cli
                 {
                     builder.SetEntityLocalTransform(index, entity.GetSubParam("transform"));
                 }
-                if (entity.HasKey("shapes"))
+                if (entity.HasKey("shape"))
                 {
-                    foreach (IConfigParamProvider shape in entity.GetSubParams("shapes"))
-                    {
-                        builder.AddEntityShape(index, shape);
-                    }
+                    IConfigParamProvider shape = entity.GetSubParam("shape");
+                    builder.AddEntityShape(index, shape);
                 }
                 if (entity.HasKey("instanced"))
                 {
-                    foreach (IConfigParamProvider instanced in entity.GetSubParams("instanced"))
-                    {
-                        if (!instanced.HasKey("id")) { throw new ArgumentException("invalid instanced config"); }
-                        builder.AddEntityInstanced(index, instanced.ReadInt32("id", -1));
-                    }
+                    IConfigParamProvider instanced = entity.GetSubParam("instanced");
+                    if (!instanced.HasKey("id")) { throw new ArgumentException("invalid instanced config"); }
+                    builder.AddEntityInstanced(index, instanced.ReadInt32("id", -1));
                 }
                 if (entity.HasKey("children"))
                 {

@@ -75,12 +75,10 @@
           0.68
         ]
       },
-      "shapes": [
-        {
-          "type": "model",
-          "name": "walls"
-        }
-      ]
+      "shape": {
+        "type": "model",
+        "name": "walls"
+      }
     },
     {
       "material": {
@@ -91,12 +89,10 @@
           0.427
         ]
       },
-      "shapes": [
-        {
-          "type": "model",
-          "name": "rightwall"
-        }
-      ]
+      "shape": {
+        "type": "model",
+        "name": "rightwall"
+      }
     },
     {
       "material": {
@@ -107,23 +103,19 @@
           0.05
         ]
       },
-      "shapes": [
-        {
-          "type": "model",
-          "name": "leftwall"
-        }
-      ]
+      "shape": {
+        "type": "model",
+        "name": "leftwall"
+      }
     },
     {
       "material": {
         "type": "perfect_glass"
       },
-      "shapes": [
-        {
-          "type": "sphere",
-          "radius": 0.35
-        }
-      ],
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35
+      },
       "transform": {
         "position": [
           0.5,
@@ -136,12 +128,10 @@
       "material": {
         "type": "perfect_mirror"
       },
-      "shapes": [
-        {
-          "type": "sphere",
-          "radius": 0.35
-        }
-      ],
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35
+      },
       "transform": {
         "position": [
           -0.5,

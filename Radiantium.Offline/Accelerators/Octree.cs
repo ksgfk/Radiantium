@@ -78,15 +78,15 @@ namespace Radiantium.Offline.Accelerators
                     if (allocNode != _nodeCount) { throw new NotSupportedException("maybe a bug"); }
                 }
                 sw.Stop();
-                Logger.Info($"Octree: max depth {_nowDepth}");
-                Logger.Info($"Octree: leaf count {_leafCount}");
-                Logger.Info($"Octree: node count {_nodeCount}");
-                Logger.Info($"Octree: build time {sw.Elapsed.TotalMilliseconds} ms");
-                Logger.Info($"Octree: memory used {(32.0f * _nodeCount) / 1024 / 1024} MB");
+                Logger.Info($"[Offline.Octree] -> max depth {_nowDepth}");
+                Logger.Info($"[Offline.Octree] -> leaf count {_leafCount}");
+                Logger.Info($"[Offline.Octree] -> node count {_nodeCount}");
+                Logger.Info($"[Offline.Octree] -> build time {sw.Elapsed.TotalMilliseconds} ms");
+                Logger.Info($"[Offline.Octree] -> memory used {(32.0f * _nodeCount) / 1024 / 1024} MB");
             }
             long after = GC.GetTotalMemory(true);
             //we don't know how many bytes a managed object used
-            Logger.Info($"Octree: possible used memory {(after - before) / 1024.0f / 1024} MB (reference only)");
+            Logger.Info($"[Offline.Octree] -> possible used memory {(after - before) / 1024.0f / 1024} MB (reference only)");
         }
 
         public override bool Intersect(Ray3F ray)

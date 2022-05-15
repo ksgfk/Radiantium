@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 4
+    "spp": 256
   },
   "integrator": {
     "type": "ao"
@@ -30,7 +30,7 @@
     ]
   },
   "accel": {
-    "type": "bvh"
+    "type": "octree"
   },
   "output": {},
   "assets": [
@@ -45,12 +45,10 @@
       "material": {
         "type": "diffuse"
       },
-      "shapes": [
-        {
-          "type": "model",
-          "name": "ajax"
-        }
-      ]
+      "shape": {
+        "type": "model",
+        "name": "ajax"
+      }
     }
   ]
 }

@@ -83,6 +83,12 @@ namespace Radiantium.Offline.Accelerators
 
         public Bvh(IReadOnlyList<Primitive> p, int maxPrimsInNode, SplitMethod splitMethod)
         {
+            if (p.Count == 0)
+            {
+                _primitives = new List<Primitive>();
+                _nodes = Array.Empty<LinearBVHNode>();
+                return;
+            }
             _maxPrimsInNode = maxPrimsInNode;
             _splitMethod = splitMethod;
             _primitives = p;
