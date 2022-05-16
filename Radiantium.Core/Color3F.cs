@@ -36,9 +36,9 @@ namespace Radiantium.Core
 
         public Color3F(float v) : this(v, v, v) { }
 
-        public static Color3F ToLinearRGB(Color3F c) { return new(ToLiner(c.R), ToLiner(c.G), ToLiner(c.B)); }
+        public static Color3F ToLinearRgb(Color3F c) { return new(ToLiner(c.R), ToLiner(c.G), ToLiner(c.B)); }
 
-        public static Color3F ToSRGB(Color3F c) { return new(ToSrgb(c.R), ToSrgb(c.G), ToSrgb(c.B)); }
+        public static Color3F ToSrgb(Color3F c) { return new(ToSrgb(c.R), ToSrgb(c.G), ToSrgb(c.B)); }
 
         public static ref float IndexerUnsafe(ref Color3F c, int i) { return ref Unsafe.Add(ref c.R, i); }
 
@@ -77,6 +77,8 @@ namespace Radiantium.Core
         public static Color3F operator /(float l, Color3F r) { return new(l / r.R, l / r.G, l / r.B); }
         public static bool operator ==(Color3F l, Color3F r) { return l.Equals(r); }
         public static bool operator !=(Color3F l, Color3F r) { return !(l == r); }
+
+        public static implicit operator Vector3(Color3F c) { return new Vector3(c.R, c.G, c.B); }
 
         public override string ToString() { return $"<{R}, {G}, {B}>"; }
 

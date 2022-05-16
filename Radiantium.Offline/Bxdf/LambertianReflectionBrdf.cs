@@ -30,6 +30,7 @@ namespace Radiantium.Offline.Bxdf
             {
                 wi.Z *= -1;
             }
+            if (!Coordinate.SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
             float pdf = Pdf(wo, wi);
             Color3F fr = R / MathF.PI;
             return new SampleBxdfResult(wi, fr, pdf, Type);

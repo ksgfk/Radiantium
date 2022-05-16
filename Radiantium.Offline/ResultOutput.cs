@@ -32,7 +32,7 @@ namespace Radiantium.Offline
                     {
                         for (int j = 0; i < color.Height; i++)
                         {
-                            buffer.RefRGB(i, j) = Color3F.ToSRGB(color.GetRGB(i, j));
+                            buffer.RefRGB(i, j) = Color3F.ToSrgb(color.GetRGB(i, j));
                         }
                     }
                 }

@@ -32,7 +32,7 @@ namespace Radiantium.Offline.Bxdf
 
         public SampleBxdfResult Sample(Vector3 wo, Random rand)
         {
-            float f = BxdfUtility.FresnelDielectric(Coordinate.CosTheta(wo), EtaA, EtaB);
+            float f = Fresnel.DielectricFunc(Coordinate.CosTheta(wo), EtaA, EtaB);
             if (rand.NextFloat() < f)
             {
                 if (Coordinate.CosTheta(wo) == 0)

@@ -46,55 +46,38 @@ namespace Radiantium.Offline
             return X * v.X + Y * v.Y + Z * v.Z;
         }
 
-        public static float CosTheta(Vector3 v) { return v.Z; }
+        public static float CosTheta(Vector3 v) => v.Z;
 
-        public static float AbsCosTheta(Vector3 v) { return Abs(CosTheta(v)); }
+        public static float AbsCosTheta(Vector3 v) => Abs(CosTheta(v));
 
-        public static float CosTheta2(Vector3 vec) { return vec.Z * vec.Z; }
+        public static float Cos2Theta(Vector3 v) => v.Z * v.Z;
 
-        public static float SinTheta(Vector3 v)
-        {
-            var temp = SinTheta2(v);
-            return temp <= 0.0f ? 0.0f : Sqrt(temp);
-        }
+        public static float Sin2Theta(Vector3 v) => Max(0, 1.0f - Cos2Theta(v));
 
-        public static float TanTheta(Vector3 v)
-        {
-            var temp = SinTheta2(v);
-            return temp <= 0.0f ? 0.0f : Sqrt(temp) / v.Z;
-        }
+        public static float SinTheta(Vector3 v) => Sqrt(Sin2Theta(v));
 
-        public static float TanTheta2(Vector3 vec)
-        {
-            float temp = 1 - vec.Z * vec.Z;
-            if (temp <= 0.0f)
-            {
-                return 0.0f;
-            }
-            return temp / (vec.Z * vec.Z);
-        }
+        public static float TanTheta(Vector3 v) => SinTheta(v) / CosTheta(v);
 
-        public static float SinTheta2(Vector3 v) { return 1.0f - v.Z * v.Z; }
-
-        public static float SinPhi(Vector3 v)
-        {
-            var sinTheta = SinTheta(v);
-            return sinTheta == 0.0f ? 1.0f : Math.Clamp(v.Y / sinTheta, -1.0f, 1.0f);
-        }
+        public static float Tan2Theta(Vector3 v) => Sin2Theta(v) / Cos2Theta(v);
 
         public static float CosPhi(Vector3 v)
         {
-            var sinTheta = SinTheta(v);
-            return sinTheta == 0.0f ? 1.0f : Math.Clamp(v.X / sinTheta, -1.0f, 1.0f);
+            float sinTheta = SinTheta(v);
+            return (sinTheta == 0) ? 1 : Math.Clamp(v.X / sinTheta, -1, 1);
         }
 
-        public static float SinPhi2(Vector3 v) { return Math.Clamp(v.Y * v.Y / SinTheta2(v), 0.0f, 1.0f); }
-
-        public static float CosPhi2(Vector3 v) { return Math.Clamp(v.X * v.X / SinTheta2(v), 0.0f, 1.0f); }
-
-        public static bool SameHemisphere(Vector3 w, Vector3 wp)
+        public static float SinPhi(Vector3 v)
         {
-            return w.Z * wp.Z > 0;
+            float sinTheta = SinTheta(v);
+            return (sinTheta == 0) ? 0 : Math.Clamp(v.Y / sinTheta, -1, 1);
         }
+
+        public static float Cos2Phi(Vector3 v) => CosPhi(v) * CosPhi(v);
+
+        public static float Sin2Phi(Vector3 v) => SinPhi(v) * SinPhi(v);
+
+        public static bool SameHemisphere(Vector3 x, Vector3 y) => x.Z * y.Z > 0;
+
+        public static Vector3 Faceforward(Vector3 v, Vector3 v2) => (Dot(v, v2) < 0.0f) ? -v : v;
     }
 }

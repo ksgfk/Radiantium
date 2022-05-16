@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 16
+    "spp": 256
   },
   "integrator": {
     "type": "path"
@@ -53,6 +53,12 @@
       "type": "model",
       "name": "light",
       "location": "../assets/cbox/light.obj"
+    },
+    {
+      "type": "image",
+      "name": "sky",
+      "location": "../assets/museum.exr",
+      "is_flip_y": false
     }
   ],
   "scene": [
@@ -103,24 +109,6 @@
         "type": "diffuse"
       },
       "shape": {
-        "type": "model",
-        "name": "light"
-      },
-      "light": {
-        "type": "diffuse_area",
-        "le": [
-          40,
-          40,
-          40
-        ]
-      }
-    },
-    {
-      "material": {
-        "type": "diffuse",
-        "kd": 1
-      },
-      "shape": {
         "type": "sphere",
         "radius": 0.35
       },
@@ -134,8 +122,12 @@
     },
     {
       "material": {
-        "type": "diffuse",
-        "kd": 1
+        "type": "rough_plastic",
+        "r": 1,
+        "roughness": 0.3,
+        "dist": "GGX",
+        "kd": 0.5,
+        "ks": 1.0
       },
       "shape": {
         "type": "sphere",
@@ -147,6 +139,28 @@
           0.35,
           -0.25
         ]
+      }
+    },
+    {
+      "light": {
+        "type": "infinite",
+        "le": {
+          "type": "image",
+          "name": "sky",
+          "sampler": {
+            "filter": "Linear"
+          }
+        }
+      },
+      "transform": {
+        "rotation": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "angle": 90
+        }
       }
     }
   ]
