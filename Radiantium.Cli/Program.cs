@@ -1,6 +1,7 @@
 ﻿using Radiantium.Core;
 using Radiantium.Offline;
 using Radiantium.Offline.Config;
+using System.Text;
 using System.Text.Json;
 
 namespace Radiantium.Cli

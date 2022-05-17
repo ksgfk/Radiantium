@@ -1,11 +1,12 @@
 ﻿using Radiantium.Core;
 using Radiantium.Offline.Bxdf;
 using System.Numerics;
+using static Radiantium.Offline.Coordinate;
 
 namespace Radiantium.Offline.Materials
 {
     // TODO:
-    // BUG: GGX object edge are too bright. maybe pdf calculate error?
+    // BUG: GGX object edges are too bright.
     public class RoughPlastic : Material
     {
         public Texture2D R { get; }
@@ -50,7 +51,7 @@ namespace Radiantium.Offline.Materials
 
         private Color3F CombineFr(Vector3 wo, Vector3 wi, Vector2 uv)
         {
-            if (!Coordinate.SameHemisphere(wo, wi)) { return new Color3F(0.0f); }
+            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0) { return new Color3F(0.0f); }
             var (r, roughness, kd, ks) = SampleParams(uv);
             Color3F glossy = DistType switch
             {
@@ -79,7 +80,7 @@ namespace Radiantium.Offline.Materials
 
         private float CombinePdf(Vector3 wo, Vector3 wi, Vector2 uv)
         {
-            if (!Coordinate.SameHemisphere(wo, wi)) { return 0.0f; }
+            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0) { return 0.0f; }
             var (r, roughness, kd, ks) = SampleParams(uv);
             float p = GlossyProb(kd, ks);
             float dPdf = new LambertianReflectionBrdf(r).Pdf(wo, wi);
@@ -111,6 +112,7 @@ namespace Radiantium.Offline.Materials
 
         private SampleBxdfResult CombineSample(Vector3 wo, Vector2 uv, Random rand)
         {
+            if (CosTheta(wo) <= 0) { return new SampleBxdfResult(); }
             var (r, roughness, kd, ks) = SampleParams(uv);
             SampleBxdfResult d = new LambertianReflectionBrdf(r).Sample(wo, rand);
             SampleBxdfResult s = DistType switch

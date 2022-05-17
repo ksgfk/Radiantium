@@ -118,16 +118,16 @@ namespace Radiantium.Offline.Bxdf
 
         public static float LambdaGGX(Vector3 w, float alpha)
         {
-            //float absTanTheta = Abs(TanTheta(w));
-            //if (float.IsInfinity(absTanTheta)) { return 0.0f; }
-            //float a = 1 / (alpha * absTanTheta);
-            //return (-1 + Sqrt(1 + (1 / (a * a)))) / 2;
             float absTanTheta = Abs(TanTheta(w));
             if (float.IsInfinity(absTanTheta)) { return 0.0f; }
-            float a =
-                Sqrt(Cos2Phi(w) * alpha * alpha + Sin2Phi(w) * alpha * alpha);
-            float alpha2Tan2Theta = (a * absTanTheta) * (a * absTanTheta);
-            return (-1 + Sqrt(1.0f + alpha2Tan2Theta)) / 2;
+            float a = 1 / (alpha * absTanTheta);
+            return (-1 + Sqrt(1 + (1 / (a * a)))) / 2;
+            //float absTanTheta = Abs(TanTheta(w));
+            //if (float.IsInfinity(absTanTheta)) { return 0.0f; }
+            //float a =
+            //    Sqrt(Cos2Phi(w) * alpha * alpha + Sin2Phi(w) * alpha * alpha);
+            //float alpha2Tan2Theta = (a * absTanTheta) * (a * absTanTheta);
+            //return (-1 + Sqrt(1.0f + alpha2Tan2Theta)) / 2;
         }
 
         public static float SmithGBeckmann(Vector3 wo, Vector3 wi, float alpha)

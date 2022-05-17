@@ -48,13 +48,44 @@ namespace Radiantium.Offline.Config
             builder.AddMaterialBuilder("rough_plastic", (builder, images, param) =>
             {
                 Texture2D r = param.ReadTex2D("r", builder, new Color3F(0.5f));
-                MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "GGX"));
+                MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "Beckmann"));
                 Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.01f));
                 Texture2D kd = param.ReadTex2D("kd", builder, new Color3F(0.5f));
                 Texture2D ks = param.ReadTex2D("ks", builder, new Color3F(1.0f));
                 float etaI = param.ReadFloat("etai", 1.0f);
                 float etaT = param.ReadFloat("etat", 1.5f);
                 return new RoughPlastic(r, dist, roughness, kd, ks, etaI, etaT);
+            });
+            builder.AddMaterialBuilder("rough_metal", (builder, images, param) =>
+            {
+                MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "GGX"));
+                Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.01f));
+                Color3F eta;
+                Color3F k;
+                if (param.HasKey("metal_type"))
+                {
+                    if (param.GetParamType("metal_type") == ConfigParamType.String)
+                    {
+                        string metalType = param.ReadString("metal_type", null);
+                        if (!Spectrum.TryGetMatel(metalType, out var etaK))
+                        {
+                            throw new ArgumentException($"no metal type named {metalType}");
+                        }
+                        (eta, k) = etaK;
+                    }
+                    else
+                    {
+                        var (cuEta, cuK) = Spectrum.NameToEtaAndK["Cu"];
+                        IConfigParamProvider metalType = param.GetSubParam("metal_type");
+                        eta = new Color3F(param.ReadVec3Float("eta", cuEta));
+                        k = new Color3F(param.ReadVec3Float("k", cuK));
+                    }
+                }
+                else
+                {
+                    (eta, k) = Spectrum.NameToEtaAndK["Cu"];
+                }
+                return new RoughMetal(eta, k, roughness, dist);
             });
             builder.AddAreaLightBuilder("diffuse_area", (_, shape, param) =>
             {

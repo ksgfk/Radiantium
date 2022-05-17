@@ -25,8 +25,9 @@
     <shape type="sphere">
         <float name="radius" value="0.35"/>
         <point name="center" value="-0.5,0.35,-0.25"/>
-        <bsdf type="roughplastic">
-            <string name="distribution" value="ggx"/>
+        <bsdf type="roughconductor">
+            <string name="material" value="ggx"/>
+            <string name="distribution" value="beckmann"/>
             <float name="alpha" value="0.09"/>
             <boolean name="sample_visible" value="false"/>
         </bsdf>
@@ -34,11 +35,15 @@
     <shape type="sphere">
         <float name="radius" value="0.35"/>
         <point name="center" value="0.5,0.35,0.2"/>
-        <bsdf type="diffuse">
+        <bsdf type="roughconductor">
+            <string name="material" value="ggx"/>
+            <string name="distribution" value="beckmann"/>
+            <float name="alpha" value="0.09"/>
+            <boolean name="sample_visible" value="false"/>
         </bsdf>
     </shape>
 
-    <default name="spp" value="16"/>
+    <default name="spp" value="64"/>
 
     <sensor type="perspective">
         <float name="near_clip" value="0.01"/>

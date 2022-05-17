@@ -86,6 +86,8 @@ namespace Radiantium.Core
                 cosTheta);
         }
 
+        public static float Lerp(float t, float v1, float v2) { return (1 - t) * v1 + t * v2; }
+
         //******************
         //* Linear Algebra *
         //******************
@@ -142,6 +144,25 @@ namespace Radiantium.Core
                 list[last] = temp;
                 first++;
             }
+        }
+
+        public static int FindInterval<T>(IReadOnlyList<T> list, T target, Func<T, T, bool> pred)
+        {
+            int first = 0, len = list.Count;
+            while (len > 0)
+            {
+                int half = len >> 1, middle = first + half;
+                if (pred(target, list[middle]))
+                {
+                    first = middle + 1;
+                    len -= half + 1;
+                }
+                else
+                {
+                    len = half;
+                }
+            }
+            return Math.Clamp(first - 1, 0, list.Count - 2);
         }
 
         //**********
