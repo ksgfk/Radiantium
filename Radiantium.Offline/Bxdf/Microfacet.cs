@@ -27,7 +27,12 @@ namespace Radiantium.Offline.Bxdf
             return 1 / (1 + Lambda(w));
         }
 
-        public float G(Vector3 wo, Vector3 wi)
+        public float SmithG1(Vector3 wo, Vector3 wi)
+        {
+            return G1(wo) * G1(wi);
+        }
+
+        public float SmithG2(Vector3 wo, Vector3 wi)
         {
             return 1 / (1 + Lambda(wo) + Lambda(wi));
         }
@@ -47,7 +52,7 @@ namespace Radiantium.Offline.Bxdf
             }
             public Vector3 SampleWh(Vector3 wo, Random rand)
             {
-                float logSample = Log(1 - rand.Next());
+                float logSample = Log(1 - rand.NextFloat());
                 float tan2Theta = -Alpha * Alpha * logSample;
                 float phi = rand.Next() * 2 * PI;
                 float cosTheta = 1 / Sqrt(1 + tan2Theta);
@@ -98,13 +103,6 @@ namespace Radiantium.Offline.Bxdf
             float numerator = alpha * alpha;
             float denominator = PI * (cos2Theta * (alpha * alpha - 1) + 1) * (cos2Theta * (alpha * alpha - 1) + 1);
             return numerator / denominator;
-            //float tan2Theta = Tan2Theta(wh);
-            //if (float.IsInfinity(tan2Theta)) { return 0.0f; }
-            //float cos4Theta = Cos2Theta(wh) * Cos2Theta(wh);
-            //float e =
-            //    (Cos2Phi(wh) / (alpha * alpha) + Sin2Phi(wh) / (alpha * alpha)) *
-            //    tan2Theta;
-            //return 1 / (PI * alpha * alpha * cos4Theta * (1 + e) * (1 + e));
         }
 
         public static float LambdaBeckmann(Vector3 w, float alpha)
@@ -122,22 +120,30 @@ namespace Radiantium.Offline.Bxdf
             if (float.IsInfinity(absTanTheta)) { return 0.0f; }
             float a = 1 / (alpha * absTanTheta);
             return (-1 + Sqrt(1 + (1 / (a * a)))) / 2;
-            //float absTanTheta = Abs(TanTheta(w));
-            //if (float.IsInfinity(absTanTheta)) { return 0.0f; }
-            //float a =
-            //    Sqrt(Cos2Phi(w) * alpha * alpha + Sin2Phi(w) * alpha * alpha);
-            //float alpha2Tan2Theta = (a * absTanTheta) * (a * absTanTheta);
-            //return (-1 + Sqrt(1.0f + alpha2Tan2Theta)) / 2;
         }
 
-        public static float SmithGBeckmann(Vector3 wo, Vector3 wi, float alpha)
+        public static float SmithG2Beckmann(Vector3 wo, Vector3 wi, float alpha)
         {
             return 1.0f / (1.0f + LambdaBeckmann(wo, alpha) + LambdaBeckmann(wi, alpha));
         }
 
-        public static float SmithGGGX(Vector3 wo, Vector3 wi, float alpha)
+        public static float SmithG2GGX(Vector3 wo, Vector3 wi, float alpha)
         {
             return 1.0f / (1.0f + LambdaGGX(wo, alpha) + LambdaGGX(wi, alpha));
+        }
+
+        public static float SmithG1Beckmann(Vector3 wo, Vector3 wi, float alpha)
+        {
+            float o = 1 / (1 + LambdaBeckmann(wo, alpha));
+            float i = 1 / (1 + LambdaBeckmann(wi, alpha));
+            return o * i;
+        }
+
+        public static float SmithG1GGX(Vector3 wo, Vector3 wi, float alpha)
+        {
+            float o = 1 / (1 + LambdaGGX(wo, alpha));
+            float i = 1 / (1 + LambdaGGX(wi, alpha));
+            return o * i;
         }
     }
 }

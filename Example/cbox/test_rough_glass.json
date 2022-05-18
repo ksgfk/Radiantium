@@ -1,9 +1,10 @@
 {
   "renderer": {
-    "spp": 4096
+    "spp": 256
   },
   "integrator": {
-    "type": "path"
+    "type": "path",
+    "min_depth": 7
   },
   "camera": {
     "type": "perspective",
@@ -53,12 +54,6 @@
       "type": "model",
       "name": "light",
       "location": "../assets/cbox/light.obj"
-    },
-    {
-      "type": "image",
-      "name": "sky",
-      "location": "../assets/museum.exr",
-      "is_flip_y": false
     }
   ],
   "scene": [
@@ -106,10 +101,26 @@
     },
     {
       "material": {
-        "type": "rough_metal",
+        "type": "diffuse"
+      },
+      "shape": {
+        "type": "model",
+        "name": "light"
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          40,
+          40,
+          40
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "rough_glass",
         "roughness": 0.3,
-        "dist": "GGX",
-        "metal_type": "Au"
+        "dist": "GGX"
       },
       "shape": {
         "type": "sphere",
@@ -128,7 +139,7 @@
         "type": "rough_metal",
         "roughness": 0.3,
         "dist": "GGX",
-        "metal_type": "Cu"
+        "metal_type": "Au"
       },
       "shape": {
         "type": "sphere",
@@ -140,28 +151,6 @@
           0.35,
           -0.25
         ]
-      }
-    },
-    {
-      "light": {
-        "type": "infinite",
-        "le": {
-          "type": "image",
-          "name": "sky",
-          "sampler": {
-            "filter": "Linear"
-          }
-        }
-      },
-      "transform": {
-        "rotation": {
-          "axis": [
-            0,
-            1,
-            0
-          ],
-          "angle": 90
-        }
       }
     }
   ]

@@ -271,7 +271,7 @@ namespace Radiantium.Offline.Integrators
                         Color3F li = new Color3F(0);
                         if (isHit)
                         {
-                            if (lightInct.IsLight && lightInct.Light == light)
+                            if (lightInct.IsLight)
                             {
                                 li = lightInct.Le(inct.ToWorld(-sample.Wi));
                             }

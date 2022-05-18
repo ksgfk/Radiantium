@@ -42,13 +42,12 @@ namespace Radiantium.Offline.Bxdf
                 EtaT = etaT;
                 K = k;
             }
-            public Color3F Eval(float cosI) { return new Color3F(ConductorFunc(cosI, EtaI, EtaT, K)); }
+            public Color3F Eval(float cosI) { return ConductorFunc(cosI, EtaI, EtaT, K); }
         }
 
         public static float DielectricFunc(float cosThetaI, float etaI, float etaT)
         {
             cosThetaI = Math.Clamp(cosThetaI, -1, 1);
-            // swap indices of refraction
             bool entering = cosThetaI > 0.0f;
             if (!entering)
             {
@@ -57,11 +56,9 @@ namespace Radiantium.Offline.Bxdf
                 etaT = t;
                 cosThetaI = Abs(cosThetaI);
             }
-            // Snell's law
             float sinThetaI = Sqrt(Max(0, 1 - cosThetaI * cosThetaI));
             float sinThetaT = etaI / etaT * sinThetaI;
-            // total internal reflection
-            if (sinThetaT >= 1) return 1;
+            if (sinThetaT >= 1) { return 1; }
             float cosThetaT = Sqrt(Max(0, 1 - sinThetaT * sinThetaT));
             float rparl = ((etaT * cosThetaI) - (etaI * cosThetaT)) / ((etaT * cosThetaI) + (etaI * cosThetaT));
             float rperp = ((etaI * cosThetaI) - (etaT * cosThetaT)) / ((etaI * cosThetaI) + (etaT * cosThetaT));

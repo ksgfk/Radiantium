@@ -49,7 +49,7 @@ namespace Radiantium.Offline.Config
             {
                 Texture2D r = param.ReadTex2D("r", builder, new Color3F(0.5f));
                 MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "Beckmann"));
-                Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.01f));
+                Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.3f));
                 Texture2D kd = param.ReadTex2D("kd", builder, new Color3F(0.5f));
                 Texture2D ks = param.ReadTex2D("ks", builder, new Color3F(1.0f));
                 float etaI = param.ReadFloat("etai", 1.0f);
@@ -59,7 +59,7 @@ namespace Radiantium.Offline.Config
             builder.AddMaterialBuilder("rough_metal", (builder, images, param) =>
             {
                 MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "GGX"));
-                Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.01f));
+                Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.3f));
                 Color3F eta;
                 Color3F k;
                 if (param.HasKey("metal_type"))
@@ -86,6 +86,24 @@ namespace Radiantium.Offline.Config
                     (eta, k) = Spectrum.NameToEtaAndK["Cu"];
                 }
                 return new RoughMetal(eta, k, roughness, dist);
+            });
+            builder.AddMaterialBuilder("rough_glass", (builder, images, param) =>
+            {
+                Texture2D r = param.ReadTex2D("r", builder, new Color3F(1));
+                Texture2D t = param.ReadTex2D("t", builder, new Color3F(1));
+                Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.3f));
+                float etaA = param.ReadFloat("etaA", 1.000277f);
+                float etaB = param.ReadFloat("etaB", 1.5046f);
+                MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "GGX"));
+                return new RoughGlass(r, t, roughness, etaA, etaB, dist);
+            });
+            builder.AddMaterialBuilder("rough_glass_new", (builder, images, param) =>
+            {
+                float Roughness = param.ReadFloat("roughness", 0.3f);
+                Color3F BaseColor = new Color3F(param.ReadVec3Float("baseColor", new Color3F(1.0f)));
+                float IntIOR = param.ReadFloat("intIOR", 1.5046f);
+                float ExtIOR = param.ReadFloat("extIOR", 1.000277f);
+                return new Materials.Experimental.RoughGlassNew(BaseColor, Roughness, IntIOR, ExtIOR);
             });
             builder.AddAreaLightBuilder("diffuse_area", (_, shape, param) =>
             {
