@@ -32,11 +32,11 @@ namespace Radiantium.Offline.Bxdf
             float etaT = entering ? Fresnel.EtaT : Fresnel.EtaI;
             float eta = etaT / etaI;
             Vector3 wh = Normalize(wo + wi * eta);
-            if (!SameHemisphere(wo, wh)) { wh = -wh; }
+            if (CosTheta(wh) < 0) { wh = -wh; }
             if (Dot(wo, wh) * Dot(wi, wh) > 0) { return new Color3F(); }
             Color3F f = Fresnel.Eval(Dot(wo, wh));
             float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
-            float factor = 1;
+            float factor = 1 / eta;
             float d = Distribution.D(wh);
             float g = Distribution.SmithG2(wo, wi);
             return (1 - f) * T *
@@ -46,14 +46,13 @@ namespace Radiantium.Offline.Bxdf
 
         public float Pdf(Vector3 wo, Vector3 wi)
         {
-            if (SameHemisphere(wo, wi)) { return 0; }
+            if (SameHemisphere(wo, wi)) { return 0.0f; }
             bool entering = CosTheta(wo) > 0;
             float etaI = entering ? Fresnel.EtaI : Fresnel.EtaT;
             float etaT = entering ? Fresnel.EtaT : Fresnel.EtaI;
             float eta = etaT / etaI;
             Vector3 wh = Normalize(wo + wi * eta);
-            if (!SameHemisphere(wo, wh)) { wh = -wh; }
-            if (Dot(wo, wh) * Dot(wi, wh) > 0) return 0;
+            if (Dot(wo, wh) * Dot(wi, wh) > 0) { return 0; }
             float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
             float dwhdwi = MathF.Abs((eta * eta * Dot(wi, wh)) / (sqrtDenom * sqrtDenom));
             return Distribution.Pdf(wo, wh) * dwhdwi;
@@ -68,12 +67,10 @@ namespace Radiantium.Offline.Bxdf
             float etaI = entering ? Fresnel.EtaI : Fresnel.EtaT;
             float etaT = entering ? Fresnel.EtaT : Fresnel.EtaI;
             float eta = etaI / etaT;
-            if (!Refract(wo, wh, eta, out Vector3 wi))
-            {
-                return new SampleBxdfResult();
-            }
+            if (!Refract(wo, wh, eta, out Vector3 wi)) { return new SampleBxdfResult(); }
             Color3F btdf = Fr(wo, wi);
             float pdf = Pdf(wo, wi);
+            if (!btdf.IsValid || float.IsInfinity(pdf)) { return new SampleBxdfResult(); }
             return new SampleBxdfResult(wi, btdf, pdf, Type);
         }
     }

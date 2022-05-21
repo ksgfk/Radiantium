@@ -194,11 +194,23 @@ namespace Radiantium.Offline.Integrators
                     if (lightPdf > 0.0f)
                     {
                         radiance += coeff * EstimateDirect(scene, rand, light, inct, wo, sample) / lightPdf;
+#if DEBUG
+                        if (!radiance.IsValid)
+                        {
+                            throw new InvalidOperationException($"{radiance}");
+                        }
+#endif
                     }
                 }
                 if (sample.Pdf > 0.0f)
                 {
                     coeff *= sample.Fr * Coordinate.AbsCosTheta(sample.Wi) / sample.Pdf;
+#if DEBUG
+                    if (!coeff.IsValid)
+                    {
+                        throw new InvalidOperationException($"{coeff}");
+                    }
+#endif
                 }
                 else
                 {

@@ -1,10 +1,10 @@
 {
   "renderer": {
-    "spp": 256
+    "spp": 8192
   },
   "integrator": {
     "type": "path",
-    "min_depth": 7
+    "min_depth": 5
   },
   "camera": {
     "type": "perspective",

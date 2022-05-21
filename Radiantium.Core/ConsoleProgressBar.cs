@@ -14,7 +14,7 @@
         {
             if (width == -1)
             {
-                width = Console.WindowWidth - 1;
+                width = Math.Max(32, Console.WindowWidth - 32);
             }
             _total = total;
             _width = width;

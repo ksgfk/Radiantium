@@ -7,8 +7,6 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Materials
 {
-    //TODO:
-    //BUG: There are some differences with the results of mitsuba2
     public class RoughGlass : Material
     {
         public Texture2D R { get; }
@@ -29,104 +27,93 @@ namespace Radiantium.Offline.Materials
             Dist = dist;
         }
 
-        private (Color3F, Color3F, float) SampleParams(Vector2 uv)
+        private Color3F FrImpl<T>(Vector3 wo, Vector3 wi, Vector2 uv, T dist)
+            where T : IMicrofacetDistribution
         {
-            return (
-                R.Sample(uv),
-                T.Sample(uv),
-                Roughness.Sample(uv).R
-            );
+            Color3F r = R.Sample(uv);
+            Color3F t = this.T.Sample(uv);
+
+            bool isReflect = SameHemisphere(wo, wi);
+            bool entering = CosTheta(wo) > 0;
+            float etaI = entering ? EtaA : EtaB;
+            float etaT = entering ? EtaB : EtaA;
+            float eta = isReflect ? 1 : etaT / etaI;
+            Vector3 wh = Normalize(wo + wi * eta);
+            if (CosTheta(wh) < 0) { wh = -wh; }
+            float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
+            float d = dist.D(wh);
+            float g = dist.SmithG1(wo, wi);
+            float f = Fresnel.DielectricFunc(Dot(wo, wh), etaI, etaT);
+            Color3F bsdf;
+            if (isReflect)
+            {
+                Color3F brdf = r * (d * g * f / (4.0f * CosTheta(wi) * CosTheta(wo)));
+                bsdf = brdf;
+            }
+            else
+            {
+                if (Dot(wo, wh) * Dot(wi, wh) > 0) { return new Color3F(); }
+                float factor = 1 / eta;
+                Color3F btdf = (1 - f) * t *
+                    MathF.Abs(d * g * eta * eta * AbsDot(wi, wh) * AbsDot(wo, wh) * factor * factor /
+                    (CosTheta(wo) * CosTheta(wi) * sqrtDenom * sqrtDenom));
+                bsdf = btdf;
+            }
+            return bsdf.IsValid ? bsdf : new Color3F(0.0f);
         }
 
         public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            var (r, t, roughness) = SampleParams(inct.UV);
-            if (SameHemisphere(wo, wi))
+            float roughness = Roughness.Sample(inct.UV).R;
+            return Dist switch
             {
-                return Dist switch
-                {
-                    MicrofacetDistributionType.Beckmann => new MicrofacetReflectionBrdf<Fresnel.Dielectric, Microfacet.Beckmann>(
-                        r,
-                        new Fresnel.Dielectric(EtaA, EtaB),
-                        new Microfacet.Beckmann(roughness)
-                    ).Fr(wo, wi),
-                    MicrofacetDistributionType.GGX => new MicrofacetReflectionBrdf<Fresnel.Dielectric, Microfacet.GGX>(
-                        r,
-                        new Fresnel.Dielectric(EtaA, EtaB),
-                        new Microfacet.GGX(roughness)
-                    ).Fr(wo, wi),
-                    _ => new Color3F(0.0f),
-                };
+                MicrofacetDistributionType.Beckmann => FrImpl(wo, wi, inct.UV, new Microfacet.Beckmann(roughness)),
+                MicrofacetDistributionType.GGX => FrImpl(wo, wi, inct.UV, new Microfacet.GGX(roughness)),
+                _ => new Color3F(0.0f),
+            };
+        }
+
+        private float PdfImpl<T>(Vector3 wo, Vector3 wi, T dist)
+            where T : IMicrofacetDistribution
+        {
+            bool isReflect = SameHemisphere(wo, wi);
+            bool entering = CosTheta(wo) > 0;
+            float etaI = entering ? EtaA : EtaB;
+            float etaT = entering ? EtaB : EtaA;
+            float pdf;
+            if (isReflect)
+            {
+                Vector3 wh = Normalize(wo + wi);
+                if (CosTheta(wh) < 0) { wh = -wh; }
+                if (Dot(wo, wh) * CosTheta(wo) <= 0 || Dot(wi, wh) * CosTheta(wi) <= 0) { return 0.0f; }
+                float jacobian = 1.0f / (4.0f * AbsDot(wh, wi));
+                float f = Fresnel.DielectricFunc(Dot(wo, wh), etaI, etaT);
+                pdf = dist.Pdf(wo, wh) * jacobian * f;
             }
             else
             {
-                return Dist switch
-                {
-                    MicrofacetDistributionType.Beckmann => new MicrofacetTransmissionBtdf<Microfacet.Beckmann>(
-                        t,
-                        EtaA, EtaB,
-                        new Microfacet.Beckmann(roughness)
-                    ).Fr(wo, wi),
-                    MicrofacetDistributionType.GGX => new MicrofacetTransmissionBtdf<Microfacet.GGX>(
-                        t,
-                        EtaA, EtaB,
-                        new Microfacet.GGX(roughness)
-                    ).Fr(wo, wi),
-                    _ => new Color3F(0.0f),
-                };
+                float eta = etaT / etaI;
+                Vector3 wh = Normalize(wo + wi * eta);
+                if (CosTheta(wh) < 0) { wh = -wh; }
+                if (Dot(wo, wh) * Dot(wi, wh) > 0) { return 0.0f; }
+                if (Dot(wo, wh) * CosTheta(wo) <= 0 || Dot(wi, wh) * CosTheta(wi) <= 0) { return 0.0f; }
+                float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
+                float dwhdwi = MathF.Abs((eta * eta * Dot(wi, wh)) / (sqrtDenom * sqrtDenom));
+                float f = Fresnel.DielectricFunc(Dot(wo, wh), etaI, etaT);
+                pdf = dist.Pdf(wo, wh) * dwhdwi * (1 - f);
             }
+            return float.IsInfinity(pdf) || float.IsNaN(pdf) ? 0.0f : pdf;
         }
 
         public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            var (r, t, roughness) = SampleParams(inct.UV);
-            if (SameHemisphere(wo, wi))
+            float roughness = Roughness.Sample(inct.UV).R;
+            return Dist switch
             {
-                Vector3 wh = Normalize(wo + wi);
-                Fresnel.Dielectric fresnel = new Fresnel.Dielectric(EtaA, EtaB);
-                float f = fresnel.Eval(Dot(wo, wh)).R;
-                float pdf = Dist switch
-                {
-                    MicrofacetDistributionType.Beckmann => new MicrofacetReflectionBrdf<Fresnel.Dielectric, Microfacet.Beckmann>(
-                        r,
-                        new Fresnel.Dielectric(EtaA, EtaB),
-                        new Microfacet.Beckmann(roughness)
-                    ).Pdf(wo, wi),
-                    MicrofacetDistributionType.GGX => new MicrofacetReflectionBrdf<Fresnel.Dielectric, Microfacet.GGX>(
-                        r,
-                        new Fresnel.Dielectric(EtaA, EtaB),
-                        new Microfacet.GGX(roughness)
-                    ).Pdf(wo, wi),
-                    _ => 0.0f,
-                };
-                return pdf * f;
-            }
-            else
-            {
-                bool entering = CosTheta(wo) > 0;
-                float etaI = entering ? EtaA : EtaB;
-                float etaT = entering ? EtaB : EtaA;
-                float eta = etaT / etaI;
-                Vector3 wh = Normalize(wo + wi * eta);
-                if (!SameHemisphere(wo, wh)) { wh = -wh; }
-                Fresnel.Dielectric fresnel = new Fresnel.Dielectric(EtaA, EtaB);
-                float f = fresnel.Eval(Dot(wo, wh)).R;
-                float pdf = Dist switch
-                {
-                    MicrofacetDistributionType.Beckmann => new MicrofacetTransmissionBtdf<Microfacet.Beckmann>(
-                        t,
-                        EtaA, EtaB,
-                        new Microfacet.Beckmann(roughness)
-                    ).Pdf(wo, wi),
-                    MicrofacetDistributionType.GGX => new MicrofacetTransmissionBtdf<Microfacet.GGX>(
-                        t,
-                        EtaA, EtaB,
-                        new Microfacet.GGX(roughness)
-                    ).Pdf(wo, wi),
-                    _ => 0.0f,
-                };
-                return pdf * (1 - f);
-            }
+                MicrofacetDistributionType.Beckmann => PdfImpl(wo, wi, new Microfacet.Beckmann(roughness)),
+                MicrofacetDistributionType.GGX => PdfImpl(wo, wi, new Microfacet.GGX(roughness)),
+                _ => 0.0f,
+            };
         }
 
         private SampleBxdfResult SampleImpl<T>(Vector3 wo, Vector2 uv, Random rand, T dist)
@@ -135,32 +122,45 @@ namespace Radiantium.Offline.Materials
             Color3F r = R.Sample(uv);
             Color3F t = this.T.Sample(uv);
             Vector3 wh = dist.SampleWh(wo, rand);
-            Fresnel.Dielectric fresnel = new Fresnel.Dielectric(EtaA, EtaB);
-            float f = fresnel.Eval(Dot(wo, wh)).R;
+            float f = Fresnel.DielectricFunc(Dot(wo, wh), EtaA, EtaB);
             if (rand.NextFloat() < f)
             {
-                MicrofacetReflectionBrdf<Fresnel.Dielectric, T> brdf = new(r, fresnel, dist);
                 Vector3 wi = Reflect(-wo, wh);
                 if (!SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
-                float pdf = brdf.Pdf(wo, wi) * f;
-                Color3F fr = brdf.Fr(wo, wi);
-                return new SampleBxdfResult(wi, fr, pdf, brdf.Type);
+                float d = dist.D(wh);
+                float g = dist.SmithG1(wo, wi);
+                Color3F brdf = r * (d * g * f / (4.0f * CosTheta(wi) * CosTheta(wo)));
+                float jacobian = 1.0f / (4.0f * AbsDot(wh, wi));
+                float pdf = dist.Pdf(wo, wh) * jacobian * f;
+                if (float.IsInfinity(pdf) || float.IsNaN(pdf) || !brdf.IsValid) { return new SampleBxdfResult(); }
+                return new SampleBxdfResult(wi, brdf, pdf, BxdfType.Reflection | BxdfType.Glossy);
             }
             else
             {
-                MicrofacetTransmissionBtdf<T> btdf = new(t, EtaA, EtaB, dist);
-                if (Dot(wo, wh) < 0) { return new SampleBxdfResult(); }
                 bool entering = CosTheta(wo) > 0;
-                float etaI = entering ? fresnel.EtaI : fresnel.EtaT;
-                float etaT = entering ? fresnel.EtaT : fresnel.EtaI;
-                float eta = etaI / etaT;
-                if (!Refract(wo, wh, eta, out Vector3 wi))
+                float etaI = entering ? EtaA : EtaB;
+                float etaT = entering ? EtaB : EtaA;
+                float eta = etaT / etaI;
+                if (Refract(wo, wh, etaI / etaT, out Vector3 wi))
                 {
-                    return new SampleBxdfResult();
+                    if (Dot(wo, wh) * Dot(wi, wh) > 0) { return new SampleBxdfResult(); }
                 }
-                Color3F ft = btdf.Fr(wo, wi);
-                float pdf = btdf.Pdf(wo, wi) * (1 - f);
-                return new SampleBxdfResult(wi, ft, pdf, btdf.Type);
+                else
+                {
+                    wi = Reflect(-wo, wh);
+                    eta = 1;
+                }
+                float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
+                float factor = 1 / eta;
+                float d = dist.D(wh);
+                float g = dist.SmithG1(wo, wi);
+                Color3F btdf = (1 - f) * t *
+                    MathF.Abs(d * g * eta * eta * AbsDot(wi, wh) * AbsDot(wo, wh) * factor * factor /
+                    (CosTheta(wo) * CosTheta(wi) * sqrtDenom * sqrtDenom));
+                float dwhdwi = MathF.Abs((eta * eta * Dot(wi, wh)) / (sqrtDenom * sqrtDenom));
+                float pdf = dist.Pdf(wo, wh) * dwhdwi * (1 - f);
+                if (float.IsInfinity(pdf) || float.IsNaN(pdf) || !btdf.IsValid) { return new SampleBxdfResult(); }
+                return new SampleBxdfResult(wi, btdf, pdf, BxdfType.Transmission | BxdfType.Glossy);
             }
         }
 

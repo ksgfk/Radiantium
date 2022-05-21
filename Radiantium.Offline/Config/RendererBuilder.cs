@@ -97,14 +97,6 @@ namespace Radiantium.Offline.Config
                 MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "GGX"));
                 return new RoughGlass(r, t, roughness, etaA, etaB, dist);
             });
-            builder.AddMaterialBuilder("rough_glass_new", (builder, images, param) =>
-            {
-                float Roughness = param.ReadFloat("roughness", 0.3f);
-                Color3F BaseColor = new Color3F(param.ReadVec3Float("baseColor", new Color3F(1.0f)));
-                float IntIOR = param.ReadFloat("intIOR", 1.5046f);
-                float ExtIOR = param.ReadFloat("extIOR", 1.000277f);
-                return new Materials.Experimental.RoughGlassNew(BaseColor, Roughness, IntIOR, ExtIOR);
-            });
             builder.AddAreaLightBuilder("diffuse_area", (_, shape, param) =>
             {
                 Vector3 le = param.ReadVec3Float("le", new Vector3(1));

@@ -18,7 +18,7 @@ namespace Radiantium.Cli
             (Renderer renderer, ResultOutput output) = GetRenderer(args);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
             System.Timers.Timer timer = new System.Timers.Timer(1000);
-            ConsoleProgressBar bar = new ConsoleProgressBar(renderer.AllBlockCount, 32);
+            ConsoleProgressBar bar = new ConsoleProgressBar(renderer.AllBlockCount);
             renderer.CompleteBlock += _ => bar.Increase();
             timer.Elapsed += (_, _) => bar.Draw();
             timer.Start();
