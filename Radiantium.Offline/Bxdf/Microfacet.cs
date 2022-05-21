@@ -60,7 +60,7 @@ namespace Radiantium.Offline.Bxdf
                 (float sinPhi, float cosPhi) = SinCos(phi);
                 Vector3 wh = new Vector3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
                 if (!SameHemisphere(wo, wh)) wh = -wh;
-                return wh;
+                return Vector3.Normalize(wh);
             }
         }
 
@@ -83,7 +83,7 @@ namespace Radiantium.Offline.Bxdf
                 (float sinPhi, float cosPhi) = SinCos(phi);
                 Vector3 wh = new Vector3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
                 if (!SameHemisphere(wo, wh)) wh = -wh;
-                return wh;
+                return Vector3.Normalize(wh);
             }
         }
 

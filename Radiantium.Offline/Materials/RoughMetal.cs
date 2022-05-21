@@ -5,8 +5,6 @@ using static Radiantium.Offline.Coordinate;
 
 namespace Radiantium.Offline.Materials
 {
-    //TODO:
-    //BUG: Beckmann...edges are black...
     public class RoughMetal : Material
     {
         public Color3F Eta { get; }
@@ -28,68 +26,76 @@ namespace Radiantium.Offline.Materials
             return Roughness.Sample(uv).R;
         }
 
+        private Color3F FrImpl<T>(Vector3 wo, Vector3 wi, T dist) where T : IMicrofacetDistribution
+        {
+            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0)
+            {
+                wo = -wo;
+                wi = -wi;
+            }
+            return new MicrofacetReflectionBrdf<Fresnel.Conductor, T>(
+                new Color3F(1.0f),
+                new Fresnel.Conductor(new Color3F(1.0f), Eta, K),
+                dist
+            ).Fr(wo, wi);
+        }
+
         public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0) { return new Color3F(0.0f); }
             float roughness = GetParam(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann =>
-                    new MicrofacetReflectionBrdf<Fresnel.Conductor, Microfacet.Beckmann>(
-                        new Color3F(1.0f),
-                        new Fresnel.Conductor(new Color3F(1.0f), Eta, K),
-                        new Microfacet.Beckmann(roughness)
-                    ).Fr(wo, wi),
-                MicrofacetDistributionType.GGX =>
-                    new MicrofacetReflectionBrdf<Fresnel.Conductor, Microfacet.GGX>(
-                        new Color3F(1.0f),
-                        new Fresnel.Conductor(new Color3F(1.0f), Eta, K),
-                        new Microfacet.GGX(roughness)
-                    ).Fr(wo, wi),
+                MicrofacetDistributionType.Beckmann => FrImpl(wo, wi, new Microfacet.Beckmann(roughness)),
+                MicrofacetDistributionType.GGX => FrImpl(wo, wi, new Microfacet.GGX(roughness)),
                 _ => new Color3F(0.0f)
             };
         }
 
+        private float PdfImpl<T>(Vector3 wo, Vector3 wi, T dist) where T : IMicrofacetDistribution
+        {
+            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0)
+            {
+                wo = -wo;
+                wi = -wi;
+            }
+            return new MicrofacetReflectionBrdf<Fresnel.Conductor, T>(
+                new Color3F(1.0f),
+                new Fresnel.Conductor(new Color3F(1.0f), Eta, K),
+                dist
+            ).Pdf(wo, wi);
+        }
+
         public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0) { return 0.0f; }
             float roughness = GetParam(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann =>
-                    new MicrofacetReflectionBrdf<Fresnel.Conductor, Microfacet.Beckmann>(
-                        new Color3F(1.0f),
-                        new Fresnel.Conductor(new Color3F(1.0f), Eta, K),
-                        new Microfacet.Beckmann(roughness)
-                    ).Pdf(wo, wi),
-                MicrofacetDistributionType.GGX =>
-                    new MicrofacetReflectionBrdf<Fresnel.Conductor, Microfacet.GGX>(
-                        new Color3F(1.0f),
-                        new Fresnel.Conductor(new Color3F(1.0f), Eta, K),
-                        new Microfacet.GGX(roughness)
-                    ).Pdf(wo, wi),
+                MicrofacetDistributionType.Beckmann => PdfImpl(wo, wi, new Microfacet.Beckmann(roughness)),
+                MicrofacetDistributionType.GGX => PdfImpl(wo, wi, new Microfacet.GGX(roughness)),
                 _ => 0.0f
             };
         }
 
+        private SampleBxdfResult SampleImpl<T>(Vector3 wo, Random rand, T dist) where T : IMicrofacetDistribution
+        {
+            if (CosTheta(wo) <= 0)
+            {
+                wo = -wo;
+            }
+            return new MicrofacetReflectionBrdf<Fresnel.Conductor, T>(
+                new Color3F(1.0f),
+                new Fresnel.Conductor(new Color3F(1.0f), Eta, K),
+                dist
+            ).Sample(wo, rand);
+        }
+
         public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
         {
-            if (CosTheta(wo) <= 0) { return new SampleBxdfResult(); }
             float roughness = GetParam(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann =>
-                    new MicrofacetReflectionBrdf<Fresnel.Conductor, Microfacet.Beckmann>(
-                        new Color3F(1.0f),
-                        new Fresnel.Conductor(new Color3F(1.0f), Eta, K),
-                        new Microfacet.Beckmann(roughness)
-                    ).Sample(wo, rand),
-                MicrofacetDistributionType.GGX =>
-                    new MicrofacetReflectionBrdf<Fresnel.Conductor, Microfacet.GGX>(
-                        new Color3F(1.0f),
-                        new Fresnel.Conductor(new Color3F(1.0f), Eta, K),
-                        new Microfacet.GGX(roughness)
-                    ).Sample(wo, rand),
+                MicrofacetDistributionType.Beckmann => SampleImpl(wo, rand, new Microfacet.Beckmann(roughness)),
+                MicrofacetDistributionType.GGX => SampleImpl(wo, rand, new Microfacet.GGX(roughness)),
                 _ => new SampleBxdfResult()
             };
         }

@@ -35,7 +35,6 @@ namespace Radiantium.Offline.Bxdf
             float d = Distribution.D(wh);
             float g = Distribution.SmithG2(wo, wi);
             Color3F result = R * ((d * g * f) / (4 * cosThetaI * cosThetaO));
-            //Color3F result = R * ((d) / (4 * cosThetaI * cosThetaO));
             return result;
         }
 
