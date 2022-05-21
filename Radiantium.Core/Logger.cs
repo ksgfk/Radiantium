@@ -10,6 +10,7 @@
 
     public static class Logger
     {
+        private static Mutex _mutex = new Mutex();
         private static Action<string, LogLevel>? _proxyLog;
 
         public static Action<string, LogLevel>? SetLogProxy(Action<string, LogLevel> proxy)
@@ -21,6 +22,8 @@
 
         private static void Log(string msg, LogLevel level)
         {
+            _mutex.WaitOne();
+
             if (_proxyLog == null)
             {
                 Console.ForegroundColor = level switch
@@ -37,6 +40,8 @@
             {
                 _proxyLog(msg, level);
             }
+
+            _mutex.ReleaseMutex();
         }
 
         public static void Debug(string msg) { Log(msg, LogLevel.Debug); }
@@ -56,5 +61,15 @@
         public static void Error(string fmt, params object[] objs) { Log(string.Format(fmt, objs), LogLevel.Error); }
 
         public static void Exception(Exception e) { Log(e.ToString(), LogLevel.Error); }
+
+        public static void Lock()
+        {
+            _mutex.WaitOne();
+        }
+
+        public static void Release()
+        {
+            _mutex.ReleaseMutex();
+        }
     }
 }

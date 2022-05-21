@@ -37,20 +37,50 @@ namespace Radiantium.Core
 
         public ref Color3F RefRGB(int x, int y)
         {
+            if (_channel < 3) { throw new InvalidOperationException("too few channels"); }
             return ref Unsafe.As<float, Color3F>(ref _buffer[GetIndex(x, y)]);
         }
 
         public Color3F GetRGB(int x, int y)
         {
-            return Unsafe.As<float, Color3F>(ref _buffer[GetIndex(x, y)]);
+            if (_channel < 3)
+            {
+                int start = GetIndex(x, y);
+                Color3F result = default;
+                for (int i = 0; i < 3; i++)
+                {
+                    Color3F.IndexerUnsafe(ref result, i) = _channel >= i ? 0 : _buffer[start + i];
+                }
+                return result;
+            }
+            else
+            {
+                return Unsafe.As<float, Color3F>(ref _buffer[GetIndex(x, y)]);
+            }
         }
 
         public void SetRGB(int x, int y, Color3F color)
         {
-            int i = GetIndex(x, y);
-            _buffer[i + 0] = color.R;
-            _buffer[i + 1] = color.G;
-            _buffer[i + 2] = color.B;
+            if (_channel < 3)
+            {
+                int start = GetIndex(x, y);
+                for (int i = 0; i < _channel; i++)
+                {
+                    _buffer[start + i] = Color3F.IndexerUnsafe(ref color, i);
+                }
+            }
+            else
+            {
+                int i = GetIndex(x, y);
+                _buffer[i + 0] = color.R;
+                _buffer[i + 1] = color.G;
+                _buffer[i + 2] = color.B;
+            }
+        }
+
+        public Span<float> GetPixel(int x, int y)
+        {
+            return new Span<float>(_buffer, GetIndex(x, y), _channel);
         }
     }
 }

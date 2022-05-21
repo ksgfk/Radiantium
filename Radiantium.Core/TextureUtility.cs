@@ -114,7 +114,7 @@ namespace Radiantium.Core
             }
         }
 
-        public static ColorBuffer LoadImageFromPath(string path, bool isFlipY, bool isCastToLinear)
+        public static ColorBuffer LoadImageFromPath(string path, int needChannel, bool isFlipY, bool isCastToLinear)
         {
             try
             {
@@ -124,7 +124,7 @@ namespace Radiantium.Core
                 using var pixels = image.GetPixelsUnsafe();
                 int channel = pixels.Channels;
                 IntPtr head = pixels.GetAreaPointer(0, 0, 1, 1);
-                ColorBuffer buffer = new ColorBuffer(width, height, channel);
+                ColorBuffer buffer = new ColorBuffer(width, height, needChannel > 0 ? needChannel : channel);
                 for (int i = 0; i < width; i++)
                 {
                     for (int j = 0; j < height; j++)
@@ -142,10 +142,29 @@ namespace Radiantium.Core
                             }
                             int offset = (k * width + i) * channel; //Magick.NET内部储存是行优先...
                             void* ptr = Unsafe.Add<float>(head.ToPointer(), offset);
-                            float r = Unsafe.Read<float>(ptr);
-                            float g = Unsafe.Read<float>(Unsafe.Add<float>(ptr, 1));
-                            float b = Unsafe.Read<float>(Unsafe.Add<float>(ptr, 2));
-                            buffer.SetRGB(i, j, new Color3F(r, g, b));
+                            if (needChannel > 0)
+                            {
+                                Span<float> pixel = buffer.GetPixel(i, j);
+                                for (int a = 0; a < pixel.Length; a++)
+                                {
+                                    if (a >= channel)
+                                    {
+                                        pixel[a] = 0;
+                                    }
+                                    else
+                                    {
+                                        pixel[a] = Unsafe.Read<float>(Unsafe.Add<float>(ptr, a));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Span<float> pixel = buffer.GetPixel(i, j);
+                                for (int a = 0; a < channel; a++)
+                                {
+                                    pixel[a] = Unsafe.Read<float>(Unsafe.Add<float>(ptr, a));
+                                }
+                            }
                         }
                     }
                 }
@@ -153,7 +172,11 @@ namespace Radiantium.Core
                 {
                     for (int j = 0; j < height; j++)
                     {
-                        buffer.RefRGB(i, j) /= Quantum.Max;
+                        Span<float> pixel = buffer.GetPixel(i, j);
+                        foreach (ref float e in pixel)
+                        {
+                            e /= Quantum.Max;
+                        }
                     }
                 }
                 if (isCastToLinear)
@@ -162,7 +185,11 @@ namespace Radiantium.Core
                     {
                         for (int j = 0; j < height; j++)
                         {
-                            buffer.RefRGB(i, j).ToLinearRGB();
+                            Span<float> pixel = buffer.GetPixel(i, j);
+                            foreach (ref float e in pixel)
+                            {
+                                e = Color3F.ToLinear(e);
+                            }
                         }
                     }
                 }

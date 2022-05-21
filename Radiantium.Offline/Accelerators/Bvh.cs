@@ -1,4 +1,5 @@
 ﻿using Radiantium.Core;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using static Radiantium.Core.MathExt;
@@ -74,15 +75,18 @@ namespace Radiantium.Offline.Accelerators
             }
         }
 
-        private readonly int _maxPrimsInNode;
-        private readonly SplitMethod _splitMethod;
-        private readonly IReadOnlyList<Primitive> _primitives;
-        private readonly LinearBVHNode[] _nodes;
+        readonly int _maxPrimsInNode;
+        readonly SplitMethod _splitMethod;
+        readonly IReadOnlyList<Primitive> _primitives;
+        readonly LinearBVHNode[] _nodes;
+        int _leafCount;
 
         public override BoundingBox3F WorldBound => _nodes[0].Bounds;
 
         public Bvh(IReadOnlyList<Primitive> p, int maxPrimsInNode, SplitMethod splitMethod)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             if (p.Count == 0)
             {
                 _primitives = new List<Primitive>();
@@ -104,6 +108,14 @@ namespace Radiantium.Offline.Accelerators
             _nodes = new LinearBVHNode[totalNodes];
             int offset = 0;
             FlattenBVHTree(root, ref offset);
+            sw.Stop();
+            Logger.Lock();
+            Logger.Info($"[Offline.Bvh] -> build BVH done.");
+            Logger.Info($"    leaf count {_leafCount}");
+            Logger.Info($"    node count {_nodes.Length}");
+            Logger.Info($"    build time {sw.Elapsed.TotalMilliseconds} ms");
+            Logger.Info($"    node used memory {(32.0f * _nodes.Length) / 1024 / 1024} MB");
+            Logger.Release();
         }
 
         public override bool Intersect(Ray3F ray)
@@ -234,6 +246,7 @@ namespace Radiantium.Offline.Accelerators
                     orderedPrims.Add(_primitives[primNum]);
                 }
                 node = new BVHBuildNode(firstPrimOffset, nPrimitives, bounds);
+                _leafCount++;
                 return node;
             }
             else
@@ -254,6 +267,7 @@ namespace Radiantium.Offline.Accelerators
                         orderedPrims.Add(_primitives[primNum]);
                     }
                     node = new BVHBuildNode(firstPrimOffset, nPrimitives, bounds);
+                    _leafCount++;
                     return node;
                 }
                 else
@@ -339,6 +353,7 @@ namespace Radiantium.Offline.Accelerators
                                             orderedPrims.Add(_primitives[primNum]);
                                         }
                                         node = new BVHBuildNode(firstPrimOffset, nPrimitives, bounds);
+                                        _leafCount++;
                                         return node;
                                     }
                                 }

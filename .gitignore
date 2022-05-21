@@ -10,3 +10,4 @@ obj/
 .vscode/
 
 !Example/assets/*.png
+!Gallery/*.png

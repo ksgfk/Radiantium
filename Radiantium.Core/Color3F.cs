@@ -36,13 +36,13 @@ namespace Radiantium.Core
 
         public Color3F(float v) : this(v, v, v) { }
 
-        public static Color3F ToLinearRgb(Color3F c) { return new(ToLiner(c.R), ToLiner(c.G), ToLiner(c.B)); }
+        public static Color3F ToLinearRgb(Color3F c) { return new(ToLinear(c.R), ToLinear(c.G), ToLinear(c.B)); }
 
         public static Color3F ToSrgb(Color3F c) { return new(ToSrgb(c.R), ToSrgb(c.G), ToSrgb(c.B)); }
 
         public static ref float IndexerUnsafe(ref Color3F c, int i) { return ref Unsafe.Add(ref c.R, i); }
 
-        public void ToLinearRGB() { R = ToLiner(R); G = ToLiner(G); B = ToLiner(B); }
+        public void ToLinearRGB() { R = ToLinear(R); G = ToLinear(G); B = ToLinear(B); }
 
         public void ToSrgb() { R = ToSrgb(R); G = ToSrgb(G); B = ToSrgb(B); }
 
@@ -82,12 +82,12 @@ namespace Radiantium.Core
 
         public override string ToString() { return $"<{R}, {G}, {B}>"; }
 
-        private static float ToLiner(float value)
+        public static float ToLinear(float value)
         {
             return value <= 0.04045f ? value * (1.0f / 12.92f) : MathF.Pow((value + 0.055f) * (1.0f / 1.055f), 2.4f);
         }
 
-        private static float ToSrgb(float value)
+        public static float ToSrgb(float value)
         {
             return value <= 0.0031308f ? 12.92f * value : (1.0f + 0.055f) * MathF.Pow(value, 1.0f / 2.4f) - 0.055f;
         }

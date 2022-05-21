@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 512
+    "spp": 32
   },
   "integrator": {
     "type": "path",
@@ -61,7 +61,8 @@
     {
       "type": "image",
       "name": "earth_full",
-      "location": "../assets/world.200412.3x5400x2700.png"
+      "location": "../assets/world.200412.3x5400x2700.png",
+      "is_cast_to_linear": false
     },
     {
       "type": "image",

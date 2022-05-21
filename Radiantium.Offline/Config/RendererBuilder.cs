@@ -8,6 +8,7 @@ using Radiantium.Offline.Shapes;
 using Radiantium.Offline.Textures;
 using System.Diagnostics;
 using System.Numerics;
+using System.Text;
 
 namespace Radiantium.Offline.Config
 {
@@ -380,15 +381,11 @@ namespace Radiantium.Offline.Config
             string path = GetPath(location);
             Stopwatch sw = new Stopwatch();
             long usedMemoryByte = 0;
+            StringBuilder sb = new StringBuilder();
             sw.Start();
             using FileStream stream = File.OpenRead(path);
             using WavefrontObjReader reader = new WavefrontObjReader(stream);
             reader.Read();
-            if (!string.IsNullOrWhiteSpace(reader.ErrorInfo))
-            {
-                Logger.Warn($"[Offline.RendererBuilder] -> obj reader warning: ");
-                Logger.Warn($"    {reader.ErrorInfo}");
-            }
             TriangleModel model = reader.ToModel(willGenNormal);
             usedMemoryByte += model.UsedMemory;
             List<ModelEntry.Child>? children = null;
@@ -408,24 +405,34 @@ namespace Radiantium.Offline.Config
                 Children = children
             };
             sw.Stop();
-            Logger.Info($"[Offline.RendererBuilder] -> load model {path}");
-            Logger.Info($"[Offline.RendererBuilder] -> use time {sw.ElapsedMilliseconds} ms");
-            Logger.Info($"[Offline.RendererBuilder] -> vertex {reader.Positions.Count}, face {reader.Faces.Count}");
-            Logger.Info($"[Offline.RendererBuilder] -> used memory {usedMemoryByte / 1024.0f / 1024:0.00} MB");
+            sb.AppendFormat("[Offline.RendererBuilder] -> load model {0}", path).AppendLine();
+            sb.AppendFormat("    use time {0} ms", sw.ElapsedMilliseconds).AppendLine();
+            sb.AppendFormat("    vertex {0}, face {1}", reader.Positions.Count, reader.Faces.Count).AppendLine();
+            sb.AppendFormat("    used memory {0} MB", (usedMemoryByte / 1024.0f / 1024).ToString("0.00"));
+            Logger.Lock();
+            if (!string.IsNullOrWhiteSpace(reader.ErrorInfo))
+            {
+                Logger.Warn($"[Offline.RendererBuilder] -> obj reader warning: ");
+                Logger.Warn($"    {reader.ErrorInfo}");
+            }
+            Logger.Info(sb.ToString());
+            Logger.Release();
             return entry;
         }
 
-        public ImageEntry LoadImage(string name, string location, bool isFlipY, bool isCastToLinear)
+        public ImageEntry LoadImage(string name, string location, int needChannel, bool isFlipY, bool isCastToLinear)
         {
             string path = GetPath(location);
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            ColorBuffer image = TextureUtility.LoadImageFromPath(path, isFlipY, isCastToLinear);
+            ColorBuffer image = TextureUtility.LoadImageFromPath(path, needChannel, isFlipY, isCastToLinear);
             ImageEntry entry = new ImageEntry(name, location, image);
             sw.Stop();
+            Logger.Lock();
             Logger.Info($"[Offline.RendererBuilder] -> load image {path}");
-            Logger.Info($"[Offline.RendererBuilder] -> use time {sw.ElapsedMilliseconds} ms");
-            Logger.Info($"[Offline.RendererBuilder] -> used memory {image.UsedMemory / 1024.0f / 1024:0.00} MB");
+            Logger.Info($"    use time {sw.ElapsedMilliseconds} ms");
+            Logger.Info($"    used memory {image.UsedMemory / 1024.0f / 1024:0.00} MB");
+            Logger.Release();
             return entry;
         }
 
@@ -627,29 +634,30 @@ namespace Radiantium.Offline.Config
 
         public (Renderer, ResultOutput) Build()
         {
-            _models = _modelConfigs.Select(param =>
-           {
-               if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
-               if (!param.HasKey("location")) { throw new ArgumentException("no key location"); }
-               return LoadModel(param.ReadString("name", null),
-                   param.ReadString("location", null),
-                   param.ReadBool("is_store_sub_model", false),
-                   param.ReadBool("will_gen_normal", false));
-           }).ToDictionary(m => m.Name, m => m);
+            _models = _modelConfigs.AsParallel().Select(param =>
+            {
+                if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
+                if (!param.HasKey("location")) { throw new ArgumentException("no key location"); }
+                return LoadModel(param.ReadString("name", null),
+                    param.ReadString("location", null),
+                    param.ReadBool("is_store_sub_model", false),
+                    param.ReadBool("will_gen_normal", false));
+            }).ToDictionary(m => m.Name, m => m);
 
-            _images = _imageConfigs.Select(param =>
-           {
-               if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
-               if (!param.HasKey("location")) { throw new ArgumentException("no key location"); }
-               string location = param.ReadString("location", null);
-               bool isCastToLinear = param.ReadBool("is_cast_to_linear", !TextureUtility.IsHdr(location));
-               return LoadImage(param.ReadString("name", null),
-                   location,
-                   param.ReadBool("is_flip_y", true),
-                   isCastToLinear);
-           }).ToDictionary(m => m.Name, m => m);
+            _images = _imageConfigs.AsParallel().Select(param =>
+            {
+                if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
+                if (!param.HasKey("location")) { throw new ArgumentException("no key location"); }
+                string location = param.ReadString("location", null);
+                bool isCastToLinear = param.ReadBool("is_cast_to_linear", !TextureUtility.IsHdr(location));
+                return LoadImage(param.ReadString("name", null),
+                    location,
+                    param.ReadInt32("channel", -1),
+                    param.ReadBool("is_flip_y", true),
+                    isCastToLinear);
+            }).ToDictionary(m => m.Name, m => m);
 
-            _inst = _instances.Select(entry =>
+            _inst = _instances.AsParallel().Select(entry =>
             {
                 List<Primitive> primitives = new List<Primitive>();
                 foreach (IConfigParamProvider param in entry.ShapeConfigs)
