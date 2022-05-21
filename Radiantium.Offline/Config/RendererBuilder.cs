@@ -30,7 +30,7 @@ namespace Radiantium.Offline.Config
             builder.AddMaterialBuilder("diffuse", (builder, images, param) =>
              {
                  Texture2D kd = param.ReadTex2D("kd", builder, new Color3F(0.5f));
-                 return new DiffuseReflection(kd);
+                 return new Diffuse(kd);
              });
             builder.AddMaterialBuilder("perfect_glass", (builder, images, param) =>
             {
@@ -50,10 +50,10 @@ namespace Radiantium.Offline.Config
                 Texture2D r = param.ReadTex2D("r", builder, new Color3F(0.5f));
                 MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "Beckmann"));
                 Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.3f));
-                Texture2D kd = param.ReadTex2D("kd", builder, new Color3F(0.5f));
-                Texture2D ks = param.ReadTex2D("ks", builder, new Color3F(1.0f));
-                float etaI = param.ReadFloat("etai", 1.0f);
-                float etaT = param.ReadFloat("etat", 1.5f);
+                float kd = param.ReadFloat("kd", 0.5f);
+                float ks = param.ReadFloat("ks", 0.5f);
+                float etaI = param.ReadFloat("etaA", 1.000277f);
+                float etaT = param.ReadFloat("etaB", 1.5046f);
                 return new RoughPlastic(r, dist, roughness, kd, ks, etaI, etaT);
             });
             builder.AddMaterialBuilder("rough_metal", (builder, images, param) =>

@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 256
+    "spp": 1024
   },
   "integrator": {
     "type": "path"
@@ -106,10 +106,12 @@
     },
     {
       "material": {
-        "type": "rough_metal",
-        "roughness": 0.3,
-        "dist": "GGX",
-        "metal_type": "Au"
+        "type": "rough_plastic",
+        "r": 1,
+        "roughness": 0.2,
+        "dist": "Beckmann",
+        "kd": 0.5,
+        "ks": 0.5
       },
       "shape": {
         "type": "sphere",
@@ -125,10 +127,12 @@
     },
     {
       "material": {
-        "type": "rough_metal",
-        "roughness": 0.3,
+        "type": "rough_plastic",
+        "r": 1,
+        "roughness": 0.2,
         "dist": "GGX",
-        "metal_type": "Cu"
+        "kd": 0.5,
+        "ks": 0.5
       },
       "shape": {
         "type": "sphere",

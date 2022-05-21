@@ -106,7 +106,10 @@
     },
     {
       "material": {
-        "type": "diffuse"
+        "type": "rough_metal",
+        "roughness": 0.3,
+        "dist": "GGX",
+        "metal_type": "Au"
       },
       "shape": {
         "type": "sphere",
@@ -122,12 +125,10 @@
     },
     {
       "material": {
-        "type": "rough_plastic",
-        "r": 1,
+        "type": "rough_metal",
         "roughness": 0.3,
-        "dist": "GGX",
-        "kd": 0.5,
-        "ks": 1.0
+        "dist": "Beckmann",
+        "metal_type": "Cu"
       },
       "shape": {
         "type": "sphere",

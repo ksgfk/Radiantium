@@ -4,12 +4,12 @@ using System.Numerics;
 
 namespace Radiantium.Offline.Materials
 {
-    public class DiffuseReflection : Material
+    public class Diffuse : Material
     {
         public Texture2D Kd { get; }
         public override BxdfType Type => BxdfType.Reflection | BxdfType.Diffuse;
 
-        public DiffuseReflection(Texture2D kd)
+        public Diffuse(Texture2D kd)
         {
             Kd = kd;
         }
