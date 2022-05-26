@@ -1,0 +1,192 @@
+{
+  "renderer": {
+    "spp": 64,
+    "threads": -1
+  },
+  "integrator": {
+    "type": "vol_path",
+    "max_depth": 7,
+    "min_depth": 3
+  },
+  "camera": {
+    "type": "perspective",
+    "screen": [
+      800,
+      600
+    ],
+    "fov": 27.7856,
+    "far": 100,
+    "origin": [
+      0,
+      0.919769,
+      5.41159
+    ],
+    "target": [
+      0,
+      0.893051,
+      4.41198
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ]
+  },
+  "accel": {
+    "type": "bvh"
+  },
+  "output": {},
+  "assets": [
+    {
+      "type": "model",
+      "name": "walls",
+      "location": "../assets/cbox/walls.obj"
+    },
+    {
+      "type": "model",
+      "name": "rightwall",
+      "location": "../assets/cbox/rightwall.obj"
+    },
+    {
+      "type": "model",
+      "name": "leftwall",
+      "location": "../assets/cbox/leftwall.obj"
+    },
+    {
+      "type": "model",
+      "name": "light",
+      "location": "../assets/cbox/light.obj"
+    }
+  ],
+  "global_media": {
+    "same": {
+      "type": "homogeneous",
+      "g": 0.7
+    }
+  },
+  "scene": [
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.725,
+          0.71,
+          0.68
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "walls"
+      },
+      "media": {
+        "outside": {
+          "is_global": true
+        }
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.161,
+          0.133,
+          0.427
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "rightwall"
+      },
+      "media": {
+        "outside": {
+          "is_global": true
+        }
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.630,
+          0.065,
+          0.05
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "leftwall"
+      },
+      "media": {
+        "outside": {
+          "is_global": true
+        }
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse"
+      },
+      "shape": {
+        "type": "model",
+        "name": "light"
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          40,
+          40,
+          40
+        ]
+      },
+      "media": {
+        "outside": {
+          "is_global": true
+        }
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": 1
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35
+      },
+      "transform": {
+        "position": [
+          0.5,
+          0.35,
+          0.2
+        ]
+      },
+      "media": {
+        "outside": {
+          "is_global": true
+        }
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": 1
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35
+      },
+      "transform": {
+        "position": [
+          -0.5,
+          0.35,
+          -0.25
+        ]
+      },
+      "media": {
+        "outside": {
+          "is_global": true
+        }
+      }
+    }
+  ]
+}

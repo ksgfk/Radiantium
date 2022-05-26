@@ -288,6 +288,10 @@ namespace Radiantium.Offline.Integrators
                                 li = lightInct.Le(inct.ToWorld(-sample.Wi));
                             }
                         }
+                        else
+                        {
+                            li = scene.EvalAllInfiniteLights(toLightRay);
+                        }
                         if (li != Color3F.Black)
                         {
                             le += fr * li * weight / scatteringPdf;

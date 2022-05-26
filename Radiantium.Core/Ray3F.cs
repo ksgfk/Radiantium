@@ -28,7 +28,9 @@ namespace Radiantium.Core
         {
             Vector3 o = Vector3.Transform(ray.O, m);
             Vector3 d = Vector3.Normalize(Vector3.TransformNormal(ray.D, m));
-            return new Ray3F(o, d, ray.MinT, float.MaxValue); //i don't know how to cast max t. maybe cause problem?
+            Vector3 max = Vector3.Transform(ray.At(ray.MaxT), m);
+            float maxT = Vector3.Distance(o, max);
+            return new Ray3F(o, d, ray.MinT, maxT);
         }
     }
 }

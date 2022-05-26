@@ -86,6 +86,13 @@ namespace Radiantium.Core
                 cosTheta);
         }
 
+        public static Vector3 SphericalDirection(float sinTheta, float cosTheta, float phi,
+            Vector3 x, Vector3 y, Vector3 z)
+        {
+            (float sinPhi, float cosPhi) = SinCos(phi);
+            return sinTheta * cosPhi * x + sinTheta * sinPhi * y + cosTheta * z;
+        }
+
         public static float Lerp(float t, float v1, float v2) { return (1 - t) * v1 + t * v2; }
 
         //******************

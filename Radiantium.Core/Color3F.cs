@@ -75,6 +75,7 @@ namespace Radiantium.Core
         public static Color3F operator -(float l, Color3F r) { return new(l - r.R, l - r.G, l - r.B); }
         public static Color3F operator *(float l, Color3F r) { return new(l * r.R, l * r.G, l * r.B); }
         public static Color3F operator /(float l, Color3F r) { return new(l / r.R, l / r.G, l / r.B); }
+        public static Color3F operator -(Color3F v) { return new(-v.R, -v.G, -v.B); }
         public static bool operator ==(Color3F l, Color3F r) { return l.Equals(r); }
         public static bool operator !=(Color3F l, Color3F r) { return !(l == r); }
 
