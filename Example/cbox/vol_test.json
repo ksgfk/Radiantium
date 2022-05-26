@@ -30,7 +30,10 @@
       0,
       1,
       0
-    ]
+    ],
+    "medium": {
+      "type": "homogeneous"
+    }
   },
   "accel": {
     "type": "bvh"
@@ -58,12 +61,6 @@
       "location": "../assets/cbox/light.obj"
     }
   ],
-  "global_media": {
-    "same": {
-      "type": "homogeneous",
-      "g": 0.7
-    }
-  },
   "scene": [
     {
       "material": {
@@ -78,7 +75,7 @@
         "type": "model",
         "name": "walls"
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
@@ -97,7 +94,7 @@
         "type": "model",
         "name": "rightwall"
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
@@ -116,7 +113,7 @@
         "type": "model",
         "name": "leftwall"
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
@@ -138,7 +135,7 @@
           40
         ]
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
@@ -160,7 +157,7 @@
           0.2
         ]
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
@@ -182,7 +179,7 @@
           -0.25
         ]
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }

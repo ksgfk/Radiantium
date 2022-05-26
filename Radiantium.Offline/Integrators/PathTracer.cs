@@ -13,14 +13,14 @@ namespace Radiantium.Offline.Integrators
         Mis
     }
 
-    public class PathTracing : Integrator
+    public class PathTracer : Integrator
     {
         public int MaxDepth { get; }
         public int MinDepth { get; }
         public float RRThreshold { get; }
         public PathSampleMethod Method { get; }
 
-        public PathTracing(int maxDepth, int minDepth, float rrThreshold, PathSampleMethod method)
+        public PathTracer(int maxDepth, int minDepth, float rrThreshold, PathSampleMethod method)
         {
             MaxDepth = maxDepth;
             MinDepth = minDepth;
@@ -49,12 +49,18 @@ namespace Radiantium.Offline.Integrators
                 {
                     break;
                 }
+                if (!inct.HasSurface)
+                {
+                    ray = new Ray3F(inct.P, ray.D, 0.001f);
+                    bounces--;
+                    continue;
+                }
                 Vector3 wo = -ray.D;
                 if (inct.IsLight)
                 {
                     radiance += coeff * inct.Le(wo);
                 }
-                (Vector3 wi, Color3F fr, float pdf, BxdfType _) = inct.Shape.Material.Sample(inct.ToLocal(-ray.D), inct, rand);
+                (Vector3 wi, Color3F fr, float pdf, BxdfType _) = inct.Surface.Sample(inct.ToLocal(-ray.D), inct, rand);
                 if (pdf > 0.0f)
                 {
                     coeff *= fr * Coordinate.AbsCosTheta(wi) / pdf;
@@ -105,7 +111,13 @@ namespace Radiantium.Offline.Integrators
                 {
                     break;
                 }
-                (Vector3 wi, Color3F fr, float pdf, BxdfType type) = inct.Shape.Material.Sample(inct.ToLocal(wo), inct, rand);
+                if (!inct.HasSurface)
+                {
+                    ray = new Ray3F(inct.P, ray.D, 0.001f);
+                    bounces--;
+                    continue;
+                }
+                (Vector3 wi, Color3F fr, float pdf, BxdfType type) = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
                 isSpecularPath = (type & BxdfType.Specular) != 0;
                 if (!isSpecularPath)
                 {
@@ -149,11 +161,11 @@ namespace Radiantium.Offline.Integrators
                     return new Color3F(0);
                 }
                 Ray3F shadowRay = new Ray3F(inct.P, wi, 0.001f, toLight.Length() - 0.001f);
-                if (scene.Intersect(shadowRay))
+                if (scene.Intersect(shadowRay)) //maybe occluded by primitive which only has medium ?
                 {
                     return new Color3F(0);
                 }
-                Color3F fr = inct.Shape.Material.Fr(inct.ToLocal(wo), inct.ToLocal(wi), inct);
+                Color3F fr = inct.Surface.Fr(inct.ToLocal(wo), inct.ToLocal(wi), inct);
                 return fr * li * Coordinate.AbsCosTheta(inct.ToLocal(wi)) / pdf;
             }
         }
@@ -186,7 +198,13 @@ namespace Radiantium.Offline.Integrators
                 {
                     break;
                 }
-                SampleBxdfResult sample = inct.Shape.Material.Sample(inct.ToLocal(wo), inct, rand);
+                if (!inct.HasSurface)
+                {
+                    ray = new Ray3F(inct.P, ray.D, 0.001f);
+                    bounces--;
+                    continue;
+                }
+                SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
                 isSpecularPath = (sample.Type & BxdfType.Specular) != 0;
                 if (!isSpecularPath)
                 {
@@ -238,8 +256,8 @@ namespace Radiantium.Offline.Integrators
                 float scatteringPdf = 0.0f;
                 if (lightPdf > 0.0f && lightLi != Color3F.Black)
                 {
-                    Color3F fr = inct.Shape.Material.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
-                    scatteringPdf = inct.Shape.Material.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                    Color3F fr = inct.Surface.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                    scatteringPdf = inct.Surface.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
                     if (fr != Color3F.Black)
                     {
                         fr *= Coordinate.AbsCosTheta(inct.ToLocal(lightWi));

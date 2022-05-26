@@ -5,9 +5,10 @@ namespace Radiantium.Offline
 {
     public abstract class Primitive
     {
-        public abstract Material Material { get; }
+        public abstract Material? Material { get; }
         public abstract AreaLight? Light { get; set; }
         public abstract BoundingBox3F WorldBound { get; }
+        public abstract MediumAdapter Medium { get; }
         public abstract bool Intersect(Ray3F ray);
         public abstract bool Intersect(Ray3F ray, out Intersection inct);
     }
@@ -16,13 +17,15 @@ namespace Radiantium.Offline
     {
         public Shape Shape { get; }
         public override BoundingBox3F WorldBound => Shape.WorldBound;
-        public override Material Material { get; }
+        public override Material? Material { get; }
         public override AreaLight? Light { get; set; }
+        public override MediumAdapter Medium { get; }
 
-        public GeometricPrimitive(Shape shape, Material material)
+        public GeometricPrimitive(Shape shape, Material? material, MediumAdapter medium)
         {
             Shape = shape ?? throw new ArgumentNullException(nameof(shape));
-            Material = material ?? throw new ArgumentNullException(nameof(shape));
+            Material = material;
+            Medium = medium ?? throw new ArgumentNullException(nameof(medium));
         }
 
         public override bool Intersect(Ray3F ray)
@@ -48,12 +51,13 @@ namespace Radiantium.Offline
 
     public abstract class Aggregate : Primitive
     {
-        public sealed override Material Material => throw new NotSupportedException("aggregate can't have material");
+        public sealed override Material? Material => throw new NotSupportedException("aggregate can't have material");
         public sealed override AreaLight? Light
         {
             get => throw new NotSupportedException("aggregate can't have light");
             set => throw new NotSupportedException("aggregate can't have light");
         }
+        public sealed override MediumAdapter Medium => throw new NotSupportedException("aggregate can't have medium");
     }
 
     public class InstancedTransform
@@ -75,9 +79,10 @@ namespace Radiantium.Offline
     public class ShapeWrapperPrimitive : Primitive
     {
         public Shape Shape { get; }
-        public override Material Material => throw new NotSupportedException("wrapper hasn't material");
+        public override Material? Material => throw new NotSupportedException("wrapper hasn't material");
         public override AreaLight? Light { get => null; set => throw new NotSupportedException("wrapper can't set light"); }
         public override BoundingBox3F WorldBound => Shape.WorldBound;
+        public override MediumAdapter Medium => throw new NotSupportedException("wrapper hasn't medium");
 
         public ShapeWrapperPrimitive(Shape shape)
         {
@@ -109,15 +114,17 @@ namespace Radiantium.Offline
     {
         public Primitive Instanced { get; }
         public InstancedTransform Transform { get; }
-        public override Material Material { get; }
+        public override Material? Material { get; }
         public override AreaLight? Light { get => null; set => throw new NotSupportedException("InstancedPrimitive can't set light"); }
         public override BoundingBox3F WorldBound { get; }
+        public override MediumAdapter Medium { get; }
 
-        public InstancedPrimitive(Primitive instanced, InstancedTransform transform, Material material)
+        public InstancedPrimitive(Primitive instanced, InstancedTransform transform, Material? material, MediumAdapter medium)
         {
             Instanced = instanced ?? throw new ArgumentNullException(nameof(instanced));
             Transform = transform ?? throw new ArgumentNullException(nameof(transform));
-            Material = material ?? throw new ArgumentNullException(nameof(material));
+            Material = material;
+            Medium = medium ?? throw new ArgumentNullException(nameof(medium));
             WorldBound = BoundingBox3F.Transform(Instanced.WorldBound, Transform.ModelToWorld);
         }
 

@@ -7,12 +7,14 @@ namespace Radiantium.Offline
         public Primitive Aggregate { get; }
         public Light[] Lights { get; }
         public InfiniteLight[] InfiniteLights { get; }
+        public Medium? GlobalMedium { get; }
 
-        public Scene(Primitive primitive, Light[] lights, InfiniteLight[] infiniteLights)
+        public Scene(Primitive primitive, Light[] lights, InfiniteLight[] infiniteLights, Medium? globalMedium)
         {
             Aggregate = primitive ?? throw new ArgumentNullException(nameof(primitive));
             Lights = lights ?? throw new ArgumentNullException(nameof(lights));
             InfiniteLights = infiniteLights ?? throw new ArgumentNullException(nameof(primitive));
+            GlobalMedium = globalMedium;
             foreach (InfiniteLight infLight in infiniteLights)
             {
                 infLight.Preprocess(this);

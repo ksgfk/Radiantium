@@ -43,7 +43,12 @@ namespace Radiantium.Cli
                 builder.SetRenderer(config.GetSubParam("renderer"));
             }
             builder.SetIntegrator(config.GetSubParam("integrator"));
-            builder.SetCamera(config.GetSubParam("camera"));
+            IConfigParamProvider cameraConfig = config.GetSubParam("camera");
+            builder.SetCamera(cameraConfig);
+            if (cameraConfig.HasKey("medium"))
+            {
+                builder.SetGlobalMedium(cameraConfig.GetSubParam("medium"));
+            }
             if (config.HasKey("accel"))
             {
                 builder.SetSceneAccelerator(config.GetSubParam("accel"));
@@ -125,6 +130,10 @@ namespace Radiantium.Cli
                     {
                         q.Enqueue((child, index));
                     }
+                }
+                if (entity.HasKey("medium"))
+                {
+                    builder.SetEntityMedium(index, entity.GetSubParam("medium"));
                 }
             }
             return builder.Build();
