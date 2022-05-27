@@ -1,4 +1,7 @@
-﻿namespace Radiantium.Offline
+﻿using Radiantium.Core;
+using System.Numerics;
+
+namespace Radiantium.Offline
 {
     public class MediumAdapter
     {
@@ -18,7 +21,38 @@
         public MediumAdapter(Medium? same) : this(same, same) { }
     }
 
-    public class Medium
+    public struct MediumSampleResult
     {
+        public Vector3 P;
+        public Vector3 Wo;
+        public Color3F Tr;
+        public float T;
+        public bool IsSampleMedium;
+
+        public MediumSampleResult(Color3F tr)
+        {
+            Tr = tr;
+            IsSampleMedium = false;
+            P = default;
+            Wo = default;
+            T = default;
+        }
+
+        public MediumSampleResult(Vector3 p, Vector3 wo, Color3F tr, float t)
+        {
+            P = p;
+            Wo = wo;
+            Tr = tr;
+            T = t;
+            IsSampleMedium = true;
+        }
+    }
+
+    public abstract class Medium : IPhaseFunction
+    {
+        public abstract Color3F Tr(Ray3F ray, Random rand);
+        public abstract MediumSampleResult Sample(Ray3F ray, Random rand);
+        public abstract float P(Vector3 wo, Vector3 wi);
+        public abstract PhaseFunctionSampleResult SampleWi(Vector3 wo, Random rand);
     }
 }

@@ -32,7 +32,7 @@ namespace Radiantium.Offline.Shapes
             float t = surface.T;
             ray = Ray3F.Transform(ray, WorldToModel);
             Vector3 p = ray.At(t);
-            Vector3 n = Normalize(p); //it works. why?
+            Vector3 n = Normalize(p);
             Coordinate coord = new Coordinate(n);
 
             float theta = Acos(-n.Y);

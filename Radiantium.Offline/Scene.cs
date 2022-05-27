@@ -1,4 +1,5 @@
 ﻿using Radiantium.Core;
+using System.Numerics;
 
 namespace Radiantium.Offline
 {
@@ -51,6 +52,51 @@ namespace Radiantium.Offline
             light = Lights[rand.Next(Lights.Length)];
             float pdf = 1.0f / Lights.Length;
             return pdf;
+        }
+
+        public bool IsOccluded(Vector3 from, Vector3 to)
+        {
+            Vector3 vec = to - from;
+            float dis = vec.Length();
+            if (dis < 0.001f) // two points too close
+            {
+                return true;
+            }
+            Vector3 dir = Vector3.Normalize(vec);
+            Ray3F shadowRay = new Ray3F(from, dir, 0.001f, dis - 0.001f);
+            return Intersect(shadowRay);
+        }
+
+        public Color3F Transmittance(Vector3 from, Vector3 to, Medium? rayEnv, Random rand)
+        {
+            Color3F tr = new Color3F(1.0f);
+            Vector3 vec = to - from;
+            while (true)
+            {
+                float dis = vec.Length();
+                if (dis < 0.001f)
+                {
+                    break;
+                }
+                Vector3 dir = Vector3.Normalize(vec);
+                Ray3F ray = new Ray3F(from, dir, 0.001f, dis - 0.001f);
+                bool anyHit = Intersect(ray, out Intersection inct);
+                if (anyHit && inct.HasSurface)
+                {
+                    return new Color3F(0.0f);
+                }
+                if (rayEnv != null)
+                {
+                    tr *= rayEnv.Tr(ray, rand);
+                }
+                if (!anyHit)
+                {
+                    break;
+                }
+                vec = to - inct.P;
+                rayEnv = inct.GetMedium(dir);
+            }
+            return tr;
         }
     }
 }

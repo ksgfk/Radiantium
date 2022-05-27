@@ -13,6 +13,7 @@ namespace Radiantium.Offline.Integrators
         Mis
     }
 
+    //TODO: NEE and MIS impl more light sampling methods
     public class PathTracer : Integrator
     {
         public int MaxDepth { get; }
@@ -155,15 +156,9 @@ namespace Radiantium.Offline.Integrators
                 {
                     return new Color3F(0);
                 }
-                Vector3 toLight = p - inct.P;
-                if (toLight.Length() < 0.001f)
+                if (scene.IsOccluded(inct.P, p))
                 {
-                    return new Color3F(0);
-                }
-                Ray3F shadowRay = new Ray3F(inct.P, wi, 0.001f, toLight.Length() - 0.001f);
-                if (scene.Intersect(shadowRay)) //maybe occluded by primitive which only has medium ?
-                {
-                    return new Color3F(0);
+                    return new Color3F(0.0f);
                 }
                 Color3F fr = inct.Surface.Fr(inct.ToLocal(wo), inct.ToLocal(wi), inct);
                 return fr * li * Coordinate.AbsCosTheta(inct.ToLocal(wi)) / pdf;
@@ -261,21 +256,16 @@ namespace Radiantium.Offline.Integrators
                     if (fr != Color3F.Black)
                     {
                         fr *= Coordinate.AbsCosTheta(inct.ToLocal(lightWi));
-                        Vector3 toLight = lightP - inct.P;
-                        if (toLight.Length() >= 0.001f)
+                        if (!scene.IsOccluded(inct.P, lightP))
                         {
-                            Ray3F shadowRay = new Ray3F(inct.P, lightWi, 0.001f, toLight.Length() - 0.001f);
-                            if (!scene.Intersect(shadowRay))
+                            if (light.IsDelta)
                             {
-                                if (light.IsDelta)
-                                {
-                                    le += fr * lightLi / lightPdf;
-                                }
-                                else
-                                {
-                                    float weight = PowerHeuristic(1, lightPdf, 1, scatteringPdf);
-                                    le += fr * lightLi * weight / lightPdf;
-                                }
+                                le += fr * lightLi / lightPdf;
+                            }
+                            else
+                            {
+                                float weight = PowerHeuristic(1, lightPdf, 1, scatteringPdf);
+                                le += fr * lightLi * weight / lightPdf;
                             }
                         }
                     }
