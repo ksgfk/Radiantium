@@ -25,7 +25,7 @@ namespace Radiantium.Offline.Lights
             return (Dot(inct.N, w) > 0) ? Lemit : new Color3F(0.0f);
         }
 
-        public override float PdfLi(Intersection inct, Vector3 wi)
+        public override float PdfLi(LightEvalParam inct, Vector3 wi)
         {
             Ray3F ray = new Ray3F(inct.P, wi);
             if (!Shape.Intersect(ray, out SurfacePoint point))
@@ -41,7 +41,7 @@ namespace Radiantium.Offline.Lights
             return pdf;
         }
 
-        public override LightSampleResult SampleLi(Intersection inct, Random rand)
+        public override LightSampleResult SampleLi(LightEvalParam inct, Random rand)
         {
             ShapeIntersection shape = Shape.Sample(rand, out float shapePdf);
             Vector3 wi = shape.P - inct.P;

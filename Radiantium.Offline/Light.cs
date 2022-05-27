@@ -11,6 +11,23 @@ namespace Radiantium.Offline
         Infinite
     }
 
+    public struct LightEvalParam
+    {
+        public Vector3 P;
+        public float T;
+
+        public LightEvalParam(Vector3 p, float t)
+        {
+            P = p;
+            T = t;
+        }
+
+        public static implicit operator LightEvalParam(Intersection inct)
+        {
+            return new LightEvalParam(inct.P, inct.T);
+        }
+    }
+
     public struct LightSampleResult
     {
         public Vector3 P;
@@ -43,9 +60,9 @@ namespace Radiantium.Offline
 
         public bool IsDelta => (Type & LightType.DeltaPosition) != 0 || (Type & LightType.DeltaDirection) != 0;
 
-        public abstract LightSampleResult SampleLi(Intersection inct, Random rand);
+        public abstract LightSampleResult SampleLi(LightEvalParam inct, Random rand);
 
-        public abstract float PdfLi(Intersection inct, Vector3 wi);
+        public abstract float PdfLi(LightEvalParam inct, Vector3 wi);
 
         public virtual Color3F Le(Ray3F ray)
         {
