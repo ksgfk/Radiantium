@@ -11,44 +11,51 @@ namespace Radiantium.Offline.Mediums
         public Color3F SigmaT { get; }
         public float G { get; }
 
-        public Homogeneous(Color3F sigmaA, Color3F sigmaS, float g)
+        public Homogeneous(Color3F sigmaA, Color3F sigmaS, float g, float scale)
         {
-            SigmaA = sigmaA;
-            SigmaS = sigmaS;
-            SigmaT = sigmaA + sigmaS;
+            SigmaA = sigmaA * scale;
+            SigmaS = sigmaS * scale;
+            SigmaT = SigmaA + SigmaS;
             G = g;
         }
 
         public override Color3F Tr(Ray3F ray, Random rand)
         {
-            Color3F tr = -SigmaT * Min(ray.MaxT, float.MaxValue);
-            return new Color3F(Exp(tr.R), Exp(tr.G), Exp(tr.B));
+            float negLength = ray.MinT - ray.MaxT;
+            Color3F tr;
+            tr.R = SigmaT.R == 0 ? 1.0f : Exp(SigmaT.R * negLength);
+            tr.G = SigmaT.G == 0 ? 1.0f : Exp(SigmaT.G * negLength);
+            tr.B = SigmaT.B == 0 ? 1.0f : Exp(SigmaT.B * negLength);
+            return tr;
         }
 
         public override MediumSampleResult Sample(Ray3F ray, Random rand)
         {
             int channel = rand.Next(3);
-            if (channel < 0 || channel >= 3) { throw new Exception(); }
             Color3F sigmaT = SigmaT;
-            float dist = -Log(1 - rand.NextFloat()) / Color3F.IndexerUnsafe(ref sigmaT, channel);
-            float t = Min(dist, ray.MaxT);
-            Color3F tr = -SigmaT * Min(t, float.MaxValue);
-            tr = new Color3F(Exp(tr.R), Exp(tr.G), Exp(tr.B));
-            bool isSampleMedium = t < ray.MaxT;
-            if (isSampleMedium)
+            float samplingDensity = Color3F.IndexerUnsafe(ref sigmaT, channel);
+            float sampledDistance = -Log(1 - rand.NextFloat()) / samplingDensity;
+            float distSurf = ray.MaxT - ray.MinT;
+            if (sampledDistance < distSurf)
             {
-                Color3F density = sigmaT * tr;
-                float pdf = (density.R + density.G + density.B) / 3;
-                if (pdf == 0) { pdf = 1; }
-                Color3F resultTr = tr * SigmaS / pdf;
+                float t = ray.MinT + sampledDistance;
                 Vector3 p = ray.At(t);
-                Vector3 wo = -ray.D;
-                return new MediumSampleResult(p, wo, resultTr, t);
+                Color3F tr;
+                tr.R = Exp(-sigmaT.R * sampledDistance);
+                tr.G = Exp(-sigmaT.G * sampledDistance);
+                tr.B = Exp(-sigmaT.B * sampledDistance);
+                float pdf = (tr.R * sigmaT.R + tr.G * sigmaT.G + tr.B * sigmaT.B) / 3;
+                if (pdf == 0) { pdf = 0.0001f; }
+                return new MediumSampleResult(p, -ray.D, tr * SigmaS / pdf, t);
             }
             else
             {
+                Color3F tr;
+                tr.R = Exp(-SigmaT.R * distSurf);
+                tr.G = Exp(-SigmaT.G * distSurf);
+                tr.B = Exp(-SigmaT.B * distSurf);
                 float pdf = (tr.R + tr.G + tr.B) / 3;
-                if (pdf == 0) { pdf = 1; }
+                if (pdf == 0) { pdf = 0.0001f; }
                 return new MediumSampleResult(tr / pdf);
             }
         }

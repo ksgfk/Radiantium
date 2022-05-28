@@ -26,6 +26,11 @@ namespace Radiantium.Offline
         {
             return new LightEvalParam(inct.P, inct.T);
         }
+
+        public static implicit operator LightEvalParam(MediumSampleResult msr)
+        {
+            return new LightEvalParam(msr.P, msr.T);
+        }
     }
 
     public struct LightSampleResult

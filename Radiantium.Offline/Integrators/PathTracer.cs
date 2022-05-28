@@ -29,12 +29,6 @@ namespace Radiantium.Offline.Integrators
             Method = method;
         }
 
-        private static float PowerHeuristic(int nf, float fPdf, int ng, float gPdf)
-        {
-            float f = nf * fPdf, g = ng * gPdf;
-            return (f * f) / (f * f + g * g);
-        }
-
         public Color3F OnlySampleBxdf(Ray3F ray, Scene scene, Random rand)
         {
             Color3F radiance = new(0.0f);
@@ -264,7 +258,7 @@ namespace Radiantium.Offline.Integrators
                             }
                             else
                             {
-                                float weight = PowerHeuristic(1, lightPdf, 1, scatteringPdf);
+                                float weight = PathUtility.PowerHeuristic(1, lightPdf, 1, scatteringPdf);
                                 le += fr * lightLi * weight / lightPdf;
                             }
                         }
@@ -284,14 +278,14 @@ namespace Radiantium.Offline.Integrators
                             {
                                 return le;
                             }
-                            weight = PowerHeuristic(1, scatteringPdf, 1, bxdfToLightPdf);
+                            weight = PathUtility.PowerHeuristic(1, scatteringPdf, 1, bxdfToLightPdf);
                         }
                         Ray3F toLightRay = inct.SpawnRay(inct.ToWorld(sample.Wi));
                         bool isHit = scene.Intersect(toLightRay, out Intersection lightInct);
                         Color3F li = new Color3F(0);
                         if (isHit)
                         {
-                            if (lightInct.IsLight)
+                            if (lightInct.IsLight && lightInct.Light == light)
                             {
                                 li = lightInct.Le(inct.ToWorld(-sample.Wi));
                             }

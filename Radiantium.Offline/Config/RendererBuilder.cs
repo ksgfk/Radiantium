@@ -121,7 +121,8 @@ namespace Radiantium.Offline.Config
                 Vector3 sigmaA = param.ReadVec3Float("sigma_a", new Vector3());
                 Vector3 sigmaS = param.ReadVec3Float("sigma_s", new Vector3());
                 float g = param.ReadFloat("g", 0);
-                return new Homogeneous(new Color3F(sigmaA), new Color3F(sigmaS), g);
+                float scale = param.ReadFloat("scale", 1);
+                return new Homogeneous(new Color3F(sigmaA), new Color3F(sigmaS), g, scale);
             });
         }
 

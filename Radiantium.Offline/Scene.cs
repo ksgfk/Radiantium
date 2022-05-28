@@ -63,23 +63,24 @@ namespace Radiantium.Offline
                 return true;
             }
             Vector3 dir = Vector3.Normalize(vec);
-            Ray3F shadowRay = new Ray3F(from, dir, 0.001f, dis - 0.001f);
+            Ray3F shadowRay = new Ray3F(from, dir, 0.0001f, dis - 0.0001f);
             return Intersect(shadowRay);
         }
 
         public Color3F Transmittance(Vector3 from, Vector3 to, Medium? rayEnv, Random rand)
         {
             Color3F tr = new Color3F(1.0f);
-            Vector3 vec = to - from;
+            Vector3 start = from;
+            Vector3 dir = Vector3.Normalize(to - start);
             while (true)
             {
+                Vector3 vec = to - start;
                 float dis = vec.Length();
-                if (dis < 0.001f)
+                if (dis < 0.0001f)
                 {
                     break;
                 }
-                Vector3 dir = Vector3.Normalize(vec);
-                Ray3F ray = new Ray3F(from, dir, 0.001f, dis - 0.001f);
+                Ray3F ray = new Ray3F(start, dir, 0.0001f, dis - 0.0001f);
                 bool anyHit = Intersect(ray, out Intersection inct);
                 if (anyHit && inct.HasSurface)
                 {
@@ -93,10 +94,38 @@ namespace Radiantium.Offline
                 {
                     break;
                 }
-                vec = to - inct.P;
+                start = inct.P;
                 rayEnv = inct.GetMedium(dir);
             }
             return tr;
+        }
+
+        public bool IntersectTr(Ray3F ray, Medium? rayEnv, Random rand, out Intersection inct, out Color3F tr)
+        {
+            tr = new Color3F(1.0f);
+            while (true)
+            {
+                bool anyHit = Intersect(ray, out inct);
+                if (!anyHit)
+                {
+                    if (rayEnv != null)
+                    {
+                        tr *= rayEnv.Tr(ray, rand);
+                    }
+                    return false;
+                }
+                if (rayEnv != null)
+                {
+                    Ray3F realPath = new Ray3F(ray.O, ray.D, ray.MinT, ray.At(inct.T).Length());
+                    tr *= rayEnv.Tr(realPath, rand);
+                }
+                if (inct.HasSurface)
+                {
+                    return true;
+                }
+                ray = new Ray3F(inct.P, ray.D, 0.001f);
+                rayEnv = inct.GetMedium(ray.D);
+            }
         }
     }
 }

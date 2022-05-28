@@ -29,7 +29,8 @@ namespace Radiantium.Offline
         public static float HenyeyGreenstein(float cosTheta, float g)
         {
             float denom = 1 + g * g + 2 * g * cosTheta;
-            return (1 / 4 * PI) * (1 - g * g) / (denom * Sqrt(denom));
+            float result = (1 / (4 * PI)) * (1 - g * g) / (denom * Sqrt(denom));
+            return result;
         }
     }
 
@@ -41,7 +42,8 @@ namespace Radiantium.Offline
 
         public float P(Vector3 wo, Vector3 wi)
         {
-            return PhaseFunctionUtility.HenyeyGreenstein(Dot(wo, wi), G);
+            float p = PhaseFunctionUtility.HenyeyGreenstein(Dot(wo, wi), G);
+            return p;
         }
 
         public PhaseFunctionSampleResult SampleWi(Vector3 wo, Random rand)

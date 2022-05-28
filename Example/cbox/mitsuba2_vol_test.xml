@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <scene version="2.0.0">
-    <integrator type="volpath">
+    <integrator type="volpathmis">
         <integer name="max_depth" value="-1"/>
     </integrator>
 
@@ -34,6 +34,12 @@
         <bsdf type="diffuse">
         </bsdf>
     </shape>
+    <shape type="obj">
+        <string name="filename" value="../assets/cbox/light.obj"/>
+        <emitter type="area">
+            <rgb name="radiance" value="40,40,40"/>
+        </emitter>
+    </shape>
 
     <default name="spp" value="256"/>
 
@@ -61,15 +67,11 @@
         </sampler>
 
         <medium type="homogeneous">
-			      <spectrum value="0.25" name="sigma_t"/>
-			      <phase type="isotropic"/>
+			      <spectrum name="sigma_t" value="0.11"/>
+            <spectrum name="albedo" value="0.9"/>
+            <phase type="hg">
+                <float name="g" value="0.7"/>
+            </phase>
 		    </medium>
     </sensor>
-
-    <emitter type="envmap">
-		    <string name="filename" value="../assets/museum.exr"/>
-        <transform name="to_world">
-            <rotate y="1" angle="90"/>
-        </transform>
-	  </emitter>
 </scene>
