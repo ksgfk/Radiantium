@@ -62,7 +62,7 @@ namespace Radiantium.Offline.Lights
             return Lmap.Sample(uv);
         }
 
-        public override float PdfLi(Intersection inct, Vector3 wi)
+        public override float PdfLi(LightEvalParam inct, Vector3 wi)
         {
             Vector3 dir = Vector3.Normalize(Vector3.TransformNormal(wi, _worldToModel));
             float phi = Atan2(dir.X, -dir.Z);
@@ -78,7 +78,7 @@ namespace Radiantium.Offline.Lights
             return _dist.ContinuousPdf(u, v) / (2 * PI * PI * sinTheta);
         }
 
-        public override LightSampleResult SampleLi(Intersection inct, Random rand)
+        public override LightSampleResult SampleLi(LightEvalParam inct, Random rand)
         {
             _dist.SampleContinuous(rand.NextVec2(), out float pdf, out (int, int) offset);
             if (pdf <= 0) { return new LightSampleResult(); }

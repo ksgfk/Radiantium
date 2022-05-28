@@ -4,6 +4,7 @@ using Radiantium.Offline.Bxdf;
 using Radiantium.Offline.Integrators;
 using Radiantium.Offline.Lights;
 using Radiantium.Offline.Materials;
+using Radiantium.Offline.Mediums;
 using Radiantium.Offline.Shapes;
 using Radiantium.Offline.Textures;
 using System.Diagnostics;
@@ -24,7 +25,14 @@ namespace Radiantium.Offline.Config
                 int minDepth = param.ReadInt32("min_depth", 3);
                 float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
                 PathSampleMethod method = Enum.Parse<PathSampleMethod>(param.ReadString("method", "Mis"));
-                return new PathTracing(maxDepth, minDepth, rrThreshold, method);
+                return new PathTracer(maxDepth, minDepth, rrThreshold, method);
+            });
+            builder.AddIntegratorBuilder("vol_path", (_, param) =>
+            {
+                int maxDepth = param.ReadInt32("max_depth", -1);
+                int minDepth = param.ReadInt32("min_depth", 3);
+                float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
+                return new VolumetricPathTracer(maxDepth, minDepth, rrThreshold);
             });
             builder.AddAccelBuilder("bvh", (_, p, param) => new Bvh(p, param.ReadInt32("max_prim", 1), Enum.Parse<SplitMethod>(param.ReadString("split", "SAH"))));
             builder.AddAccelBuilder("octree", (_, p, param) => new Octree(p, param.ReadInt32("max_depth", 10), param.ReadInt32("max_count", 10), param.ReadFloat("out_bound", 2.0f)));
@@ -108,6 +116,14 @@ namespace Radiantium.Offline.Config
                 Texture2D img = param.ReadTex2D("le", builder, new Color3F(0));
                 return new InfiniteAreaLight(mat, img);
             });
+            builder.AddMediumBuilder("homogeneous", (builder, param) =>
+            {
+                Vector3 sigmaA = param.ReadVec3Float("sigma_a", new Vector3());
+                Vector3 sigmaS = param.ReadVec3Float("sigma_s", new Vector3());
+                float g = param.ReadFloat("g", 0);
+                float scale = param.ReadFloat("scale", 1);
+                return new Homogeneous(new Color3F(sigmaA), new Color3F(sigmaS), g, scale);
+            });
         }
 
         public static Texture2D ReadTex2D(this IConfigParamProvider param,
@@ -160,6 +176,7 @@ namespace Radiantium.Offline.Config
         public delegate InfiniteLight InfiniteLightBuilder(RendererBuilder builder, Matrix4x4 modelToWorld, IConfigParamProvider param);
         public delegate Integrator IntegratorBuilder(RendererBuilder builder, IConfigParamProvider param);
         public delegate Texture2D Texture2DBuilder(RendererBuilder builder, IConfigParamProvider param);
+        public delegate Medium MediumBuilder(RendererBuilder builder, IConfigParamProvider param);
 
         public record ModelEntry(string Name, string Location, TriangleModel Model)
         {
@@ -187,6 +204,7 @@ namespace Radiantium.Offline.Config
             public List<InstancedPrimitivesEntry> Instances { get; } = new List<InstancedPrimitivesEntry>();
             public IConfigParamProvider? MaterialConfig { get; set; }
             public IConfigParamProvider? LightConfig { get; set; }
+            public IConfigParamProvider? MediumConfig { get; set; }
             public List<SceneEntityEntry> Children { get; } = new List<SceneEntityEntry>();
             public SceneEntityEntry? Parent { get; set; }
             public Matrix4x4 ModelToWorld { get; set; }
@@ -202,6 +220,7 @@ namespace Radiantium.Offline.Config
         readonly Dictionary<string, ShapeBuilder> _shapeBuilder;
         readonly Dictionary<string, IntegratorBuilder> _integratorBuilder;
         readonly Dictionary<string, Texture2DBuilder> _tex2dBuilder;
+        readonly Dictionary<string, MediumBuilder> _mediumBuilder;
 
         readonly List<IConfigParamProvider> _modelConfigs;
         readonly List<IConfigParamProvider> _imageConfigs;
@@ -214,13 +233,16 @@ namespace Radiantium.Offline.Config
         IConfigParamProvider? _sceneAccelConfig;
         IConfigParamProvider? _rendererConfig;
         IConfigParamProvider? _outputConfig;
+        IConfigParamProvider? _globalMediumConfig;
         Dictionary<string, ModelEntry> _models = null!;
         Dictionary<string, ImageEntry> _images = null!;
         Aggregate[] _inst = null!;
+        Medium? _globalMediumObject;
 
         public IReadOnlyDictionary<string, ModelEntry> LoadedModels => _models;
         public IReadOnlyDictionary<string, ImageEntry> LoadedImages => _images;
         public IReadOnlyList<Aggregate> CompleteIns => _inst;
+        public Medium? GlobalMediumObject => _globalMediumObject;
 
         public RendererBuilder(string searchPath, string workSpaceName)
         {
@@ -234,6 +256,7 @@ namespace Radiantium.Offline.Config
             _shapeBuilder = new Dictionary<string, ShapeBuilder>();
             _integratorBuilder = new Dictionary<string, IntegratorBuilder>();
             _tex2dBuilder = new Dictionary<string, Texture2DBuilder>();
+            _mediumBuilder = new Dictionary<string, MediumBuilder>();
 
             _modelConfigs = new List<IConfigParamProvider>();
             _imageConfigs = new List<IConfigParamProvider>();
@@ -361,6 +384,43 @@ namespace Radiantium.Offline.Config
                 filter = Enum.Parse<FilterMode>(param.ReadString("filter", "Nearest"));
             }
             return new TextureSampler(wrap, filter);
+        }
+
+        public Medium? CreateMedium(IConfigParamProvider? param)
+        {
+            if (param == null) { return null; }
+            if (param.HasKey("is_global"))
+            {
+                bool isGlobal = param.ReadBool("is_global", false);
+                if (isGlobal) { return _globalMediumObject; }
+            }
+            if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
+            string type = param.ReadString("type", null);
+            return _mediumBuilder[param.ReadString("type", null)](this, param);
+        }
+
+        public MediumAdapter CreateMediumAdapter(IConfigParamProvider? param)
+        {
+            if (param == null) { return new MediumAdapter(null); }
+            if (param.HasKey("same"))
+            {
+                Medium? same = CreateMedium(param.GetSubParam("same"));
+                return new MediumAdapter(same);
+            }
+            else
+            {
+                Medium? outside = null;
+                Medium? inside = null;
+                if (param.HasKey("outside"))
+                {
+                    outside = CreateMedium(param.GetSubParam("outside"));
+                }
+                if (param.HasKey("inside"))
+                {
+                    inside = CreateMedium(param.GetSubParam("inside"));
+                }
+                return new MediumAdapter(inside, outside);
+            }
         }
 
         public string GetPath(string location)
@@ -550,6 +610,11 @@ namespace Radiantium.Offline.Config
             _entities[index].LightConfig = param;
         }
 
+        public void SetEntityMedium(int index, IConfigParamProvider param)
+        {
+            _entities[index].MediumConfig = param;
+        }
+
         public void SetSceneAccelerator(IConfigParamProvider param)
         {
             _sceneAccelConfig = param;
@@ -573,6 +638,11 @@ namespace Radiantium.Offline.Config
         public void SetCamera(IConfigParamProvider param)
         {
             _cameraConfig = param;
+        }
+
+        public void SetGlobalMedium(IConfigParamProvider? param)
+        {
+            _globalMediumConfig = param;
         }
 
         public void AddAccelBuilder(string accel, AccelBuilder builder)
@@ -608,6 +678,11 @@ namespace Radiantium.Offline.Config
         public void AddInfiniteLightBuilder(string name, InfiniteLightBuilder builder)
         {
             _infLightBuilder.Add(name, builder);
+        }
+
+        public void AddMediumBuilder(string name, MediumBuilder builder)
+        {
+            _mediumBuilder.Add(name, builder);
         }
 
         public TriangleModel FindTriangleModel(IConfigParamProvider param)
@@ -681,6 +756,8 @@ namespace Radiantium.Offline.Config
                 return accel;
             }).ToArray();
 
+            _globalMediumObject = CreateMedium(_globalMediumConfig);
+
             Queue<SceneEntityEntry> bfsQ = new Queue<SceneEntityEntry>(_root);
             while (bfsQ.Count > 0)
             {
@@ -701,7 +778,7 @@ namespace Radiantium.Offline.Config
             List<InfiniteLight> infiniteLights = new List<InfiniteLight>();
             foreach (SceneEntityEntry e in _entities)
             {
-                if (e.MaterialConfig == null) //infinite light
+                if (e.MaterialConfig == null && e.MediumConfig == null) //infinite light
                 {
                     if (e.LightConfig == null)
                     {
@@ -713,11 +790,16 @@ namespace Radiantium.Offline.Config
                 }
                 else //scene object
                 {
-                    Material material = CreateMaterial(e.MaterialConfig);
+                    Material? material = null;
+                    if (e.MaterialConfig != null)
+                    {
+                        material = CreateMaterial(e.MaterialConfig);
+                    }
+                    MediumAdapter mediums = CreateMediumAdapter(e.MediumConfig);
                     foreach (IConfigParamProvider param in e.Shapes)
                     {
                         Shape shape = CreateShape(e.ModelToWorld, param);
-                        GeometricPrimitive prim = new GeometricPrimitive(shape, material)
+                        GeometricPrimitive prim = new GeometricPrimitive(shape, material, mediums)
                         {
                             Light = e.LightConfig == null ? null : CreateAreaLight(shape, e.LightConfig)
                         };
@@ -734,7 +816,7 @@ namespace Radiantium.Offline.Config
                         List<Triangle> triangles = mesh.ToTriangle();
                         foreach (Triangle triangle in triangles)
                         {
-                            GeometricPrimitive prim = new GeometricPrimitive(triangle, material)
+                            GeometricPrimitive prim = new GeometricPrimitive(triangle, material, mediums)
                             {
                                 Light = e.LightConfig == null ? null : CreateAreaLight(triangle, e.LightConfig)
                             };
@@ -747,7 +829,7 @@ namespace Radiantium.Offline.Config
                     }
                     foreach (InstancedPrimitivesEntry entry in e.Instances)
                     {
-                        InstancedPrimitive prim = new InstancedPrimitive(_inst[entry.Index], new InstancedTransform(e.ModelToWorld), material);
+                        InstancedPrimitive prim = new InstancedPrimitive(_inst[entry.Index], new InstancedTransform(e.ModelToWorld), material, mediums);
                         primitives.Add(prim);
                     }
                 }
@@ -755,7 +837,7 @@ namespace Radiantium.Offline.Config
 
             Aggregate aggregate = CreateAccelerator(primitives, _sceneAccelConfig);
 
-            Scene scene = new Scene(aggregate, lights.ToArray(), infiniteLights.ToArray());
+            Scene scene = new Scene(aggregate, lights.ToArray(), infiniteLights.ToArray(), _globalMediumObject);
 
             Integrator integrator = CreateIntegrator(_integratorConfig!);
 

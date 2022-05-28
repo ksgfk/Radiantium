@@ -28,6 +28,11 @@ namespace Radiantium.Offline
         public Vector3 N => Shading.Z;
         public bool IsLight => Shape.Light != null;
         public AreaLight Light => Shape.Light!;
+        public bool HasSurface => Shape.Material != null;
+        public Material Surface => Shape.Material!;
+        public bool HasMedium => Shape.Medium.HasMedium;
+        public bool HasOutsideMedium => Shape.Medium.HasOutsideMedium;
+        public bool HasInsideMedium => Shape.Medium.HasInsideMedium;
 
         public Intersection(Vector3 p, Vector2 uV, float t, Primitive shape, Coordinate shading)
         {
@@ -56,6 +61,11 @@ namespace Radiantium.Offline
         public Vector3 ToWorld(Vector3 v)
         {
             return Shading.ToWorld(v);
+        }
+
+        public Medium GetMedium(Vector3 w)
+        {
+            return Vector3.Dot(w, N) > 0 ? Shape.Medium.Outside! : Shape.Medium.Inside!;
         }
     }
 }

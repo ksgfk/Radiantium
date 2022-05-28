@@ -1,12 +1,12 @@
 {
   "renderer": {
-    "spp": 64,
+    "spp": 1024,
     "threads": -1
   },
   "integrator": {
     "type": "vol_path",
-    "max_depth": 7,
-    "min_depth": 3
+    "max_depth": 11,
+    "min_depth": 7
   },
   "camera": {
     "type": "perspective",
@@ -30,7 +30,22 @@
       0,
       1,
       0
-    ]
+    ],
+    "medium": {
+      "type": "homogeneous",
+      "sigma_s": [
+        0.1,
+        0.1,
+        0.1
+      ],
+      "sigma_a": [
+        0.01,
+        0.01,
+        0.01
+      ],
+      "g": 0.7,
+      "scale": 1
+    }
   },
   "accel": {
     "type": "bvh"
@@ -58,12 +73,6 @@
       "location": "../assets/cbox/light.obj"
     }
   ],
-  "global_media": {
-    "same": {
-      "type": "homogeneous",
-      "g": 0.7
-    }
-  },
   "scene": [
     {
       "material": {
@@ -78,7 +87,7 @@
         "type": "model",
         "name": "walls"
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
@@ -97,7 +106,7 @@
         "type": "model",
         "name": "rightwall"
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
@@ -116,7 +125,7 @@
         "type": "model",
         "name": "leftwall"
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
@@ -138,17 +147,13 @@
           40
         ]
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
       }
     },
     {
-      "material": {
-        "type": "diffuse",
-        "kd": 1
-      },
       "shape": {
         "type": "sphere",
         "radius": 0.35
@@ -160,17 +165,16 @@
           0.2
         ]
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
+      },
+      "material": {
+        "type": "diffuse"
       }
     },
     {
-      "material": {
-        "type": "diffuse",
-        "kd": 1
-      },
       "shape": {
         "type": "sphere",
         "radius": 0.35
@@ -182,10 +186,13 @@
           -0.25
         ]
       },
-      "media": {
+      "medium": {
         "outside": {
           "is_global": true
         }
+      },
+      "material": {
+        "type": "diffuse"
       }
     }
   ]

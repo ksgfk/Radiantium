@@ -17,7 +17,7 @@ path 8192 spp
 
 <img src="Gallery/test_rough_metal.png"  />
 
-path 256spp
+path 1024spp
 
 (copper and gold!)
 
