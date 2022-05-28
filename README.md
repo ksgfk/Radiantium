@@ -7,27 +7,23 @@ MIT
 
 ## Gallery
 
-### Rough Glass
+### Homogeneous Participating Medium
 
-<img src="Gallery/test_rough_glass.png"  />
+<img src="Gallery/participating_media.png"  />
 
-path 8192 spp
+vol_path 512spp
 
-### Rough Metal
+### Rough Materials
 
-<img src="Gallery/test_rough_metal.png"  />
+<img src="Gallery/material.png"  />
 
-path 1024spp
+path
 
-(copper and gold!)
+left: plastic 1024spp (There are many differences compared to the result of Mitsuba2)
 
-### Rough Plastic
+center: metal 1024spp
 
-<img src="Gallery/test_rough_plastic.png"  />
-
-path 1024spp
-
-(There are many differences compared to the result of Mitsuba2)
+right: metal and glass 8192spp
 
 ### Teapots (Instanced Test)
 
@@ -38,5 +34,11 @@ path 512spp
 ### Infinite Light Test (IBL)
 
 <img src="Gallery/ibl_test.png"  />
+
+path 256spp
+
+### MIS Test
+
+<img src="Gallery/sample_compare.png"  />
 
 path 256spp

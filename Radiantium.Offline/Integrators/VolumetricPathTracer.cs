@@ -12,13 +12,14 @@ namespace Radiantium.Offline.Integrators
         public int MaxDepth { get; }
         public int MinDepth { get; }
         public float RRThreshold { get; }
-        public float MaxRandomWalk { get; }
+        public LightSampleStrategy Strategy { get; }
 
-        public VolumetricPathTracer(int maxDepth, int minDepth, float rrThreshold)
+        public VolumetricPathTracer(int maxDepth, int minDepth, float rrThreshold, LightSampleStrategy strategy)
         {
             MaxDepth = maxDepth;
             MinDepth = minDepth;
             RRThreshold = rrThreshold;
+            Strategy = strategy;
         }
 
         public override Color3F Li(Ray3F ray, Scene scene, Random rand)
@@ -53,10 +54,25 @@ namespace Radiantium.Offline.Integrators
                         break;
                     }
                     Medium envMedium = rayEnv!;
-                    float lightPdf = scene.SampleLight(rand, out Light light);
-                    if (lightPdf > 0.0f)
+                    switch (Strategy)
                     {
-                        radiance += coeff * EstimateDirectMedium(scene, rand, light, msr, envMedium) / lightPdf;
+                        case LightSampleStrategy.Uniform:
+                            {
+                                float lightPdf = scene.SampleLight(rand, out Light light);
+                                if (lightPdf > 0.0f)
+                                {
+                                    radiance += coeff * EstimateDirectMedium(scene, rand, light, msr, envMedium) / lightPdf;
+                                }
+                            }
+                            break;
+                        case LightSampleStrategy.All:
+                            {
+                                foreach (Light light in scene.Lights)
+                                {
+                                    radiance += coeff * EstimateDirectMedium(scene, rand, light, msr, envMedium);
+                                }
+                            }
+                            break;
                     }
                     PhaseFunctionSampleResult sample = envMedium.SampleWi(wo, rand);
                     ray = new Ray3F(msr.P, sample.Wi, ray.MinT);
@@ -90,10 +106,25 @@ namespace Radiantium.Offline.Integrators
                         bounces--;
                         continue;
                     }
-                    float lightPdf = scene.SampleLight(rand, out Light light);
-                    if (lightPdf > 0.0f)
+                    switch (Strategy)
                     {
-                        radiance += coeff * EstimateDirectSurface(scene, rand, light, inct, wo, rayEnv) / lightPdf;
+                        case LightSampleStrategy.Uniform:
+                            {
+                                float lightPdf = scene.SampleLight(rand, out Light light);
+                                if (lightPdf > 0.0f)
+                                {
+                                    radiance += coeff * EstimateDirectSurface(scene, rand, light, inct, wo, rayEnv) / lightPdf;
+                                }
+                            }
+                            break;
+                        case LightSampleStrategy.All:
+                            {
+                                foreach (Light light in scene.Lights)
+                                {
+                                    radiance += coeff * EstimateDirectSurface(scene, rand, light, inct, wo, rayEnv);
+                                }
+                            }
+                            break;
                     }
                     SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
                     isSpecularPath = (sample.Type & BxdfType.Specular) != 0;

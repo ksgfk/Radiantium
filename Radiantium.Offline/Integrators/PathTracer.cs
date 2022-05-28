@@ -13,20 +13,27 @@ namespace Radiantium.Offline.Integrators
         Mis
     }
 
-    //TODO: NEE and MIS impl more light sampling methods
+    public enum LightSampleStrategy
+    {
+        Uniform,
+        All
+    }
+
     public class PathTracer : Integrator
     {
         public int MaxDepth { get; }
         public int MinDepth { get; }
         public float RRThreshold { get; }
         public PathSampleMethod Method { get; }
+        public LightSampleStrategy Strategy { get; }
 
-        public PathTracer(int maxDepth, int minDepth, float rrThreshold, PathSampleMethod method)
+        public PathTracer(int maxDepth, int minDepth, float rrThreshold, PathSampleMethod method, LightSampleStrategy strategy)
         {
             MaxDepth = maxDepth;
             MinDepth = minDepth;
             RRThreshold = rrThreshold;
             Method = method;
+            Strategy = strategy;
         }
 
         public Color3F OnlySampleBxdf(Ray3F ray, Scene scene, Random rand)
@@ -46,7 +53,7 @@ namespace Radiantium.Offline.Integrators
                 }
                 if (!inct.HasSurface)
                 {
-                    ray = new Ray3F(inct.P, ray.D, 0.001f);
+                    ray = new Ray3F(inct.P, ray.D, ray.MinT);
                     bounces--;
                     continue;
                 }
@@ -108,20 +115,32 @@ namespace Radiantium.Offline.Integrators
                 }
                 if (!inct.HasSurface)
                 {
-                    ray = new Ray3F(inct.P, ray.D, 0.001f);
+                    ray = new Ray3F(inct.P, ray.D, ray.MinT);
                     bounces--;
                     continue;
                 }
+                switch (Strategy)
+                {
+                    case LightSampleStrategy.Uniform:
+                        {
+                            float lightPdf = scene.SampleLight(rand, out Light light);
+                            if (lightPdf > 0.0f)
+                            {
+                                radiance += coeff * EstimateLight(scene, rand, light, inct, wo) / lightPdf;
+                            }
+                        }
+                        break;
+                    case LightSampleStrategy.All:
+                        {
+                            foreach (Light light in scene.Lights)
+                            {
+                                radiance += coeff * EstimateLight(scene, rand, light, inct, wo);
+                            }
+                        }
+                        break;
+                }
                 (Vector3 wi, Color3F fr, float pdf, BxdfType type) = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
                 isSpecularPath = (type & BxdfType.Specular) != 0;
-                if (!isSpecularPath)
-                {
-                    float lightPdf = scene.SampleLight(rand, out Light light);
-                    if (lightPdf > 0.0f)
-                    {
-                        radiance += coeff * EstimateLight(scene, rand, light, inct, wo) / lightPdf;
-                    }
-                }
                 if (pdf > 0.0f)
                 {
                     coeff *= fr * Coordinate.AbsCosTheta(wi) / pdf;
@@ -189,26 +208,38 @@ namespace Radiantium.Offline.Integrators
                 }
                 if (!inct.HasSurface)
                 {
-                    ray = new Ray3F(inct.P, ray.D, 0.001f);
+                    ray = new Ray3F(inct.P, ray.D, ray.MinT);
                     bounces--;
                     continue;
                 }
+                switch (Strategy)
+                {
+                    case LightSampleStrategy.Uniform:
+                        {
+                            float lightPdf = scene.SampleLight(rand, out Light light);
+                            if (lightPdf > 0.0f)
+                            {
+                                radiance += coeff * EstimateDirect(scene, rand, light, inct, wo) / lightPdf;
+#if DEBUG
+                                if (!radiance.IsValid)
+                                {
+                                    throw new InvalidOperationException($"{radiance}");
+                                }
+#endif
+                            }
+                        }
+                        break;
+                    case LightSampleStrategy.All:
+                        {
+                            foreach (Light light in scene.Lights)
+                            {
+                                radiance += coeff * EstimateDirect(scene, rand, light, inct, wo);
+                            }
+                        }
+                        break;
+                }
                 SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
                 isSpecularPath = (sample.Type & BxdfType.Specular) != 0;
-                if (!isSpecularPath)
-                {
-                    float lightPdf = scene.SampleLight(rand, out Light light);
-                    if (lightPdf > 0.0f)
-                    {
-                        radiance += coeff * EstimateDirect(scene, rand, light, inct, wo, sample) / lightPdf;
-#if DEBUG
-                        if (!radiance.IsValid)
-                        {
-                            throw new InvalidOperationException($"{radiance}");
-                        }
-#endif
-                    }
-                }
                 if (sample.Pdf > 0.0f)
                 {
                     coeff *= sample.Fr * Coordinate.AbsCosTheta(sample.Wi) / sample.Pdf;
@@ -238,20 +269,19 @@ namespace Radiantium.Offline.Integrators
 
             static Color3F EstimateDirect(
                 Scene scene, Random rand, Light light,
-                Intersection inct, Vector3 wo, SampleBxdfResult sample)
+                Intersection inct, Vector3 wo)
             {
                 Color3F le = new Color3F(0.0f);
                 (Vector3 lightP, Vector3 lightWi, float lightPdf, Color3F lightLi) = light.SampleLi(inct, rand);
-                float scatteringPdf = 0.0f;
                 if (lightPdf > 0.0f && lightLi != Color3F.Black)
                 {
                     Color3F fr = inct.Surface.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
-                    scatteringPdf = inct.Surface.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                    float scatteringPdf = inct.Surface.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
                     if (fr != Color3F.Black)
                     {
-                        fr *= Coordinate.AbsCosTheta(inct.ToLocal(lightWi));
                         if (!scene.IsOccluded(inct.P, lightP))
                         {
+                            fr *= Coordinate.AbsCosTheta(inct.ToLocal(lightWi));
                             if (light.IsDelta)
                             {
                                 le += fr * lightLi / lightPdf;
@@ -266,7 +296,9 @@ namespace Radiantium.Offline.Integrators
                 }
                 if (!light.IsDelta)
                 {
+                    SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
                     Color3F fr = sample.Fr * Coordinate.AbsCosTheta(sample.Wi);
+                    float scatteringPdf = sample.Pdf;
                     bool sampledSpecular = (sample.Type & BxdfType.Specular) != 0;
                     if (fr != Color3F.Black && scatteringPdf > 0)
                     {
@@ -280,8 +312,8 @@ namespace Radiantium.Offline.Integrators
                             }
                             weight = PathUtility.PowerHeuristic(1, scatteringPdf, 1, bxdfToLightPdf);
                         }
-                        Ray3F toLightRay = inct.SpawnRay(inct.ToWorld(sample.Wi));
-                        bool isHit = scene.Intersect(toLightRay, out Intersection lightInct);
+                        Ray3F toLight = inct.SpawnRay(inct.ToWorld(sample.Wi));
+                        bool isHit = scene.Intersect(toLight, out Intersection lightInct);
                         Color3F li = new Color3F(0);
                         if (isHit)
                         {
@@ -292,7 +324,7 @@ namespace Radiantium.Offline.Integrators
                         }
                         else
                         {
-                            li = scene.EvalAllInfiniteLights(toLightRay);
+                            li = scene.EvalAllInfiniteLights(toLight);
                         }
                         if (li != Color3F.Black)
                         {

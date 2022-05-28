@@ -9,7 +9,6 @@ using Radiantium.Offline.Shapes;
 using Radiantium.Offline.Textures;
 using System.Diagnostics;
 using System.Numerics;
-using System.Text;
 
 namespace Radiantium.Offline.Config
 {
@@ -25,14 +24,16 @@ namespace Radiantium.Offline.Config
                 int minDepth = param.ReadInt32("min_depth", 3);
                 float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
                 PathSampleMethod method = Enum.Parse<PathSampleMethod>(param.ReadString("method", "Mis"));
-                return new PathTracer(maxDepth, minDepth, rrThreshold, method);
+                LightSampleStrategy strategy = Enum.Parse<LightSampleStrategy>(param.ReadString("strategy", "Uniform"));
+                return new PathTracer(maxDepth, minDepth, rrThreshold, method, strategy);
             });
             builder.AddIntegratorBuilder("vol_path", (_, param) =>
             {
                 int maxDepth = param.ReadInt32("max_depth", -1);
                 int minDepth = param.ReadInt32("min_depth", 3);
                 float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
-                return new VolumetricPathTracer(maxDepth, minDepth, rrThreshold);
+                LightSampleStrategy strategy = Enum.Parse<LightSampleStrategy>(param.ReadString("strategy", "Uniform"));
+                return new VolumetricPathTracer(maxDepth, minDepth, rrThreshold, strategy);
             });
             builder.AddAccelBuilder("bvh", (_, p, param) => new Bvh(p, param.ReadInt32("max_prim", 1), Enum.Parse<SplitMethod>(param.ReadString("split", "SAH"))));
             builder.AddAccelBuilder("octree", (_, p, param) => new Octree(p, param.ReadInt32("max_depth", 10), param.ReadInt32("max_count", 10), param.ReadFloat("out_bound", 2.0f)));
@@ -441,7 +442,6 @@ namespace Radiantium.Offline.Config
             string path = GetPath(location);
             Stopwatch sw = new Stopwatch();
             long usedMemoryByte = 0;
-            StringBuilder sb = new StringBuilder();
             sw.Start();
             using FileStream stream = File.OpenRead(path);
             using WavefrontObjReader reader = new WavefrontObjReader(stream);
@@ -465,17 +465,17 @@ namespace Radiantium.Offline.Config
                 Children = children
             };
             sw.Stop();
-            sb.AppendFormat("[Offline.RendererBuilder] -> load model {0}", path).AppendLine();
-            sb.AppendFormat("    use time {0} ms", sw.ElapsedMilliseconds).AppendLine();
-            sb.AppendFormat("    vertex {0}, face {1}", reader.Positions.Count, reader.Faces.Count).AppendLine();
-            sb.AppendFormat("    used memory {0} MB", (usedMemoryByte / 1024.0f / 1024).ToString("0.00"));
             Logger.Lock();
             if (!string.IsNullOrWhiteSpace(reader.ErrorInfo))
             {
                 Logger.Warn($"[Offline.RendererBuilder] -> obj reader warning: ");
                 Logger.Warn($"    {reader.ErrorInfo}");
             }
-            Logger.Info(sb.ToString());
+            Logger.Info("[Offline.RendererBuilder] -> load model {0}, {1} ms, vertex {2} face {3}, {4} MB",
+                path,
+                sw.ElapsedMilliseconds,
+                reader.Positions.Count, reader.Faces.Count,
+                (usedMemoryByte / 1024.0f / 1024).ToString("0.00"));
             Logger.Release();
             return entry;
         }
@@ -488,11 +488,7 @@ namespace Radiantium.Offline.Config
             ColorBuffer image = TextureUtility.LoadImageFromPath(path, needChannel, isFlipY, isCastToLinear);
             ImageEntry entry = new ImageEntry(name, location, image);
             sw.Stop();
-            Logger.Lock();
-            Logger.Info($"[Offline.RendererBuilder] -> load image {path}");
-            Logger.Info($"    use time {sw.ElapsedMilliseconds} ms");
-            Logger.Info($"    used memory {image.UsedMemory / 1024.0f / 1024:0.00} MB");
-            Logger.Release();
+            Logger.Info($"[Offline.RendererBuilder] -> load image {path}, {sw.ElapsedMilliseconds} ms, {image.UsedMemory / 1024.0f / 1024:0.00} MB");
             return entry;
         }
 

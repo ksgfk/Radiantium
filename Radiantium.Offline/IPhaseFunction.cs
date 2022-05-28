@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using static Radiantium.Core.MathExt;
-using static System.Numerics.Vector3;
 using static System.MathF;
+using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline
 {
