@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='utf-8'?>
+<scene version="2.0.0">
+    <integrator type="path">
+        <integer name="max_depth" value="-1"/>
+    </integrator>
+
+    <shape type="obj">
+        <string name="filename" value="../assets/veach_mi/plate1.obj"/>
+        <bsdf type="twosided">
+            <bsdf type="roughconductor">
+                <string name="material" value="Cu"/>
+                <float name="alpha" value="0.00499849"/>
+                <string name="distribution" value="ggx"/>
+                <boolean name="sample_visible" value="false"/>
+            </bsdf>
+        </bsdf>
+    </shape>
+    <shape type="obj">
+        <string name="filename" value="../assets/veach_mi/plate2.obj"/>
+        <bsdf type="twosided">
+            <bsdf type="roughconductor">
+                <string name="material" value="Cu"/>
+                <float name="alpha" value="0.0199996164"/>
+                <string name="distribution" value="ggx"/>
+                <boolean name="sample_visible" value="false"/>
+            </bsdf>
+        </bsdf>
+    </shape>
+    <shape type="obj">
+        <string name="filename" value="../assets/veach_mi/plate3.obj"/>
+        <bsdf type="twosided">
+            <bsdf type="roughconductor">
+                <string name="material" value="Cu"/>
+                <float name="alpha" value="0.04999696"/>
+                <string name="distribution" value="ggx"/>
+                <boolean name="sample_visible" value="false"/>
+            </bsdf>
+        </bsdf>
+    </shape>
+    <shape type="obj">
+        <string name="filename" value="../assets/veach_mi/plate4.obj"/>
+        <bsdf type="twosided">
+            <bsdf type="roughconductor">
+                <string name="material" value="Cu"/>
+                <float name="alpha" value="0.0999950884"/>
+                <string name="distribution" value="ggx"/>
+                <boolean name="sample_visible" value="false"/>
+            </bsdf>
+        </bsdf>
+    </shape>
+    <shape type="obj">
+        <string name="filename" value="../assets/veach_mi/floor.obj"/>
+        <bsdf type="twosided">
+            <bsdf type="diffuse">
+                <rgb name="reflectance" value="0.1,0.1,0.1"/>
+            </bsdf>
+        </bsdf>
+    </shape>
+
+    <shape type="sphere">
+        <float name="radius" value="0.2"/>
+        <point name="center" value="-1.25,0,0"/>
+        <emitter type="area">
+            <rgb name="radiance" value="100,100,100"/>
+        </emitter>
+    </shape>
+    <shape type="sphere">
+        <float name="radius" value="0.05"/>
+        <point name="center" value="-3.75,0,0"/>
+        <emitter type="area">
+            <rgb name="radiance" value="800,800,800"/>
+        </emitter>
+    </shape>
+    <shape type="sphere">
+        <float name="radius" value="0.5"/>
+        <point name="center" value="1.25,0,0"/>
+        <emitter type="area">
+            <rgb name="radiance" value="11.1111,11.1111,11.1111"/>
+        </emitter>
+    </shape>
+    <shape type="sphere">
+        <float name="radius" value="0.8"/>
+        <point name="center" value="3.75,0,0"/>
+        <emitter type="area">
+            <rgb name="radiance" value="3,3,3"/>
+        </emitter>
+    </shape>
+    <shape type="sphere">
+        <float name="radius" value="0.7"/>
+        <point name="center" value="0,4,3"/>
+        <emitter type="area">
+            <rgb name="radiance" value="100,100,100"/>
+        </emitter>
+    </shape>
+
+    <default name="spp" value="256"/>
+
+    <sensor type="perspective">
+        <float name="near_clip" value="0.01"/>
+        <float name="far_clip" value="100"/>
+        <float name="fov" value="25"/>
+
+        <transform name="to_world">
+            <lookat target="0,-1.5,2.5"
+                    origin="0,6,27.5"
+                    up    ="0.0, 1.0, 0.0"/>
+        </transform>
+
+        <film type="hdrfilm">
+            <rfilter type="box"/>
+            <integer name="width" value="768"/>
+            <integer name="height" value="512"/>
+			      <string name="pixel_format" value="rgb"/>
+			      <string name="component_format" value="float32"/>
+        </film>
+
+        <sampler type="independent">
+            <integer name="sample_count" value="$spp"/>
+        </sampler>
+    </sensor>
+</scene>

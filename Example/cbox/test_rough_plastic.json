@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 1024
+    "spp": 8192
   },
   "integrator": {
     "type": "path"

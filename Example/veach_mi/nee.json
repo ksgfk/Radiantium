@@ -69,7 +69,8 @@
         ]
       },
       "material": {
-        "type": "diffuse"
+        "type": "diffuse",
+        "kd": 0
       },
       "light": {
         "type": "diffuse_area",
@@ -93,7 +94,8 @@
         ]
       },
       "material": {
-        "type": "diffuse"
+        "type": "diffuse",
+        "kd": 0
       },
       "light": {
         "type": "diffuse_area",
@@ -117,7 +119,8 @@
         ]
       },
       "material": {
-        "type": "diffuse"
+        "type": "diffuse",
+        "kd": 0
       },
       "light": {
         "type": "diffuse_area",
@@ -141,7 +144,8 @@
         ]
       },
       "material": {
-        "type": "diffuse"
+        "type": "diffuse",
+        "kd": 0
       },
       "light": {
         "type": "diffuse_area",
@@ -165,7 +169,8 @@
         ]
       },
       "material": {
-        "type": "diffuse"
+        "type": "diffuse",
+        "kd": 0
       },
       "light": {
         "type": "diffuse_area",
@@ -183,7 +188,8 @@
       },
       "material": {
         "type": "rough_metal",
-        "roughness": 0.0707
+        "roughness": 0.0707,
+        "is_two_side": true
       }
     },
     {
@@ -193,7 +199,8 @@
       },
       "material": {
         "type": "rough_metal",
-        "roughness": 0.14142
+        "roughness": 0.14142,
+        "is_two_side": true
       }
     },
     {
@@ -203,7 +210,8 @@
       },
       "material": {
         "type": "rough_metal",
-        "roughness": 0.2236
+        "roughness": 0.2236,
+        "is_two_side": true
       }
     },
     {
@@ -213,7 +221,8 @@
       },
       "material": {
         "type": "rough_metal",
-        "roughness": 0.31622
+        "roughness": 0.31622,
+        "is_two_side": true
       }
     },
     {
@@ -227,7 +236,8 @@
           0.1,
           0.1,
           0.1
-        ]
+        ],
+        "is_two_side": true
       }
     }
   ]

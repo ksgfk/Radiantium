@@ -11,14 +11,16 @@ namespace Radiantium.Offline.Materials
         public Color3F K { get; }
         public Texture2D Roughness { get; }
         public MicrofacetDistributionType Dist { get; }
+        public bool IsTwoSide { get; }
         public override BxdfType Type => BxdfType.Reflection | BxdfType.Glossy;
 
-        public RoughMetal(Color3F eta, Color3F k, Texture2D roughness, MicrofacetDistributionType dist)
+        public RoughMetal(Color3F eta, Color3F k, Texture2D roughness, MicrofacetDistributionType dist, bool isTwoSide)
         {
             Eta = eta;
             K = k;
             Roughness = roughness ?? throw new ArgumentNullException(nameof(roughness));
             Dist = dist;
+            IsTwoSide = isTwoSide;
         }
 
         private float GetParam(Vector2 uv)
@@ -30,8 +32,10 @@ namespace Radiantium.Offline.Materials
         {
             if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0)
             {
-                wo = -wo;
-                wi = -wi;
+                if (!IsTwoSide)
+                {
+                    return new Color3F(0.0f);
+                }
             }
             return new MicrofacetReflectionBrdf<Fresnel.Conductor, T>(
                 new Color3F(1.0f),
@@ -55,8 +59,10 @@ namespace Radiantium.Offline.Materials
         {
             if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0)
             {
-                wo = -wo;
-                wi = -wi;
+                if (!IsTwoSide)
+                {
+                    return 0.0f;
+                }
             }
             return new MicrofacetReflectionBrdf<Fresnel.Conductor, T>(
                 new Color3F(1.0f),
@@ -80,7 +86,10 @@ namespace Radiantium.Offline.Materials
         {
             if (CosTheta(wo) <= 0)
             {
-                wo = -wo;
+                if (!IsTwoSide)
+                {
+                    return new SampleBxdfResult();
+                }
             }
             return new MicrofacetReflectionBrdf<Fresnel.Conductor, T>(
                 new Color3F(1.0f),

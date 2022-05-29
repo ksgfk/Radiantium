@@ -16,10 +16,10 @@ namespace Radiantium.Offline.Materials
         public float Ks { get; }
         public float EtaI { get; }
         public float EtaT { get; }
-
+        public bool IsTwoSide { get; }
         public override BxdfType Type => BxdfType.Diffuse | BxdfType.Reflection | BxdfType.Glossy;
 
-        public RoughPlastic(Texture2D r, MicrofacetDistributionType distType, Texture2D roughness, float kd, float ks, float etaI = 1, float etaT = 1.5f)
+        public RoughPlastic(Texture2D r, MicrofacetDistributionType distType, Texture2D roughness, float kd, float ks, bool isTwoSide, float etaI = 1, float etaT = 1.5f)
         {
             R = r ?? throw new ArgumentNullException(nameof(r));
             Dist = distType;
@@ -28,6 +28,7 @@ namespace Radiantium.Offline.Materials
             Ks = ks;
             EtaI = etaI;
             EtaT = etaT;
+            IsTwoSide = isTwoSide;
         }
 
         private (Color3F, float, float) SampleParams(Vector2 uv)
@@ -49,7 +50,13 @@ namespace Radiantium.Offline.Materials
         private Color3F FrImpl<T>(Vector3 wo, Vector3 wi, T dist,
             (Color3F, float, float) param) where T : IMicrofacetDistribution
         {
-            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0) { return new Color3F(0.0f); }
+            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0)
+            {
+                if (!IsTwoSide)
+                {
+                    return new Color3F(0.0f);
+                }
+            }
             var (r, kd, ks) = param;
             Color3F diffuse = new LambertianReflectionBrdf(r).Fr(wo, wi);
             Color3F glossy = new MicrofacetReflectionBrdf<Fresnel.Dielectric, T>(
@@ -75,7 +82,13 @@ namespace Radiantium.Offline.Materials
         private float PdfImpl<T>(Vector3 wo, Vector3 wi, T dist,
             (Color3F, float, float) param) where T : IMicrofacetDistribution
         {
-            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0) { return 0.0f; }
+            if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0)
+            {
+                if (!IsTwoSide)
+                {
+                    return 0.0f;
+                }
+            }
             var (r, kd, ks) = param;
             float p = GlossyProbability(kd, ks);
             float diffuse = new LambertianReflectionBrdf(r).Pdf(wo, wi);
@@ -102,7 +115,13 @@ namespace Radiantium.Offline.Materials
         private SampleBxdfResult SampleImpl<T>(Vector3 wo, Vector2 uv, Random rand, T dist)
             where T : IMicrofacetDistribution
         {
-            if (CosTheta(wo) <= 0) { return new SampleBxdfResult(); }
+            if (CosTheta(wo) <= 0)
+            {
+                if (!IsTwoSide)
+                {
+                    return new SampleBxdfResult();
+                }
+            }
             var param = SampleParams(uv);
             var (r, kd, ks) = param;
             float p = GlossyProbability(kd, ks);

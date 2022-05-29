@@ -7,7 +7,7 @@ MIT
 
 ## Gallery
 
-### Homogeneous Participating Medium
+### Homogeneous Participating Media
 
 <img src="Gallery/participating_media.png"  />
 
@@ -17,13 +17,13 @@ vol_path 512spp
 
 <img src="Gallery/material.png"  />
 
-path
+path 8192spp
 
-left: plastic 1024spp (There are many differences compared to the result of Mitsuba2)
+left: plastic (There are many differences compared to the result of Mitsuba2)
 
-center: metal 1024spp
+center: metal
 
-right: metal and glass 8192spp
+right: metal and glass
 
 ### Teapots (Instanced Test)
 

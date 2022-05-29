@@ -35,13 +35,19 @@ namespace Radiantium.Offline.Config
                 LightSampleStrategy strategy = Enum.Parse<LightSampleStrategy>(param.ReadString("strategy", "Uniform"));
                 return new VolumetricPathTracer(maxDepth, minDepth, rrThreshold, strategy);
             });
+            builder.AddIntegratorBuilder("gbuffer", (_, param) =>
+            {
+                GBufferType name = Enum.Parse<GBufferType>(param.ReadString("name", "Normal"));
+                return new GBufferVisualization(name);
+            });
             builder.AddAccelBuilder("bvh", (_, p, param) => new Bvh(p, param.ReadInt32("max_prim", 1), Enum.Parse<SplitMethod>(param.ReadString("split", "SAH"))));
             builder.AddAccelBuilder("octree", (_, p, param) => new Octree(p, param.ReadInt32("max_depth", 10), param.ReadInt32("max_count", 10), param.ReadFloat("out_bound", 2.0f)));
             builder.AddMaterialBuilder("diffuse", (builder, images, param) =>
-             {
-                 Texture2D kd = param.ReadTex2D("kd", builder, new Color3F(0.5f));
-                 return new Diffuse(kd);
-             });
+            {
+                Texture2D kd = param.ReadTex2D("kd", builder, new Color3F(0.5f));
+                bool isTwoSide = param.ReadBool("is_two_side", false);
+                return new Diffuse(kd, isTwoSide);
+            });
             builder.AddMaterialBuilder("perfect_glass", (builder, images, param) =>
             {
                 Texture2D r = param.ReadTex2D("r", builder, new Color3F(1));
@@ -53,7 +59,8 @@ namespace Radiantium.Offline.Config
             builder.AddMaterialBuilder("perfect_mirror", (builder, images, param) =>
             {
                 Texture2D r = param.ReadTex2D("r", builder, new Color3F(1));
-                return new PerfectMirror(r);
+                bool isTwoSide = param.ReadBool("is_two_side", false);
+                return new PerfectMirror(r, isTwoSide);
             });
             builder.AddMaterialBuilder("rough_plastic", (builder, images, param) =>
             {
@@ -64,7 +71,8 @@ namespace Radiantium.Offline.Config
                 float ks = param.ReadFloat("ks", 0.5f);
                 float etaI = param.ReadFloat("etaA", 1.000277f);
                 float etaT = param.ReadFloat("etaB", 1.5046f);
-                return new RoughPlastic(r, dist, roughness, kd, ks, etaI, etaT);
+                bool isTwoSide = param.ReadBool("is_two_side", false);
+                return new RoughPlastic(r, dist, roughness, kd, ks, isTwoSide, etaI, etaT);
             });
             builder.AddMaterialBuilder("rough_metal", (builder, images, param) =>
             {
@@ -95,7 +103,8 @@ namespace Radiantium.Offline.Config
                 {
                     (eta, k) = Spectrum.NameToEtaAndK["Cu"];
                 }
-                return new RoughMetal(eta, k, roughness, dist);
+                bool isTwoSide = param.ReadBool("is_two_side", false);
+                return new RoughMetal(eta, k, roughness, dist, isTwoSide);
             });
             builder.AddMaterialBuilder("rough_glass", (builder, images, param) =>
             {

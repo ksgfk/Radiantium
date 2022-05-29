@@ -33,7 +33,8 @@ namespace Radiantium.Offline.Shapes
             ray = Ray3F.Transform(ray, WorldToModel);
             Vector3 p = ray.At(t);
             Vector3 n = Normalize(p);
-            Coordinate coord = new Coordinate(n);
+            Vector3 worldN = TransformNormal(n, ModelToWorld);
+            Coordinate coord = new Coordinate(worldN);
 
             float theta = Acos(-n.Y);
             float phi = Atan2(-n.Z, n.X) + MathF.PI;

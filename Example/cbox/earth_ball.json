@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 32
+    "spp": 256
   },
   "integrator": {
     "type": "path",
@@ -61,13 +61,13 @@
     {
       "type": "image",
       "name": "earth_full",
-      "location": "../assets/world.200412.3x5400x2700.png",
-      "is_cast_to_linear": false
+      "location": "../assets/world.200412.3x5400x2700.png"
     },
     {
       "type": "image",
       "name": "earth_blue",
-      "location": "../assets/earth_map_blue.png"
+      "location": "../assets/earth_map_blue.png",
+      "is_cast_to_linear": false
     }
   ],
   "scene": [
