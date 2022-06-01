@@ -175,6 +175,40 @@ namespace Radiantium.Offline.Config
                 }
             }
         }
+
+        public static (Vector3, Matrix4x4, Vector3) ReadTransform(this IConfigParamProvider param)
+        {
+            Vector3 position = param.ReadVec3Float("position", new Vector3(0));
+            Matrix4x4 rotation;
+            if (param.HasKey("rotation"))
+            {
+                ConfigParamType type = param.GetParamType("rotation");
+                switch (type)
+                {
+                    case ConfigParamType.Mat4:
+                        rotation = param.ReadMat4("rotation", Matrix4x4.Identity);
+                        break;
+                    case ConfigParamType.Object:
+                        IConfigParamProvider o = param.GetSubParam("rotation");
+                        Vector3 axis = o.ReadVec3Float("axis", new Vector3(0, 1, 0));
+                        float angle = o.ReadFloat("angle", 0);
+                        rotation = Matrix4x4.CreateFromAxisAngle(axis, MathExt.Radian(angle));
+                        break;
+                    case ConfigParamType.Vec4:
+                        Vector4 v = param.ReadVec4Float("rotation", new Vector4(0, 0, 0, 1));
+                        rotation = Matrix4x4.CreateFromQuaternion(new Quaternion(v.X, v.Y, v.Z, v.W));
+                        break;
+                    default:
+                        throw new ArgumentException("invalid param");
+                }
+            }
+            else
+            {
+                rotation = Matrix4x4.Identity;
+            }
+            Vector3 scale = param.ReadVec3Float("scale", new Vector3(1));
+            return (position, rotation, scale);
+        }
     }
 
     public class RendererBuilder
@@ -201,6 +235,10 @@ namespace Radiantium.Offline.Config
             public IConfigParamProvider? AggregateConfig { get; set; }
             public List<IConfigParamProvider> ShapeConfigs { get; } = new List<IConfigParamProvider>();
             public List<IConfigParamProvider> ModelConfigs { get; } = new List<IConfigParamProvider>();
+            public Vector3 LocalPosition { get; set; } = new Vector3(0);
+            public Matrix4x4 LocalRotation { get; set; } = Matrix4x4.Identity;
+            public Vector3 LocalScale { get; set; } = new Vector3(1);
+            public Matrix4x4 ModelToWorld { get; set; }
         }
 
         public class SceneEntityEntry
@@ -532,6 +570,14 @@ namespace Radiantium.Offline.Config
             _instances[index].AggregateConfig = param;
         }
 
+        public void SetInstancedLocalTransform(int index, IConfigParamProvider param)
+        {
+            var (position, rotation, scale) = param.ReadTransform();
+            _instances[index].LocalPosition = position;
+            _instances[index].LocalRotation = rotation;
+            _instances[index].LocalScale = scale;
+        }
+
         public int AddEntity(int? parent = null)
         {
             int index = _entities.Count;
@@ -551,36 +597,7 @@ namespace Radiantium.Offline.Config
 
         public void SetEntityLocalTransform(int index, IConfigParamProvider param)
         {
-            Vector3 position = param.ReadVec3Float("position", new Vector3(0));
-            Matrix4x4 rotation;
-            if (param.HasKey("rotation"))
-            {
-                ConfigParamType type = param.GetParamType("rotation");
-                switch (type)
-                {
-                    case ConfigParamType.Mat4:
-                        rotation = param.ReadMat4("rotation", Matrix4x4.Identity);
-                        break;
-                    case ConfigParamType.Object:
-                        IConfigParamProvider o = param.GetSubParam("rotation");
-                        Vector3 axis = o.ReadVec3Float("axis", new Vector3(0, 1, 0));
-                        float angle = o.ReadFloat("angle", 0);
-                        rotation = Matrix4x4.CreateFromAxisAngle(axis, MathExt.Radian(angle));
-                        break;
-                    case ConfigParamType.Vec4:
-                        Vector4 v = param.ReadVec4Float("rotation", new Vector4(0, 0, 0, 1));
-                        rotation = Matrix4x4.CreateFromQuaternion(new Quaternion(v.X, v.Y, v.Z, v.W));
-                        break;
-                    default:
-                        throw new ArgumentException("invalid param");
-                }
-            }
-            else
-            {
-                rotation = Matrix4x4.Identity;
-            }
-            Vector3 scale = param.ReadVec3Float("scale", new Vector3(1));
-
+            var (position, rotation, scale) = param.ReadTransform();
             _entities[index].LocalPosition = position;
             _entities[index].LocalRotation = rotation;
             _entities[index].LocalScale = scale;
@@ -740,16 +757,20 @@ namespace Radiantium.Offline.Config
             _inst = _instances.AsParallel().Select(entry =>
             {
                 List<Primitive> primitives = new List<Primitive>();
+                Matrix4x4 trans = Matrix4x4.CreateTranslation(entry.LocalPosition);
+                Matrix4x4 rotate = entry.LocalRotation;
+                Matrix4x4 scale = Matrix4x4.CreateScale(entry.LocalScale);
+                Matrix4x4 thisModel = scale * rotate * trans;
                 foreach (IConfigParamProvider param in entry.ShapeConfigs)
                 {
-                    Shape shape = CreateShape(Matrix4x4.Identity, param);
+                    Shape shape = CreateShape(thisModel, param);
                     ShapeWrapperPrimitive wrapper = new ShapeWrapperPrimitive(shape);
                     primitives.Add(wrapper);
                 }
                 foreach (IConfigParamProvider param in entry.ModelConfigs)
                 {
                     TriangleModel model = FindTriangleModel(param);
-                    TriangleMesh mesh = new TriangleMesh(Matrix4x4.Identity, model);
+                    TriangleMesh mesh = new TriangleMesh(thisModel, model);
                     List<Triangle> triangles = mesh.ToTriangle();
                     foreach (Triangle triangle in triangles)
                     {

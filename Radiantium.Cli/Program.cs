@@ -90,6 +90,10 @@ namespace Radiantium.Cli
                         IConfigParamProvider shape = instanced.GetSubParam("shape");
                         builder.AddInstancedShape(index, shape);
                     }
+                    if (instanced.HasKey("transform"))
+                    {
+                        builder.SetInstancedLocalTransform(index, instanced.GetSubParam("transform"));
+                    }
                 }
             }
             Queue<(IConfigParamProvider, int?)> q = new Queue<(IConfigParamProvider, int?)>();
