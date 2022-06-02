@@ -38,7 +38,7 @@ namespace Radiantium.Offline.Bxdf
             float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
             float factor = 1 / eta;
             float d = Distribution.D(wh);
-            float g = Distribution.SmithG2(wo, wi);
+            float g = Distribution.G(wo, wi);
             return (1 - f) * T *
                 MathF.Abs(d * g * eta * eta * AbsDot(wi, wh) * AbsDot(wo, wh) * factor * factor /
                 (cosThetaI * cosThetaO * sqrtDenom * sqrtDenom));

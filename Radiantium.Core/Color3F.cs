@@ -92,5 +92,10 @@ namespace Radiantium.Core
         {
             return value <= 0.0031308f ? 12.92f * value : (1.0f + 0.055f) * MathF.Pow(value, 1.0f / 2.4f) - 0.055f;
         }
+
+        public static Color3F Lerp(float weight, Color3F a, Color3F b)
+        {
+            return (1 - weight) * a + weight * b;
+        }
     }
 }

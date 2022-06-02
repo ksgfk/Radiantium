@@ -41,6 +41,7 @@ namespace Radiantium.Offline
                     buffer = renderer.RenderTarget;
                 }
                 string fullPath = Path.Combine(SavePath, $"{SaveName}.png");
+                fullPath = Path.GetFullPath(fullPath);
                 using FileStream stream = File.OpenWrite(fullPath);
                 buffer.SavePng(stream);
                 Logger.Info($"[Offline.Output] -> save result {fullPath}");
@@ -48,6 +49,7 @@ namespace Radiantium.Offline
             if (IsSaveExr)
             {
                 string fullPath = Path.Combine(SavePath, $"{SaveName}.exr");
+                fullPath = Path.GetFullPath(fullPath);
                 using FileStream stream = File.OpenWrite(fullPath);
                 renderer.RenderTarget.SaveOpenExr(stream);
                 Logger.Info($"[Offline.Output] -> save result {fullPath}");

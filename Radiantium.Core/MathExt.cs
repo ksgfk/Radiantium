@@ -65,6 +65,13 @@ namespace Radiantium.Core
 
         public static float Radian(float value) { return value * (PI / 180.0f); }
 
+        public static float Sqr(float value) { return value * value; }
+
+        public static float MulSign(float a1, float a2)
+        {
+            return a1 * CopySign(1, a2);
+        }
+
         public static bool Refract(Vector3 wi, Vector3 n, float eta, out Vector3 wt)
         {
             float cosThetaI = Dot(n, wi);
@@ -91,6 +98,12 @@ namespace Radiantium.Core
         {
             (float sinPhi, float cosPhi) = SinCos(phi);
             return sinTheta * cosPhi * x + sinTheta * sinPhi * y + cosTheta * z;
+        }
+
+        public static Vector3 SphericalDirection(float sinTheta, float cosTheta, float phi)
+        {
+            (float sinPhi, float cosPhi) = SinCos(phi);
+            return new Vector3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
         }
 
         public static float Lerp(float t, float v1, float v2) { return (1 - t) * v1 + t * v2; }

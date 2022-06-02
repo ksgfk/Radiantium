@@ -12,19 +12,26 @@ namespace Radiantium.Offline.Materials
         public Texture2D R { get; }
         public Texture2D T { get; }
         public Texture2D Roughness { get; }
+        public Texture2D Anisotropic { get; }
         public float EtaA { get; }
         public float EtaB { get; }
         public MicrofacetDistributionType Dist { get; }
         public override BxdfType Type => BxdfType.Glossy | BxdfType.Transmission | BxdfType.Reflection;
 
-        public RoughGlass(Texture2D r, Texture2D t, Texture2D roughness, float etaA, float etaB, MicrofacetDistributionType dist)
+        public RoughGlass(Texture2D r, Texture2D t, Texture2D roughness, Texture2D anisotropic, float etaA, float etaB, MicrofacetDistributionType dist)
         {
             R = r ?? throw new ArgumentNullException(nameof(r));
             T = t ?? throw new ArgumentNullException(nameof(t));
             Roughness = roughness ?? throw new ArgumentNullException(nameof(roughness));
+            Anisotropic = anisotropic ?? throw new AbandonedMutexException(nameof(anisotropic));
             EtaA = etaA;
             EtaB = etaB;
             Dist = dist;
+        }
+
+        private (float, float) GetParam(Vector2 uv)
+        {
+            return (Roughness.Sample(uv).R, Anisotropic.Sample(uv).R);
         }
 
         private Color3F FrImpl<T>(Vector3 wo, Vector3 wi, Vector2 uv, T dist)
@@ -42,7 +49,7 @@ namespace Radiantium.Offline.Materials
             if (CosTheta(wh) < 0) { wh = -wh; }
             float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
             float d = dist.D(wh);
-            float g = dist.SmithG1(wo, wi);
+            float g = dist.G(wo, wi);
             float f = Fresnel.DielectricFunc(Dot(wo, wh), etaI, etaT);
             Color3F bsdf;
             if (isReflect)
@@ -64,11 +71,11 @@ namespace Radiantium.Offline.Materials
 
         public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            float roughness = Roughness.Sample(inct.UV).R;
+            var (roughness, anis) = GetParam(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann => FrImpl(wo, wi, inct.UV, new Microfacet.Beckmann(roughness)),
-                MicrofacetDistributionType.GGX => FrImpl(wo, wi, inct.UV, new Microfacet.GGX(roughness)),
+                MicrofacetDistributionType.Beckmann => FrImpl(wo, wi, inct.UV, new Microfacet.Beckmann(roughness, anis)),
+                MicrofacetDistributionType.GGX => FrImpl(wo, wi, inct.UV, new Microfacet.GGX(roughness, anis)),
                 _ => new Color3F(0.0f),
             };
         }
@@ -107,11 +114,11 @@ namespace Radiantium.Offline.Materials
 
         public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            float roughness = Roughness.Sample(inct.UV).R;
+            var (roughness, anis) = GetParam(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann => PdfImpl(wo, wi, new Microfacet.Beckmann(roughness)),
-                MicrofacetDistributionType.GGX => PdfImpl(wo, wi, new Microfacet.GGX(roughness)),
+                MicrofacetDistributionType.Beckmann => PdfImpl(wo, wi, new Microfacet.Beckmann(roughness, anis)),
+                MicrofacetDistributionType.GGX => PdfImpl(wo, wi, new Microfacet.GGX(roughness, anis)),
                 _ => 0.0f,
             };
         }
@@ -128,7 +135,7 @@ namespace Radiantium.Offline.Materials
                 Vector3 wi = Reflect(-wo, wh);
                 if (!SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
                 float d = dist.D(wh);
-                float g = dist.SmithG1(wo, wi);
+                float g = dist.G(wo, wi);
                 Color3F brdf = r * (d * g * f / (4.0f * CosTheta(wi) * CosTheta(wo)));
                 float jacobian = 1.0f / (4.0f * AbsDot(wh, wi));
                 float pdf = dist.Pdf(wo, wh) * jacobian * f;
@@ -153,7 +160,7 @@ namespace Radiantium.Offline.Materials
                 float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
                 float factor = 1 / eta;
                 float d = dist.D(wh);
-                float g = dist.SmithG1(wo, wi);
+                float g = dist.G(wo, wi);
                 Color3F btdf = (1 - f) * t *
                     MathF.Abs(d * g * eta * eta * AbsDot(wi, wh) * AbsDot(wo, wh) * factor * factor /
                     (CosTheta(wo) * CosTheta(wi) * sqrtDenom * sqrtDenom));
@@ -166,11 +173,11 @@ namespace Radiantium.Offline.Materials
 
         public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
         {
-            float roughness = Roughness.Sample(inct.UV).R;
+            var (roughness, anis) = GetParam(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann => SampleImpl(wo, inct.UV, rand, new Microfacet.Beckmann(roughness)),
-                MicrofacetDistributionType.GGX => SampleImpl(wo, inct.UV, rand, new Microfacet.GGX(roughness)),
+                MicrofacetDistributionType.Beckmann => SampleImpl(wo, inct.UV, rand, new Microfacet.Beckmann(roughness, anis)),
+                MicrofacetDistributionType.GGX => SampleImpl(wo, inct.UV, rand, new Microfacet.GGX(roughness, anis)),
                 _ => new SampleBxdfResult(),
             };
         }

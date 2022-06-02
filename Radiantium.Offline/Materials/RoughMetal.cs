@@ -10,22 +10,24 @@ namespace Radiantium.Offline.Materials
         public Color3F Eta { get; }
         public Color3F K { get; }
         public Texture2D Roughness { get; }
+        public Texture2D Anisotropic { get; }
         public MicrofacetDistributionType Dist { get; }
         public bool IsTwoSide { get; }
         public override BxdfType Type => BxdfType.Reflection | BxdfType.Glossy;
 
-        public RoughMetal(Color3F eta, Color3F k, Texture2D roughness, MicrofacetDistributionType dist, bool isTwoSide)
+        public RoughMetal(Color3F eta, Color3F k, Texture2D roughness, Texture2D anisotropic, MicrofacetDistributionType dist, bool isTwoSide)
         {
             Eta = eta;
             K = k;
             Roughness = roughness ?? throw new ArgumentNullException(nameof(roughness));
+            Anisotropic = anisotropic ?? throw new AbandonedMutexException(nameof(anisotropic));
             Dist = dist;
             IsTwoSide = isTwoSide;
         }
 
-        private float GetParam(Vector2 uv)
+        private (float, float) GetParam(Vector2 uv)
         {
-            return Roughness.Sample(uv).R;
+            return (Roughness.Sample(uv).R, Anisotropic.Sample(uv).R);
         }
 
         private Color3F FrImpl<T>(Vector3 wo, Vector3 wi, T dist) where T : IMicrofacetDistribution
@@ -46,11 +48,11 @@ namespace Radiantium.Offline.Materials
 
         public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            float roughness = GetParam(inct.UV);
+            var (roughness, anis) = GetParam(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann => FrImpl(wo, wi, new Microfacet.Beckmann(roughness)),
-                MicrofacetDistributionType.GGX => FrImpl(wo, wi, new Microfacet.GGX(roughness)),
+                MicrofacetDistributionType.Beckmann => FrImpl(wo, wi, new Microfacet.Beckmann(roughness, anis)),
+                MicrofacetDistributionType.GGX => FrImpl(wo, wi, new Microfacet.GGX(roughness, anis)),
                 _ => new Color3F(0.0f)
             };
         }
@@ -73,11 +75,11 @@ namespace Radiantium.Offline.Materials
 
         public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            float roughness = GetParam(inct.UV);
+            var (roughness, anis) = GetParam(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann => PdfImpl(wo, wi, new Microfacet.Beckmann(roughness)),
-                MicrofacetDistributionType.GGX => PdfImpl(wo, wi, new Microfacet.GGX(roughness)),
+                MicrofacetDistributionType.Beckmann => PdfImpl(wo, wi, new Microfacet.Beckmann(roughness, anis)),
+                MicrofacetDistributionType.GGX => PdfImpl(wo, wi, new Microfacet.GGX(roughness, anis)),
                 _ => 0.0f
             };
         }
@@ -100,11 +102,11 @@ namespace Radiantium.Offline.Materials
 
         public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
         {
-            float roughness = GetParam(inct.UV);
+            var (roughness, anis) = GetParam(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann => SampleImpl(wo, rand, new Microfacet.Beckmann(roughness)),
-                MicrofacetDistributionType.GGX => SampleImpl(wo, rand, new Microfacet.GGX(roughness)),
+                MicrofacetDistributionType.Beckmann => SampleImpl(wo, rand, new Microfacet.Beckmann(roughness, anis)),
+                MicrofacetDistributionType.GGX => SampleImpl(wo, rand, new Microfacet.GGX(roughness, anis)),
                 _ => new SampleBxdfResult()
             };
         }

@@ -13,6 +13,10 @@ MIT
 
 vol_path 512spp
 
+<img src="Gallery/bunny.png"  />
+
+vol_path 8192spp
+
 ### Rough Materials
 
 <img src="Gallery/material.png"  />

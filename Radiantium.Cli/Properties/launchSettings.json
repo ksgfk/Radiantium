@@ -2,7 +2,7 @@
   "profiles": {
     "Radiantium.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "D://ProjectCSharp//Radiantium//Example//cbox//bunny.json",
+      "commandLineArgs": "..//..//..//..//Example//cbox//anis_rough_metal.json",
       "environmentVariables": {
         "DOTNET_TC_QuickJitForLoops": "1",
         "DOTNET_TieredPGO": "1",

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using static Radiantium.Core.MathExt;
+using System.Numerics;
 using static System.MathF;
 using static System.Numerics.Vector3;
 
@@ -12,27 +13,36 @@ namespace Radiantium.Offline
 
         public Coordinate(Vector3 n)
         {
-            //https://zhuanlan.zhihu.com/p/351071035
-            if (Abs(n.X) > Abs(n.Y))
-            {
-                X = new Vector3(-n.Z, 0, n.X) / Sqrt(n.X * n.X + n.Z * n.Z);
-            }
-            else
-            {
-                X = new Vector3(0, n.Z, -n.Y) / Sqrt(n.Y * n.Y + n.Z * n.Z);
-            }
-            Y = Cross(n, X);
+            /* Based on "Building an Orthonormal Basis, Revisited" by
+             * Tom Duff, James Burgess, Per Christensen,
+             * Christophe Hery, Andrew Kensler, Max Liani,
+             * and Ryusuke Villemin (JCGT Vol 6, No 1, 2017)
+             */
+            float sign = CopySign(1.0f, n.Z);
+            float a = -1 / (sign + n.Z);
+            float b = n.X * n.Y * a;
+            X = new Vector3(
+                MulSign(Sqr(n.X) * a, n.Z) + 1.0f,
+                MulSign(b, n.Z),
+                MulSign(n.X, -n.Z)
+            );
+            Y = new Vector3(
+                b,
+                sign + Sqr(n.Y) * a,
+                -n.Y
+            );
             Z = n;
-            //fast version
-            //if (Abs(Abs(Dot(n, new Vector3(1, 0, 0))) - 1) < 0.1f)
+
+            //https://zhuanlan.zhihu.com/p/351071035
+            //if (Abs(n.X) > Abs(n.Y))
             //{
-            //    Y = Cross(n, new Vector3(0, 1, 0));
+            //    X = new Vector3(-n.Z, 0, n.X) / Sqrt(n.X * n.X + n.Z * n.Z);
             //}
             //else
             //{
-            //    Y = Cross(n, new Vector3(1, 0, 0));
+            //    X = new Vector3(0, n.Z, -n.Y) / Sqrt(n.Y * n.Y + n.Z * n.Z);
             //}
-            //X = Cross(Y, n);
+            //Y = Cross(n, X);
             //Z = n;
         }
 

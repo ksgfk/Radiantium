@@ -67,17 +67,19 @@ namespace Radiantium.Offline.Config
                 Texture2D r = param.ReadTex2D("r", builder, new Color3F(0.5f));
                 MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "Beckmann"));
                 Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.3f));
+                Texture2D anisotropic = param.ReadTex2D("anisotropic", builder, new Color3F(0.0f));
                 float kd = param.ReadFloat("kd", 0.5f);
                 float ks = param.ReadFloat("ks", 0.5f);
                 float etaI = param.ReadFloat("etaA", 1.000277f);
                 float etaT = param.ReadFloat("etaB", 1.5046f);
                 bool isTwoSide = param.ReadBool("is_two_side", false);
-                return new RoughPlastic(r, dist, roughness, kd, ks, isTwoSide, etaI, etaT);
+                return new RoughPlastic(r, dist, roughness, anisotropic, kd, ks, isTwoSide, etaI, etaT);
             });
             builder.AddMaterialBuilder("rough_metal", (builder, images, param) =>
             {
                 MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "GGX"));
                 Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.3f));
+                Texture2D anisotropic = param.ReadTex2D("anisotropic", builder, new Color3F(0.0f));
                 Color3F eta;
                 Color3F k;
                 if (param.HasKey("metal_type"))
@@ -104,17 +106,18 @@ namespace Radiantium.Offline.Config
                     (eta, k) = Spectrum.NameToEtaAndK["Cu"];
                 }
                 bool isTwoSide = param.ReadBool("is_two_side", false);
-                return new RoughMetal(eta, k, roughness, dist, isTwoSide);
+                return new RoughMetal(eta, k, roughness, anisotropic, dist, isTwoSide);
             });
             builder.AddMaterialBuilder("rough_glass", (builder, images, param) =>
             {
                 Texture2D r = param.ReadTex2D("r", builder, new Color3F(1));
                 Texture2D t = param.ReadTex2D("t", builder, new Color3F(1));
                 Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(0.3f));
+                Texture2D anisotropic = param.ReadTex2D("anisotropic", builder, new Color3F(0.0f));
                 float etaA = param.ReadFloat("etaA", 1.000277f);
                 float etaB = param.ReadFloat("etaB", 1.5046f);
                 MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "GGX"));
-                return new RoughGlass(r, t, roughness, etaA, etaB, dist);
+                return new RoughGlass(r, t, roughness, anisotropic, etaA, etaB, dist);
             });
             builder.AddAreaLightBuilder("diffuse_area", (_, shape, param) =>
             {

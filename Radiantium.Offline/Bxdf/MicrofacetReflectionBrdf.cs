@@ -33,18 +33,15 @@ namespace Radiantium.Offline.Bxdf
             wh = Normalize(wh);
             Color3F f = Fresnel.Eval(Dot(wi, Faceforward(wh, new Vector3(0, 0, 1))));
             float d = Distribution.D(wh);
-            float g = Distribution.SmithG2(wo, wi);
+            float g = Distribution.G(wo, wi);
             Color3F result = R * ((d * g * f) / (4 * cosThetaI * cosThetaO));
             return result;
         }
 
         public float Pdf(Vector3 wo, Vector3 wi)
         {
-            if (AbsCosTheta(wo) == 0 || AbsCosTheta(wi) == 0) { return 0.0f; }
             if (!SameHemisphere(wo, wi)) { return 0; }
-            Vector3 wh = wi + wo;
-            if (wh.X == 0 && wh.Y == 0 && wh.Z == 0) { return 0; }
-            wh = Normalize(wo + wi);
+            Vector3 wh = Normalize(wo + wi);
             return Distribution.Pdf(wo, wh) / (4 * Dot(wo, wh));
         }
 

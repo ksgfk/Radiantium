@@ -1,0 +1,158 @@
+{
+  "renderer": {
+    "spp": 64
+  },
+  "integrator": {
+    "type": "path",
+    "min_depth": 5
+  },
+  "camera": {
+    "type": "perspective",
+    "screen": [
+      800,
+      600
+    ],
+    "fov": 27.7856,
+    "far": 100,
+    "origin": [
+      0,
+      0.919769,
+      5.41159
+    ],
+    "target": [
+      0,
+      0.893051,
+      4.41198
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ]
+  },
+  "accel": {
+    "type": "bvh"
+  },
+  "output": {},
+  "assets": [
+    {
+      "type": "model",
+      "name": "walls",
+      "location": "../assets/cbox/walls.obj"
+    },
+    {
+      "type": "model",
+      "name": "rightwall",
+      "location": "../assets/cbox/rightwall.obj"
+    },
+    {
+      "type": "model",
+      "name": "leftwall",
+      "location": "../assets/cbox/leftwall.obj"
+    },
+    {
+      "type": "model",
+      "name": "light",
+      "location": "../assets/cbox/light.obj"
+    }
+  ],
+  "scene": [
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.725,
+          0.71,
+          0.68
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "walls"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.161,
+          0.133,
+          0.427
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "rightwall"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.630,
+          0.065,
+          0.05
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "leftwall"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse"
+      },
+      "shape": {
+        "type": "model",
+        "name": "light"
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          40,
+          40,
+          40
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "rough_glass",
+        "roughness": 0.3,
+        "dist": "GGX",
+        "anisotropic": -0.5
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35
+      },
+      "transform": {
+        "position": [
+          0.5,
+          0.35,
+          0.2
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "rough_glass",
+        "roughness": 0.3,
+        "dist": "Beckmann",
+        "anisotropic": -0.5
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35
+      },
+      "transform": {
+        "position": [
+          -0.5,
+          0.35,
+          -0.25
+        ]
+      }
+    }
+  ]
+}
