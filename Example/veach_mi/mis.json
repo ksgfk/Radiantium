@@ -59,10 +59,8 @@
     {
       "shape": {
         "type": "sphere",
-        "radius": 0.2
-      },
-      "transform": {
-        "position": [
+        "radius": 0.2,
+        "center": [
           -1.25,
           0,
           0
@@ -84,10 +82,8 @@
     {
       "shape": {
         "type": "sphere",
-        "radius": 0.05
-      },
-      "transform": {
-        "position": [
+        "radius": 0.05,
+        "center": [
           -3.75,
           0,
           0
@@ -109,10 +105,8 @@
     {
       "shape": {
         "type": "sphere",
-        "radius": 0.5
-      },
-      "transform": {
-        "position": [
+        "radius": 0.5,
+        "center": [
           1.25,
           0,
           0
@@ -134,10 +128,8 @@
     {
       "shape": {
         "type": "sphere",
-        "radius": 0.8
-      },
-      "transform": {
-        "position": [
+        "radius": 0.8,
+        "center": [
           3.75,
           0,
           0
@@ -159,10 +151,8 @@
     {
       "shape": {
         "type": "sphere",
-        "radius": 0.7
-      },
-      "transform": {
-        "position": [
+        "radius": 0.7,
+        "center": [
           0,
           4,
           3

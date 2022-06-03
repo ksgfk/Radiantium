@@ -67,10 +67,13 @@ namespace Radiantium.Core
 
         public static float Sqr(float value) { return value * value; }
 
-        public static float MulSign(float a1, float a2)
-        {
-            return a1 * CopySign(1, a2);
-        }
+        public static float Fma(float a, float b, float c) { return a * b + c; }
+
+        public static float MulSign(float a1, float a2) { return a1 * CopySign(1, a2); }
+
+        public static float SafeSqrt(float a) { return Sqrt(Max(a, 0)); }
+
+        public static float Rsqrt(float a) { return 1.0f / Sqrt(a); }
 
         public static bool Refract(Vector3 wi, Vector3 n, float eta, out Vector3 wt)
         {
@@ -107,6 +110,27 @@ namespace Radiantium.Core
         }
 
         public static float Lerp(float t, float v1, float v2) { return (1 - t) * v1 + t * v2; }
+
+        public static (bool, double, double) SolveQuadratic(double a, double b, double c)
+        {
+            bool linearCase = a == 0.0;
+            bool validLinear = linearCase && b != 0.0;
+            double x0 = -c / b, x1 = -c / b;
+            double discrim = b * b - 4.0 * a * c;
+            bool validQuadratic = !linearCase && (discrim >= 0.0);
+            if (validQuadratic)
+            {
+                double rootDiscrim = Math.Sqrt(discrim);
+                double temp = -0.5 * (b + Math.CopySign(rootDiscrim, b));
+                double x0p = temp / a;
+                double x1p = c / temp;
+                double x0m = Math.Min(x0p, x1p);
+                double x1m = Math.Max(x0p, x1p);
+                x0 = linearCase ? x0 : x0m;
+                x1 = linearCase ? x0 : x1m;
+            }
+            return (validLinear || validQuadratic, x0, x1);
+        }
 
         //******************
         //* Linear Algebra *

@@ -115,10 +115,8 @@
       },
       "shape": {
         "type": "sphere",
-        "radius": 0.35
-      },
-      "transform": {
-        "position": [
+        "radius": 0.35,
+        "center": [
           0.5,
           0.35,
           0.2
@@ -136,10 +134,8 @@
       },
       "shape": {
         "type": "sphere",
-        "radius": 0.35
-      },
-      "transform": {
-        "position": [
+        "radius": 0.35,
+        "center": [
           -0.5,
           0.35,
           -0.25

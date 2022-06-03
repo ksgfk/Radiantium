@@ -1,16 +1,11 @@
 ﻿using Radiantium.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using static Radiantium.Core.MathExt;
-using static System.MathF;
-using static Radiantium.Offline.Coordinate;
-using static System.Numerics.Vector3;
-using static Radiantium.Core.Color3F;
 using Radiantium.Offline.Bxdf;
+using System.Numerics;
+using static Radiantium.Core.Color3F;
+using static Radiantium.Core.MathExt;
+using static Radiantium.Offline.Coordinate;
+using static System.MathF;
+using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Materials
 {

@@ -1,5 +1,5 @@
-﻿using static Radiantium.Core.MathExt;
-using System.Numerics;
+﻿using System.Numerics;
+using static Radiantium.Core.MathExt;
 using static System.MathF;
 using static System.Numerics.Vector3;
 
@@ -60,31 +60,41 @@ namespace Radiantium.Offline
 
         public static float AbsCosTheta(Vector3 v) => Abs(CosTheta(v));
 
-        public static float Cos2Theta(Vector3 v) => v.Z * v.Z;
+        public static float Cos2Theta(Vector3 v) => Sqr(v.Z);
 
-        public static float Sin2Theta(Vector3 v) => Max(0, 1.0f - Cos2Theta(v));
+        public static float Sin2Theta(Vector3 v) => Fma(v.X, v.X, Sqr(v.Y));
 
-        public static float SinTheta(Vector3 v) => Sqrt(Sin2Theta(v));
+        public static float SinTheta(Vector3 v) => SafeSqrt(Sin2Theta(v));
 
-        public static float TanTheta(Vector3 v) => SinTheta(v) / CosTheta(v);
+        public static float TanTheta(Vector3 v) => SafeSqrt(Fma(-v.Z, v.Z, 1.0f)) / v.Z;
 
-        public static float Tan2Theta(Vector3 v) => Sin2Theta(v) / Cos2Theta(v);
+        public static float Tan2Theta(Vector3 v) => Max(Fma(-v.Z, v.Z, 1.0f), 0.0f) / Sqr(v.Z);
 
         public static float CosPhi(Vector3 v)
         {
-            float sinTheta = SinTheta(v);
-            return (sinTheta == 0) ? 1 : Math.Clamp(v.X / sinTheta, -1, 1);
+            float sin2Theta = Sin2Theta(v);
+            float invSinTheta = Rsqrt(Sin2Theta(v));
+            return Abs(sin2Theta) <= 4.0f * float.Epsilon ? 1.0f : Math.Clamp(v.X * invSinTheta, -1.0f, 1.0f);
         }
 
         public static float SinPhi(Vector3 v)
         {
-            float sinTheta = SinTheta(v);
-            return (sinTheta == 0) ? 0 : Math.Clamp(v.Y / sinTheta, -1, 1);
+            float sin2Theta = Sin2Theta(v);
+            float invSinTheta = Rsqrt(Sin2Theta(v));
+            return Abs(sin2Theta) <= 4.0f * float.Epsilon ? 0.0f : Math.Clamp(v.Y * invSinTheta, -1.0f, 1.0f);
         }
 
-        public static float Cos2Phi(Vector3 v) => CosPhi(v) * CosPhi(v);
+        public static float Cos2Phi(Vector3 v)
+        {
+            float sin2Theta = Sin2Theta(v);
+            return Abs(sin2Theta) <= 4.0f * float.Epsilon ? 1.0f : Math.Clamp(Sqr(v.X) / sin2Theta, -1.0f, 1.0f);
+        }
 
-        public static float Sin2Phi(Vector3 v) => SinPhi(v) * SinPhi(v);
+        public static float Sin2Phi(Vector3 v)
+        {
+            float sin2Theta = Sin2Theta(v);
+            return Abs(sin2Theta) <= 4.0f * float.Epsilon ? 0.0f : Math.Clamp(Sqr(v.Y) / sin2Theta, -1.0f, 1.0f);
+        }
 
         public static bool SameHemisphere(Vector3 x, Vector3 y) => x.Z * y.Z > 0;
 

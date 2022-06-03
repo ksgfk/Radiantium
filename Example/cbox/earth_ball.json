@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 256
+    "spp": 32
   },
   "integrator": {
     "type": "path",
@@ -143,14 +143,14 @@
       },
       "shape": {
         "type": "sphere",
-        "radius": 0.35
+        "radius": 0.35,
+        "center": [
+          0.5,
+          0.35,
+          0.2
+        ]
       },
       "transform": {
-        "position": [
-          -0.5,
-          0.35,
-          -0.25
-        ],
         "rotation": {
           "axis": [
             0,
@@ -171,13 +171,11 @@
       },
       "shape": {
         "type": "sphere",
-        "radius": 0.35
-      },
-      "transform": {
-        "position": [
-          0.5,
+        "radius": 0.35,
+        "center": [
+          -0.5,
           0.35,
-          0.2
+          -0.25
         ]
       }
     }
