@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 8192
+    "spp": 32
   },
   "integrator": {
     "type": "path"
@@ -57,7 +57,7 @@
     {
       "type": "image",
       "name": "sky",
-      "location": "../assets/museum.exr",
+      "location": "../assets/gothic_manor_02_2k.exr",
       "is_flip_y": false
     }
   ],
@@ -107,7 +107,7 @@
     {
       "material": {
         "type": "rough_metal",
-        "roughness": 0.3,
+        "roughness": 0.01,
         "dist": "GGX",
         "metal_type": "Au"
       },
@@ -118,23 +118,6 @@
           0.5,
           0.35,
           0.2
-        ]
-      }
-    },
-    {
-      "material": {
-        "type": "rough_metal",
-        "roughness": 0.3,
-        "dist": "Beckmann",
-        "metal_type": "Cu"
-      },
-      "shape": {
-        "type": "sphere",
-        "radius": 0.35,
-        "center": [
-          -0.5,
-          0.35,
-          -0.25
         ]
       }
     },
@@ -156,7 +139,7 @@
             1,
             0
           ],
-          "angle": 90
+          "angle": 50
         }
       }
     }

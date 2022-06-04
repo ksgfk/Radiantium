@@ -3,12 +3,13 @@ using System.Numerics;
 
 namespace Radiantium.Offline
 {
+    [Flags]
     public enum LightType
     {
-        DeltaPosition,
-        DeltaDirection,
-        Area,
-        Infinite
+        DeltaPosition = 0b0001,
+        DeltaDirection = 0b0010,
+        Area = 0b0100,
+        Infinite = 0b1000
     }
 
     public struct LightEvalParam

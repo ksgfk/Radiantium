@@ -8,6 +8,29 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Bxdf
 {
+    internal struct DisneyFresnel : IFresnel
+    {
+        public Color3F R0;
+        public float Metallic, Eta;
+        public DisneyFresnel(Color3F r0, float metallic, float eta) { R0 = r0; Metallic = metallic; Eta = eta; }
+        public Color3F Eval(float cosI)
+        {
+            return Lerp(Metallic, new Color3F(Fresnel.DielectricFunc(cosI, 1, Eta)), DisneyBsdf.FrSchlick(R0, cosI));
+        }
+    }
+    internal struct DisneyDistributionGTR2 : IMicrofacetDistribution
+    {
+        public float AlphaX { get; }
+        public float AlphaY { get; }
+        public DisneyDistributionGTR2(float alphaX, float alphaY) { AlphaX = alphaX; AlphaY = alphaY; }
+        public float D(Vector3 wh) { return Microfacet.DistributionGGX(wh, AlphaX, AlphaY); }
+        public float G1(Vector3 w) { return 1 / (1 + Lambda(w)); }
+        public float G(Vector3 wo, Vector3 wi) { return G1(wo) * G1(wi); }
+        public float Lambda(Vector3 w) { return Microfacet.LambdaGGX(w, AlphaX, AlphaY); }
+        public float Pdf(Vector3 wo, Vector3 wh) { return D(wh) * AbsCosTheta(wh); }
+        public Vector3 SampleWh(Vector3 wo, Random rand) { return Microfacet.SampleWhGGX(wo, rand, AlphaX, AlphaY); }
+    }
+
     public struct DisneyBsdf : IBxdf
     {
         private struct SampleWeights
@@ -31,16 +54,16 @@ namespace Radiantium.Offline.Bxdf
         public float Metallic;
         public float Roughness;
         public Color3F specular_scale_;
-        public float specular_tint_;
+        public float SpecularTint;
         public float anisotropic_;
         public float Sheen;
         public float SheenTint;
         public float clearcoat_;
         public float transmission_;
-        public float IOR_;
+        public float Ior;
         public float transmission_roughness_;
         public float trans_ax_, trans_ay_;
-        public float ax_, ay_;
+        public float AnisX, AnisY;
         public float clearcoat_roughness_;
         SampleWeights sample_w;
         public BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Diffuse | BxdfType.Glossy;
@@ -66,18 +89,18 @@ namespace Radiantium.Offline.Bxdf
             Metallic = metallic;
             Roughness = roughness;
             specular_scale_ = specular_scale;
-            specular_tint_ = specular_tint;
+            SpecularTint = specular_tint;
             anisotropic_ = anisotropic;
             Sheen = sheen;
             SheenTint = sheen_tint;
 
             transmission_ = transmission;
             transmission_roughness_ = transmission_roughness;
-            IOR_ = Max(1.01f, IOR);
+            Ior = Max(1.01f, IOR);
 
             float aspect = anisotropic > 0 ? Sqrt(1 - 0.9f * anisotropic) : 1;
-            ax_ = Max(0.001f, Sqr(roughness) / aspect);
-            ay_ = Max(0.001f, Sqr(roughness) * aspect);
+            AnisX = Max(0.001f, Sqr(roughness) / aspect);
+            AnisY = Max(0.001f, Sqr(roughness) * aspect);
             trans_ax_ = Max(0.001f, Sqr(transmission_roughness) / aspect);
             trans_ay_ = Max(0.001f, Sqr(transmission_roughness) * aspect);
 
@@ -111,7 +134,7 @@ namespace Radiantium.Offline.Bxdf
                     sheen = FrSheen(wo, wi);
                 }
             }
-            Color3F specular = new Color3F(0.0f);
+            Color3F specular = FrSpecular(wo, wi);
             Color3F clearcoat = new Color3F(0.0f);
             //if (CosTheta(lwo) * CosTheta(lwi) < 0)
             //{
@@ -169,7 +192,9 @@ namespace Radiantium.Offline.Bxdf
             {
                 return 0.0f;
             }
-            return PdfDiffuse(wo, wi);
+            float diffuse = PdfDiffuse(wo, wi);
+            float specular = PdfSpecular(wo, wi);
+            return 0.5f * (diffuse + specular);
 
             //if (CosTheta(lwo) < 0)
             //{
@@ -201,10 +226,24 @@ namespace Radiantium.Offline.Bxdf
             }
             else
             {
-                Vector3 wi = SampleDiffuse(rand);
-                Color3F fr = Fr(wo, wi);
-                float pdf = Pdf(wo, wi);
-                return new SampleBxdfResult(wi, fr, pdf, BxdfType.Reflection | BxdfType.Diffuse);
+                float rng = rand.NextFloat();
+                if (rng < 0.5f)
+                {
+                    Vector3 wi = SampleDiffuse(rand);
+                    Color3F fr = Fr(wo, wi);
+                    float pdf = Pdf(wo, wi);
+                    return new SampleBxdfResult(wi, fr, pdf, BxdfType.Reflection | BxdfType.Diffuse);
+                }
+                else
+                {
+                    if (!SampleSpecular(wo, rand, out Vector3 wi))
+                    {
+                        return new SampleBxdfResult();
+                    }
+                    Color3F fr = Fr(wo, wi);
+                    float pdf = Pdf(wo, wi);
+                    return new SampleBxdfResult(wi, fr, pdf, BxdfType.Reflection | BxdfType.Glossy);
+                }
             }
 
             //if (CosTheta(lwo) == 0) { return new SampleBxdfResult(); }
@@ -289,16 +328,25 @@ namespace Radiantium.Offline.Bxdf
             return Sheen * Lerp(SheenTint, new Color3F(1.0f), ColorTint) * SchlickWeight(cosThetaD);
         }
 
+        private Color3F FrSpecular(Vector3 wo, Vector3 wi)
+        {
+            //Color3F cSpec0 = Lerp(Metallic, SchlickR0FromEta(Ior) * Lerp(SpecularTint, new Color3F(1.0f), ColorTint), BaseColor);
+            //DisneyFresnel fresnel = new(cSpec0, Metallic, Ior);
+            Fresnel.Dielectric fresnel = new Fresnel.Dielectric(1, Ior);
+            DisneyDistributionGTR2 dist = new(AnisX, AnisY);
+            return new MicrofacetReflectionBrdf<Fresnel.Dielectric, DisneyDistributionGTR2>(new Color3F(1.0f), fresnel, dist).Fr(wo, wi);
+        }
+
         private Color3F TransmissionF(Vector3 lwo, Vector3 lwi)
         {
             float cos_theta_i = CosTheta(lwi);
             float cos_theta_o = CosTheta(lwo);
-            float eta = cos_theta_o > 0 ? IOR_ : 1 / IOR_;
+            float eta = cos_theta_o > 0 ? Ior : 1 / Ior;
             Vector3 lwh = Normalize(lwo + eta * lwi);
             if (lwh.Z < 0) { lwh = -lwh; }
 
             float cos_theta_d = Dot(lwo, lwh);
-            float F = Fresnel.DielectricFunc(cos_theta_d, 1, IOR_);
+            float F = Fresnel.DielectricFunc(cos_theta_d, 1, Ior);
 
             float sin_phi_h = SinPhi(lwh);
             float cos_phi_h = CosPhi(lwh);
@@ -332,7 +380,7 @@ namespace Radiantium.Offline.Bxdf
             Vector3 lwh = Normalize(-(lwo + lwi));
 
             float cos_theta_d = Dot(lwo, lwh);
-            float F = Fresnel.DielectricFunc(cos_theta_d, 1, IOR_);
+            float F = Fresnel.DielectricFunc(cos_theta_d, 1, Ior);
 
             float sin_phi_h = SinPhi(lwh);
             float cos_phi_h = CosPhi(lwh);
@@ -377,9 +425,9 @@ namespace Radiantium.Offline.Bxdf
             Vector3 lwh = Normalize(lwo + lwi);
             float cos_theta_d = Dot(lwi, lwh);
 
-            Color3F Cspec = Lerp(Metallic, Lerp(specular_tint_, new Color3F(1.0f), ColorTint), BaseColor);
+            Color3F Cspec = Lerp(Metallic, Lerp(SpecularTint, new Color3F(1.0f), ColorTint), BaseColor);
 
-            Color3F dielectric_fresnel = Cspec * Fresnel.DielectricFunc(cos_theta_d, 1, IOR_);
+            Color3F dielectric_fresnel = Cspec * Fresnel.DielectricFunc(cos_theta_d, 1, Ior);
             Color3F conductor_fresnel = schlick(Cspec, cos_theta_d);
             Color3F F = Lerp(Metallic, specular_scale_ * dielectric_fresnel, conductor_fresnel);
 
@@ -421,7 +469,7 @@ namespace Radiantium.Offline.Bxdf
             {
                 return new Vector3(0.0f);
             }
-            float eta = (CosTheta(lwo)) > 0 ? 1 / IOR_ : IOR_;
+            float eta = (CosTheta(lwo)) > 0 ? 1 / Ior : Ior;
             Vector3 owh = Dot(lwh, lwo) > 0 ? lwh : -lwh;
             if (!Refract(lwo, owh, eta, out Vector3 lwi))
             {
@@ -454,19 +502,16 @@ namespace Radiantium.Offline.Bxdf
             return Probability.SquareToCosineHemisphere(rand.NextVec2());
         }
 
-        private Vector3 SampleSpecular(Vector3 lwo, Random rand)
+        private bool SampleSpecular(Vector3 wo, Random rand, out Vector3 wi)
         {
-            Vector3 lwh = sample_anisotropic_gtr2_vnor(lwo, ax_, ay_, rand.NextVec2());
-            if (lwh.Z <= 0)
-            {
-                return new Vector3(0.0f);
-            }
-            Vector3 lwi = Normalize(2 * Dot(lwo, lwh) * lwh - lwo);
-            if (lwi.Z <= 0)
-            {
-                return new Vector3(0.0f);
-            }
-            return lwi;
+            //Color3F cSpec0 = Lerp(Metallic, SchlickR0FromEta(Ior) * Lerp(SpecularTint, new Color3F(1.0f), ColorTint), BaseColor);
+            //DisneyFresnel fresnel = new(cSpec0, Metallic, Ior);
+            Fresnel.Dielectric fresnel = new Fresnel.Dielectric(1, Ior);
+            DisneyDistributionGTR2 dist = new(AnisX, AnisY);
+            SampleBxdfResult sample = new MicrofacetReflectionBrdf<Fresnel.Dielectric, DisneyDistributionGTR2>(new Color3F(1.0f), fresnel, dist).Sample(wo, rand);
+            if (sample.Pdf == 0) { wi = default; return false; }
+            wi = sample.Wi;
+            return true;
         }
 
         private Vector3 SampleClearcoat(Vector3 lwo, Random rand)
@@ -486,7 +531,7 @@ namespace Radiantium.Offline.Bxdf
 
         private float PdfTransmission(Vector3 lwo, Vector3 lwi)
         {
-            float eta = (CosTheta(lwo)) > 0 ? IOR_ : 1 / IOR_;
+            float eta = (CosTheta(lwo)) > 0 ? Ior : 1 / Ior;
             Vector3 lwh = Normalize(lwo + eta * lwi);
             if (lwh.Z < 0) { lwh = -lwh; }
             if (((lwo.Z > 0) != (Dot(lwh, lwo) > 0)) || ((lwi.Z > 0) != (Dot(lwh, lwi) > 0)))
@@ -520,27 +565,26 @@ namespace Radiantium.Offline.Bxdf
             return AbsCosTheta(wi) / PI;
         }
 
-        private (float, float) PdfSpecularClearcoat(Vector3 lwo, Vector3 lwi)
+        private float PdfSpecular(Vector3 wo, Vector3 wi)
         {
-            Vector3 lwh = Normalize(lwi + lwo);
-            float cos_theta_d = Dot(lwi, lwh);
-            float sin_phi_h = SinPhi(lwh);
-            float cos_phi_h = CosPhi(lwh);
-            float sin_theta_h = SinTheta(lwh);
-            float cos_theta_h = CosTheta(lwh);
-            float cos_phi_o = CosPhi(lwo);
-            float sin_phi_o = SinPhi(lwo);
-            float tan_theta_o = TanTheta(lwo);
-            float specular_D = anisotropic_gtr2(sin_phi_h, cos_phi_h, sin_theta_h, cos_theta_h, trans_ax_, trans_ay_);
-            float pdf_specular = smith_anisotropic_gtr2(cos_phi_o, sin_phi_o, ax_, ay_, tan_theta_o) * specular_D / (4 * CosTheta(lwo));
-            float clearcoat_D = gtr1(sin_theta_h, cos_theta_h, clearcoat_roughness_);
-            float pdf_clearcoat = cos_theta_h * clearcoat_D / (4 * cos_theta_d);
-            return (pdf_specular, pdf_clearcoat);
+            if (!SameHemisphere(wo, wi)) { return 0; }
+            Vector3 wh = Normalize(wo + wi);
+            return Microfacet.PdfGGX(wo, wh, AnisX, AnisY) / (4 * Dot(wo, wh));
         }
 
         private static float SchlickWeight(float cosTheta)
         {
             return Pow5(Math.Clamp(1 - cosTheta, 0, 1));
+        }
+
+        internal static Color3F FrSchlick(Color3F R0, float cosTheta)
+        {
+            return Lerp(SchlickWeight(cosTheta), R0, new Color3F(1.0f));
+        }
+
+        private static float SchlickR0FromEta(float eta)
+        {
+            return Sqr(eta - 1) / Sqr(eta + 1);
         }
 
         public static Color3F to_tint(Color3F base_color)

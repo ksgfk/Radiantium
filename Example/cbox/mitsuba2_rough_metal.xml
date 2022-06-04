@@ -26,9 +26,9 @@
         <float name="radius" value="0.35"/>
         <point name="center" value="-0.5,0.35,-0.25"/>
         <bsdf type="roughconductor">
-            <string name="material" value="ggx"/>
+            <string name="material" value="Cu"/>
             <string name="distribution" value="beckmann"/>
-            <float name="alpha" value="0.09"/>
+            <float name="alpha" value="0.001"/>
             <boolean name="sample_visible" value="false"/>
         </bsdf>
     </shape>
@@ -36,14 +36,14 @@
         <float name="radius" value="0.35"/>
         <point name="center" value="0.5,0.35,0.2"/>
         <bsdf type="roughconductor">
-            <string name="material" value="ggx"/>
-            <string name="distribution" value="beckmann"/>
-            <float name="alpha" value="0.09"/>
+            <string name="material" value="Au"/>
+            <string name="distribution" value="ggx"/>
+            <float name="alpha" value="0.001"/>
             <boolean name="sample_visible" value="false"/>
         </bsdf>
     </shape>
 
-    <default name="spp" value="64"/>
+    <default name="spp" value="16"/>
 
     <sensor type="perspective">
         <float name="near_clip" value="0.01"/>

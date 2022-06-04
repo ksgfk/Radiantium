@@ -205,5 +205,10 @@ namespace Radiantium.Offline.Bxdf
             if (!SameHemisphere(wo, wh)) { wh = -wh; }
             return wh;
         }
+
+        public static float PdfGGX(Vector3 wo, Vector3 wh, float alphaX, float alphaY)
+        {
+            return DistributionGGX(wh, alphaX, alphaY) * AbsCosTheta(wh);
+        }
     }
 }

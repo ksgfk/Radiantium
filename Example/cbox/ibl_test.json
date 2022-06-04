@@ -61,7 +61,7 @@
     {
       "type": "image",
       "name": "sky",
-      "location": "../assets/museum.exr",
+      "location": "../assets/gothic_manor_02_2k.exr",
       "is_flip_y": false
     }
   ],
@@ -154,7 +154,7 @@
             1,
             0
           ],
-          "angle": 90
+          "angle": 50
         }
       }
     }
