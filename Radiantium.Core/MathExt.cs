@@ -82,7 +82,7 @@ namespace Radiantium.Core
             float sin2ThetaT = eta * eta * sin2ThetaI;
             if (sin2ThetaT >= 1) { wt = default; return false; }
             float cosThetaT = Sqrt(1 - sin2ThetaT);
-            wt = eta * -wi + (eta * cosThetaI - cosThetaT) * n;
+            wt = Normalize(eta * -wi + (eta * cosThetaI - cosThetaT) * n);
             return true;
         }
 
@@ -130,6 +130,11 @@ namespace Radiantium.Core
                 x1 = linearCase ? x0 : x1m;
             }
             return (validLinear || validQuadratic, x0, x1);
+        }
+
+        public static float Pow5(float a)
+        {
+            return a * a * a * a * a;
         }
 
         //******************

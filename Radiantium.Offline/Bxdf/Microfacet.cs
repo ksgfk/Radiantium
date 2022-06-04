@@ -104,30 +104,7 @@ namespace Radiantium.Offline.Bxdf
             }
             public Vector3 SampleWh(Vector3 wo, Random rand)
             {
-                float alphax = AlphaX;
-                float alphay = AlphaY;
-                Vector2 u = rand.NextVec2();
-                float phi = (2 * PI) * u.Y;
-                float cosTheta;
-                if (alphax == alphay)
-                {
-                    float tanTheta2 = alphax * alphax * u.X / (1.0f - u.X);
-                    cosTheta = 1 / Sqrt(1 + tanTheta2);
-                }
-                else
-                {
-                    phi = Atan(alphay / alphax * Tan(2 * PI * u.Y + .5f * PI));
-                    if (u.Y > 0.5f) { phi += PI; }
-                    float sinPhi = Sin(phi), cosPhi = Cos(phi);
-                    float alphax2 = alphax * alphax, alphay2 = alphay * alphay;
-                    float alpha2 = 1 / (cosPhi * cosPhi / alphax2 + sinPhi * sinPhi / alphay2);
-                    float tanTheta2 = alpha2 * u.X / (1 - u.X);
-                    cosTheta = 1 / Sqrt(1 + tanTheta2);
-                }
-                float sinTheta = Sqrt(Max(0.0f, 1.0f - cosTheta * cosTheta));
-                Vector3 wh = SphericalDirection(sinTheta, cosTheta, phi);
-                if (!SameHemisphere(wo, wh)) { wh = -wh; }
-                return wh;
+                return SampleWhGGX(wo, rand, AlphaX, AlphaY);
             }
             public float G(Vector3 wo, Vector3 wi)
             {
@@ -201,6 +178,32 @@ namespace Radiantium.Offline.Bxdf
             float alphaX = Math.Max(roughness * roughness * (1 + k), 0.001f);
             float alphaY = Math.Max(roughness * roughness * (1 - k), 0.001f);
             return (alphaX, alphaY);
+        }
+
+        public static Vector3 SampleWhGGX(Vector3 wo, Random rand, float alphax, float alphay)
+        {
+            Vector2 u = rand.NextVec2();
+            float phi = (2 * PI) * u.Y;
+            float cosTheta;
+            if (alphax == alphay)
+            {
+                float tanTheta2 = alphax * alphax * u.X / (1.0f - u.X);
+                cosTheta = 1 / Sqrt(1 + tanTheta2);
+            }
+            else
+            {
+                phi = Atan(alphay / alphax * Tan(2 * PI * u.Y + .5f * PI));
+                if (u.Y > 0.5f) { phi += PI; }
+                float sinPhi = Sin(phi), cosPhi = Cos(phi);
+                float alphax2 = alphax * alphax, alphay2 = alphay * alphay;
+                float alpha2 = 1 / (cosPhi * cosPhi / alphax2 + sinPhi * sinPhi / alphay2);
+                float tanTheta2 = alpha2 * u.X / (1 - u.X);
+                cosTheta = 1 / Sqrt(1 + tanTheta2);
+            }
+            float sinTheta = Sqrt(Max(0.0f, 1.0f - cosTheta * cosTheta));
+            Vector3 wh = SphericalDirection(sinTheta, cosTheta, phi);
+            if (!SameHemisphere(wo, wh)) { wh = -wh; }
+            return wh;
         }
     }
 }

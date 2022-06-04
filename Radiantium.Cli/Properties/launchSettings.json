@@ -2,7 +2,7 @@
   "profiles": {
     "Radiantium.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "..//..//..//..//Example//veach_mi//bxdf.json",
+      "commandLineArgs": "..//..//..//..//Example//disney//show.json",
       "environmentVariables": {
         "DOTNET_TC_QuickJitForLoops": "1",
         "DOTNET_TieredPGO": "1",

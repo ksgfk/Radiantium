@@ -18,7 +18,7 @@ namespace Radiantium.Offline.Config
         {
             builder.AddShapeBuilder("sphere", (_, mat, param) =>
             {
-                return new Sphere(param.ReadFloat("radius", 0.5f), param.ReadVec3Float("center", new Vector3()), mat);
+                return new Sphere(param.ReadFloat("radius", 0.5f), param.ReadVec3Float("center", new Vector3(0)), mat);
             });
             builder.AddIntegratorBuilder("ao", (_, param) => new AmbientOcclusion(param.ReadBool("is_cos_weight", true)));
             builder.AddIntegratorBuilder("path", (_, param) =>
@@ -121,6 +121,23 @@ namespace Radiantium.Offline.Config
                 float etaB = param.ReadFloat("etaB", 1.5046f);
                 MicrofacetDistributionType dist = Enum.Parse<MicrofacetDistributionType>(param.ReadString("dist", "GGX"));
                 return new RoughGlass(r, t, roughness, anisotropic, etaA, etaB, dist);
+            });
+            builder.AddMaterialBuilder("disney", (builder, images, param) =>
+            {
+                Texture2D baseColor = param.ReadTex2D("base_color", builder, new Color3F(0.5f));
+                Texture2D metallic = param.ReadTex2D("metallic", builder, new Color3F(0.0f));
+                Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(1.0f));
+                Texture2D transmission = param.ReadTex2D("transmission", builder, new Color3F(0.0f));
+                Texture2D transmissionRough = param.ReadTex2D("transmission_roughness", builder, new Color3F(0.0f));
+                Texture2D ior = param.ReadTex2D("ior", builder, new Color3F(1.5f));
+                Texture2D specularScale = param.ReadTex2D("specular_scale", builder, new Color3F(0.0f));
+                Texture2D specularTint = param.ReadTex2D("specular_tint", builder, new Color3F(0.0f));
+                Texture2D anisotropic = param.ReadTex2D("anisotropic", builder, new Color3F(0.0f));
+                Texture2D sheen = param.ReadTex2D("sheen", builder, new Color3F(0.0f));
+                Texture2D sheenTint = param.ReadTex2D("sheen_tint", builder, new Color3F(0.0f));
+                Texture2D clearcoat = param.ReadTex2D("clearcoat", builder, new Color3F(0.0f));
+                Texture2D clearcoatGloss = param.ReadTex2D("clearcoat_gloss", builder, new Color3F(0.0f));
+                return new Disney(baseColor, metallic, roughness, transmission, transmissionRough, ior, specularScale, specularTint, anisotropic, sheen, sheenTint, clearcoat, clearcoatGloss);
             });
             builder.AddAreaLightBuilder("diffuse_area", (_, shape, param) =>
             {

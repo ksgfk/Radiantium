@@ -1,0 +1,234 @@
+{
+  "renderer": {
+    "spp": 16
+  },
+  "integrator": {
+    "type": "path"
+  },
+  "camera": {
+    "type": "perspective",
+    "screen": [
+      1280,
+      1280
+    ],
+    "fov": 30,
+    "far": 100,
+    "origin": [
+      0,
+      0,
+      22
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ]
+  },
+  "accel": {
+    "type": "bvh"
+  },
+  "output": {},
+  "assets": [
+    {
+      "type": "image",
+      "name": "sky",
+      "location": "../assets/gothic_manor_02_2k.exr",
+      "is_flip_y": false
+    }
+  ],
+  "scene": [
+    {
+      "light": {
+        "type": "infinite",
+        "le": {
+          "type": "image",
+          "name": "sky",
+          "sampler": {
+            "filter": "Linear"
+          }
+        }
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          -5,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0.1,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          -4,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0.2,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          -3,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0.3,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          -2,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0.4,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          -1,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0.5,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          0,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0.6,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          1,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0.7,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          2,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0.8,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          3,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 0.9,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          4,
+          5,
+          0
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "metallic": 1,
+        "roughness": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.35,
+        "center": [
+          5,
+          5,
+          0
+        ]
+      }
+    }
+  ]
+}

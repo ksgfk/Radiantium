@@ -97,5 +97,10 @@ namespace Radiantium.Core
         {
             return (1 - weight) * a + weight * b;
         }
+
+        public static Color3F Sqrt(Color3F c)
+        {
+            return new Color3F(MathF.Sqrt(c.R), MathF.Sqrt(c.G), MathF.Sqrt(c.B));
+        }
     }
 }
