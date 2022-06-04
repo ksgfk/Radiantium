@@ -330,11 +330,10 @@ namespace Radiantium.Offline.Bxdf
 
         private Color3F FrSpecular(Vector3 wo, Vector3 wi)
         {
-            //Color3F cSpec0 = Lerp(Metallic, SchlickR0FromEta(Ior) * Lerp(SpecularTint, new Color3F(1.0f), ColorTint), BaseColor);
-            //DisneyFresnel fresnel = new(cSpec0, Metallic, Ior);
-            Fresnel.Dielectric fresnel = new Fresnel.Dielectric(1, Ior);
+            Color3F cSpec0 = Lerp(Metallic, SchlickR0FromEta(Ior) * Lerp(SpecularTint, new Color3F(1.0f), ColorTint), BaseColor);
+            DisneyFresnel fresnel = new(cSpec0, Metallic, Ior);
             DisneyDistributionGTR2 dist = new(AnisX, AnisY);
-            return new MicrofacetReflectionBrdf<Fresnel.Dielectric, DisneyDistributionGTR2>(new Color3F(1.0f), fresnel, dist).Fr(wo, wi);
+            return new MicrofacetReflectionBrdf<DisneyFresnel, DisneyDistributionGTR2>(new Color3F(1.0f), fresnel, dist).Fr(wo, wi);
         }
 
         private Color3F TransmissionF(Vector3 lwo, Vector3 lwi)
@@ -504,11 +503,10 @@ namespace Radiantium.Offline.Bxdf
 
         private bool SampleSpecular(Vector3 wo, Random rand, out Vector3 wi)
         {
-            //Color3F cSpec0 = Lerp(Metallic, SchlickR0FromEta(Ior) * Lerp(SpecularTint, new Color3F(1.0f), ColorTint), BaseColor);
-            //DisneyFresnel fresnel = new(cSpec0, Metallic, Ior);
-            Fresnel.Dielectric fresnel = new Fresnel.Dielectric(1, Ior);
+            Color3F cSpec0 = Lerp(Metallic, SchlickR0FromEta(Ior) * Lerp(SpecularTint, new Color3F(1.0f), ColorTint), BaseColor);
+            DisneyFresnel fresnel = new(cSpec0, Metallic, Ior);
             DisneyDistributionGTR2 dist = new(AnisX, AnisY);
-            SampleBxdfResult sample = new MicrofacetReflectionBrdf<Fresnel.Dielectric, DisneyDistributionGTR2>(new Color3F(1.0f), fresnel, dist).Sample(wo, rand);
+            SampleBxdfResult sample = new MicrofacetReflectionBrdf<DisneyFresnel, DisneyDistributionGTR2>(new Color3F(1.0f), fresnel, dist).Sample(wo, rand);
             if (sample.Pdf == 0) { wi = default; return false; }
             wi = sample.Wi;
             return true;

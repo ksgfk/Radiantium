@@ -69,6 +69,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0,
             "roughness": 0
           },
@@ -85,6 +90,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0.1,
             "roughness": 0
           },
@@ -101,6 +111,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0.2,
             "roughness": 0
           },
@@ -117,6 +132,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0.3,
             "roughness": 0
           },
@@ -133,6 +153,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0.4,
             "roughness": 0
           },
@@ -149,6 +174,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0.5,
             "roughness": 0
           },
@@ -165,6 +195,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0.6,
             "roughness": 0
           },
@@ -181,6 +216,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0.7,
             "roughness": 0
           },
@@ -197,6 +237,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0.8,
             "roughness": 0
           },
@@ -213,6 +258,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 0.9,
             "roughness": 0
           },
@@ -229,6 +279,11 @@
         {
           "material": {
             "type": "disney",
+            "base_color": [
+              1,
+              0,
+              0
+            ],
             "metallic": 1,
             "roughness": 0
           },
