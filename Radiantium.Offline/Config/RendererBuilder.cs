@@ -18,7 +18,9 @@ namespace Radiantium.Offline.Config
         {
             builder.AddShapeBuilder("sphere", (_, mat, param) =>
             {
-                return new Sphere(param.ReadFloat("radius", 0.5f), param.ReadVec3Float("center", new Vector3(0)), mat);
+                Vector3 center = param.ReadVec3Float("center", new Vector3(0));
+                center = Vector3.Transform(center, mat);
+                return new Sphere(param.ReadFloat("radius", 0.5f), center, mat);
             });
             builder.AddIntegratorBuilder("ao", (_, param) => new AmbientOcclusion(param.ReadBool("is_cos_weight", true)));
             builder.AddIntegratorBuilder("path", (_, param) =>

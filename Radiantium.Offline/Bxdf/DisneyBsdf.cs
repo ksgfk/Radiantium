@@ -27,14 +27,14 @@ namespace Radiantium.Offline.Bxdf
         }
 
         public Color3F BaseColor;
-        public Color3F Ctint_;
+        public Color3F ColorTint;
         public float Metallic;
         public float Roughness;
         public Color3F specular_scale_;
         public float specular_tint_;
         public float anisotropic_;
-        public float sheen_;
-        public float sheen_tint_;
+        public float Sheen;
+        public float SheenTint;
         public float clearcoat_;
         public float transmission_;
         public float IOR_;
@@ -61,15 +61,15 @@ namespace Radiantium.Offline.Bxdf
                    float IOR)
         {
             BaseColor = base_color;
-            Ctint_ = to_tint(base_color);
+            ColorTint = to_tint(base_color);
 
             Metallic = metallic;
             Roughness = roughness;
             specular_scale_ = specular_scale;
             specular_tint_ = specular_tint;
             anisotropic_ = anisotropic;
-            sheen_ = sheen;
-            sheen_tint_ = sheen_tint;
+            Sheen = sheen;
+            SheenTint = sheen_tint;
 
             transmission_ = transmission;
             transmission_roughness_ = transmission_roughness;
@@ -106,6 +106,10 @@ namespace Radiantium.Offline.Bxdf
             if (Metallic < 1)
             {
                 diffuse = FrDisneyDiffuse(wo, wi);
+                if (Sheen > 0)
+                {
+                    sheen = FrSheen(wo, wi);
+                }
             }
             Color3F specular = new Color3F(0.0f);
             Color3F clearcoat = new Color3F(0.0f);
@@ -269,18 +273,20 @@ namespace Radiantium.Offline.Bxdf
         private Color3F FrDisneyDiffuse(Vector3 wo, Vector3 wi)
         {
             Vector3 wh = Normalize(wo + wi);
-            float cosThetaD = Dot(wh, wo);
+            float cosThetaD = Dot(wh, wi);
             Color3F lambert = BaseColor / PI;
-            float fL = Func(CosTheta(wi));
-            float fV = Func(CosTheta(wo));
+            float fL = SchlickWeight(CosTheta(wi));
+            float fV = SchlickWeight(CosTheta(wo));
             float rr = 2 * Roughness * Sqr(cosThetaD);
             Color3F retroReflection = BaseColor / PI * rr * (fL + fV + fL * fV * (rr - 1));
             return lambert * (1 - 0.5f * fL) * (1 - 0.5f * fV) + retroReflection;
+        }
 
-            static float Func(float theta)
-            {
-                return Pow5(1 - theta);
-            }
+        private Color3F FrSheen(Vector3 wo, Vector3 wi)
+        {
+            Vector3 wh = Normalize(wo + wi);
+            float cosThetaD = Dot(wh, wi);
+            return Sheen * Lerp(SheenTint, new Color3F(1.0f), ColorTint) * SchlickWeight(cosThetaD);
         }
 
         private Color3F TransmissionF(Vector3 lwo, Vector3 lwi)
@@ -361,7 +367,7 @@ namespace Radiantium.Offline.Bxdf
 
         private Color3F SheenF(float cos_theta_d)
         {
-            return 4 * sheen_ * Lerp(sheen_tint_, new Color3F(1.0f), Ctint_) * one_minus_5(cos_theta_d);
+            return 4 * Sheen * Lerp(SheenTint, new Color3F(1.0f), ColorTint) * one_minus_5(cos_theta_d);
         }
 
         private Color3F SpecularF(Vector3 lwo, Vector3 lwi)
@@ -371,7 +377,7 @@ namespace Radiantium.Offline.Bxdf
             Vector3 lwh = Normalize(lwo + lwi);
             float cos_theta_d = Dot(lwi, lwh);
 
-            Color3F Cspec = Lerp(Metallic, Lerp(specular_tint_, new Color3F(1.0f), Ctint_), BaseColor);
+            Color3F Cspec = Lerp(Metallic, Lerp(specular_tint_, new Color3F(1.0f), ColorTint), BaseColor);
 
             Color3F dielectric_fresnel = Cspec * Fresnel.DielectricFunc(cos_theta_d, 1, IOR_);
             Color3F conductor_fresnel = schlick(Cspec, cos_theta_d);
@@ -534,8 +540,7 @@ namespace Radiantium.Offline.Bxdf
 
         private static float SchlickWeight(float cosTheta)
         {
-            float m = Math.Clamp(1 - cosTheta, 0, 1);
-            return m * m * m * m * m;
+            return Pow5(Math.Clamp(1 - cosTheta, 0, 1));
         }
 
         public static Color3F to_tint(Color3F base_color)

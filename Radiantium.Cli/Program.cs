@@ -130,7 +130,7 @@ namespace Radiantium.Cli
                 }
                 if (entity.HasKey("children"))
                 {
-                    foreach (IConfigParamProvider child in config.GetSubParams("children"))
+                    foreach (IConfigParamProvider child in entity.GetSubParams("children"))
                     {
                         q.Enqueue((child, index));
                     }
