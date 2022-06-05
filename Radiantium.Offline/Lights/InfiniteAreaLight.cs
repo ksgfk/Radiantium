@@ -27,7 +27,7 @@ namespace Radiantium.Offline.Lights
 
             _width = lmap.Width;
             _height = lmap.Height;
-            double[] luminance = new double[_width * _height];
+            float[] luminance = new float[_width * _height];
             Color3F avg = new Color3F();
             Parallel.For(0, _height, y =>
             {

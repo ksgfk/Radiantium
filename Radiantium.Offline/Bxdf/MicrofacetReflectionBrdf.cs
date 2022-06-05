@@ -34,7 +34,7 @@ namespace Radiantium.Offline.Bxdf
             Color3F f = Fresnel.Eval(Dot(wi, Faceforward(wh, new Vector3(0, 0, 1))));
             float d = Distribution.D(wh);
             float g = Distribution.G(wo, wi);
-            Color3F result = R * ((d * g * f) / (4 * cosThetaI * cosThetaO));
+            Color3F result = R * Color3F.Abs((d * g * f) / (4 * cosThetaI * cosThetaO));
             return result;
         }
 

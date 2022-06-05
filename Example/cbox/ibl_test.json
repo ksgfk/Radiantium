@@ -4,10 +4,7 @@
   },
   "integrator": {
     "type": "path",
-    "method": "Mis",
-    "max_depth": -1,
-    "min_depth": 3,
-    "rr_threshold": 0.99
+    "method": "Mis"
   },
   "camera": {
     "type": "perspective",
@@ -110,7 +107,7 @@
     },
     {
       "material": {
-        "type": "perfect_glass"
+        "type": "diffuse"
       },
       "shape": {
         "type": "sphere",
@@ -124,7 +121,7 @@
     },
     {
       "material": {
-        "type": "perfect_mirror"
+        "type": "diffuse"
       },
       "shape": {
         "type": "sphere",

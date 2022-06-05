@@ -6,24 +6,24 @@
     /// </summary>
     public class Distribution1D
     {
-        readonly double[] _pdf;
-        readonly double[] _cdf;
-        readonly double _integration;
+        readonly float[] _pdf;
+        readonly float[] _cdf;
+        readonly float _integration;
 
         public int Count => _pdf.Length;
-        public double Integration => _integration;
-        public IReadOnlyList<double> Pdf => _pdf;
+        public float Integration => _integration;
+        public IReadOnlyList<float> Pdf => _pdf;
 
-        public Distribution1D(Span<double> pdf) : this(pdf.ToArray()) { }
+        public Distribution1D(Span<float> pdf) : this(pdf.ToArray()) { }
 
-        public Distribution1D(double[] pdf)
+        public Distribution1D(float[] pdf)
         {
             if (pdf.Length <= 0)
             {
                 throw new ArgumentException("至少有一个pdf吧");
             }
             _pdf = pdf;
-            _cdf = new double[pdf.Length + 1];
+            _cdf = new float[pdf.Length + 1];
             _cdf[0] = 0;
             int n = pdf.Length;
             for (int i = 1; i < n + 1; ++i)//累加算概率密度函数的积分
@@ -37,7 +37,7 @@
             {
                 for (int i = 1; i < n + 1; i++)
                 {
-                    _cdf[i] = i / (double)n;
+                    _cdf[i] = i / (float)n;
                 }
             }
             else
@@ -49,7 +49,7 @@
             }
         }
 
-        private int FindInterval(double u) //二分查找
+        private int FindInterval(float u) //二分查找
         {
             int first = 0;
             int len = _cdf.Length;
@@ -70,42 +70,42 @@
             return Math.Clamp(first - 1, 0, _cdf.Length - 2);
         }
 
-        public double SampleContinuous(double u, out double pdf, out int offset)
+        public float SampleContinuous(float u, out float pdf, out int offset)
         {
             offset = FindInterval(u);
-            double du = u - _cdf[offset];
+            float du = u - _cdf[offset];
             if ((_cdf[offset + 1] - _cdf[offset]) > 0)
             {
                 du /= _cdf[offset + 1] - _cdf[offset];
             }
             pdf = ContinuousPdf(offset);
-            double cdf = (offset + du) / Count;
+            float cdf = (offset + du) / Count;
             return cdf;
         }
 
-        public double SampleContinuous(double u)
+        public float SampleContinuous(float u)
         {
             return SampleContinuous(u, out _, out _);
         }
 
-        public double ContinuousPdf(int offset)
+        public float ContinuousPdf(int offset)
         {
             return _integration > 0 ? _pdf[offset] / _integration : 0;
         }
 
-        public int SampleDiscrete(double u, out double pdf)
+        public int SampleDiscrete(float u, out float pdf)
         {
             int offset = FindInterval(u);
             pdf = DiscretePdf(offset);
             return offset;
         }
 
-        public int SampleDiscrete(double u)
+        public int SampleDiscrete(float u)
         {
             return SampleDiscrete(u, out _);
         }
 
-        public double DiscretePdf(int index)
+        public float DiscretePdf(int index)
         {
             return _integration > 0 ? _pdf[index] / (_integration * Count) : 0;
         }

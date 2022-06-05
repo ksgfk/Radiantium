@@ -25,18 +25,17 @@
     <shape type="sphere">
         <float name="radius" value="0.35"/>
         <point name="center" value="-0.5,0.35,-0.25"/>
-        <bsdf type="conductor">
-            <string name="material" value="none"/>
+        <bsdf type="diffuse">
         </bsdf>
     </shape>
     <shape type="sphere">
         <float name="radius" value="0.35"/>
         <point name="center" value="0.5,0.35,0.2"/>
-        <bsdf type="dielectric">
+        <bsdf type="diffuse">
         </bsdf>
     </shape>
 
-    <default name="spp" value="256"/>
+    <default name="spp" value="32"/>
 
     <sensor type="perspective">
         <float name="near_clip" value="0.01"/>
@@ -63,9 +62,9 @@
     </sensor>
 
     <emitter type="envmap">
-		    <string name="filename" value="../assets/museum.exr"/>
+		    <string name="filename" value="../assets/gothic_manor_02_2k.exr"/>
         <transform name="to_world">
-            <rotate y="1" angle="90"/>
+            <rotate y="1" angle="50"/>
         </transform>
 	  </emitter>
 </scene>

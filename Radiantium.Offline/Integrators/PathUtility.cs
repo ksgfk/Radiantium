@@ -4,8 +4,8 @@
     {
         public static float PowerHeuristic(int nf, float fPdf, int ng, float gPdf)
         {
-            float f = nf * fPdf, g = ng * gPdf;
-            return (f * f) / (f * f + g * g);
+            double f = nf * fPdf, g = ng * gPdf;
+            return (float)((f * f) / (f * f + g * g));
         }
     }
 }
