@@ -8,27 +8,26 @@ namespace Radiantium.Offline.Materials
     {
         public Texture2D BaseColor { get; }
         public Texture2D Metallic { get; }
+        public Texture2D Eta { get; }
         public Texture2D Roughness { get; }
-        public Texture2D Transmission { get; }
-        public Texture2D TransmissionRoughness { get; }
-        public Texture2D Ior { get; }
-        public Texture2D SpecularScale { get; }
         public Texture2D SpecularTint { get; }
         public Texture2D Anisotropic { get; }
         public Texture2D Sheen { get; }
         public Texture2D SheenTint { get; }
         public Texture2D Clearcoat { get; }
         public Texture2D ClearcoatGloss { get; }
+        public Texture2D SpecularScale { get; }
+        public Texture2D Transmission { get; }
+
         public override BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Diffuse | BxdfType.Glossy;
 
-        public Disney(Texture2D baseColor, Texture2D metallic, Texture2D roughness, Texture2D transmission, Texture2D transmissionRoughness, Texture2D ior, Texture2D specularScale, Texture2D specularTint, Texture2D anisotropic, Texture2D sheen, Texture2D sheenTint, Texture2D clearcoat, Texture2D clearcoatGloss)
+        public Disney(Texture2D baseColor, Texture2D metallic, Texture2D roughness, Texture2D transmission, Texture2D eta, Texture2D specularScale, Texture2D specularTint, Texture2D anisotropic, Texture2D sheen, Texture2D sheenTint, Texture2D clearcoat, Texture2D clearcoatGloss)
         {
             BaseColor = baseColor ?? throw new ArgumentNullException(nameof(baseColor));
             Metallic = metallic ?? throw new ArgumentNullException(nameof(metallic));
             Roughness = roughness ?? throw new ArgumentNullException(nameof(roughness));
             Transmission = transmission ?? throw new ArgumentNullException(nameof(transmission));
-            TransmissionRoughness = transmissionRoughness ?? throw new ArgumentNullException(nameof(transmissionRoughness));
-            Ior = ior ?? throw new ArgumentNullException(nameof(ior));
+            Eta = eta ?? throw new ArgumentNullException(nameof(eta));
             SpecularScale = specularScale ?? throw new ArgumentNullException(nameof(specularScale));
             SpecularTint = specularTint ?? throw new ArgumentNullException(nameof(specularTint));
             Anisotropic = anisotropic ?? throw new ArgumentNullException(nameof(anisotropic));
@@ -38,23 +37,25 @@ namespace Radiantium.Offline.Materials
             ClearcoatGloss = clearcoatGloss ?? throw new ArgumentNullException(nameof(clearcoatGloss));
         }
 
-        private DisneyBsdf CreateBsdf(Vector2 uv)
+        private LambertianReflectionBrdf CreateBsdf(Vector2 uv)
         {
-            return new DisneyBsdf(
-                BaseColor.Sample(uv),
-                Metallic.Sample(uv).R,
-                Roughness.Sample(uv).R,
-                SpecularScale.Sample(uv),
-                SpecularTint.Sample(uv).R,
-                Anisotropic.Sample(uv).R,
-                Sheen.Sample(uv).R,
-                SheenTint.Sample(uv).R,
-                Clearcoat.Sample(uv).R,
-                ClearcoatGloss.Sample(uv).R,
-                Transmission.Sample(uv).R,
-                TransmissionRoughness.Sample(uv).R,
-                Ior.Sample(uv).R
-            );
+            throw new NotImplementedException();
+
+            //return new DisneyBsdf(
+            //    BaseColor.Sample(uv),
+            //    Metallic.Sample(uv).R,
+            //    Roughness.Sample(uv).R,
+            //    SpecularScale.Sample(uv).R,
+            //    SpecularTint.Sample(uv).R,
+            //    Anisotropic.Sample(uv).R,
+            //    Sheen.Sample(uv).R,
+            //    SheenTint.Sample(uv).R,
+            //    Clearcoat.Sample(uv).R,
+            //    ClearcoatGloss.Sample(uv).R,
+            //    Transmission.Sample(uv).R,
+            //    TransmissionRoughness.Sample(uv).R,
+            //    Ior.Sample(uv).R
+            //);
         }
 
         public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)

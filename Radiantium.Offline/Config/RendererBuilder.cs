@@ -130,16 +130,15 @@ namespace Radiantium.Offline.Config
                 Texture2D metallic = param.ReadTex2D("metallic", builder, new Color3F(0.0f));
                 Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(1.0f));
                 Texture2D transmission = param.ReadTex2D("transmission", builder, new Color3F(0.0f));
-                Texture2D transmissionRough = param.ReadTex2D("transmission_roughness", builder, new Color3F(0.0f));
-                Texture2D ior = param.ReadTex2D("ior", builder, new Color3F(1.5f));
-                Texture2D specularScale = param.ReadTex2D("specular_scale", builder, new Color3F(0.0f));
+                Texture2D eta = param.ReadTex2D("eta", builder, new Color3F(1.5f));
+                Texture2D specularScale = param.ReadTex2D("specular", builder, new Color3F(1.0f));
                 Texture2D specularTint = param.ReadTex2D("specular_tint", builder, new Color3F(0.0f));
                 Texture2D anisotropic = param.ReadTex2D("anisotropic", builder, new Color3F(0.0f));
                 Texture2D sheen = param.ReadTex2D("sheen", builder, new Color3F(0.0f));
                 Texture2D sheenTint = param.ReadTex2D("sheen_tint", builder, new Color3F(0.0f));
                 Texture2D clearcoat = param.ReadTex2D("clearcoat", builder, new Color3F(0.0f));
                 Texture2D clearcoatGloss = param.ReadTex2D("clearcoat_gloss", builder, new Color3F(0.0f));
-                return new Disney(baseColor, metallic, roughness, transmission, transmissionRough, ior, specularScale, specularTint, anisotropic, sheen, sheenTint, clearcoat, clearcoatGloss);
+                return new Disney(baseColor, metallic, roughness, transmission, eta, specularScale, specularTint, anisotropic, sheen, sheenTint, clearcoat, clearcoatGloss);
             });
             builder.AddAreaLightBuilder("diffuse_area", (_, shape, param) =>
             {
