@@ -1,0 +1,96 @@
+{
+  "renderer": {
+    "spp": 64
+  },
+  "integrator": {
+    "type": "path"
+  },
+  "camera": {
+    "type": "perspective",
+    "screen": [
+      512,
+      512
+    ],
+    "fov": 30,
+    "far": 100,
+    "origin": [
+      0,
+      0,
+      3
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ]
+  },
+  "accel": {
+    "type": "bvh"
+  },
+  "output": {},
+  "assets": [
+    {
+      "type": "image",
+      "name": "sky",
+      "location": "../assets/gothic_manor_02_2k.exr",
+      "is_flip_y": false
+    }
+  ],
+  "scene": [
+    {
+      "light": {
+        "type": "infinite",
+        "le": {
+          "type": "image",
+          "name": "sky",
+          "sampler": {
+            "filter": "Linear"
+          }
+        }
+      },
+      "transform": {
+        "rotation": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "angle": 0
+        }
+      }
+    },
+    {
+      "material": {
+        "type": "disney",
+        "base_color": [
+          0,
+          0,
+          1
+        ],
+        "metallic": 0.5,
+        "roughness": 0.2,
+        "specular": 1,
+        "specular_tint": 0,
+        "anisotropic": 0,
+        "sheen": 0,
+        "sheen_tint": 0,
+        "clearcoat": 0,
+        "clearcoat_gloss": 0
+      },
+      "shape": {
+        "type": "sphere",
+        "radius": 0.5,
+        "center": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ]
+}

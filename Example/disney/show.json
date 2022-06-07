@@ -71,7 +71,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0,
@@ -92,7 +92,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0.1,
@@ -113,7 +113,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0.2,
@@ -134,7 +134,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0.3,
@@ -155,7 +155,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0.4,
@@ -176,7 +176,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0.5,
@@ -197,7 +197,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0.6,
@@ -218,7 +218,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0.7,
@@ -239,7 +239,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0.8,
@@ -260,7 +260,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 0.9,
@@ -281,7 +281,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0,
+              1,
               0
             ],
             "metallic": 1,
@@ -312,12 +312,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0
           },
           "shape": {
@@ -334,12 +334,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0.1
           },
           "shape": {
@@ -356,12 +356,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0.2
           },
           "shape": {
@@ -378,12 +378,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0.3
           },
           "shape": {
@@ -400,12 +400,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0.4
           },
           "shape": {
@@ -422,12 +422,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0.5
           },
           "shape": {
@@ -444,12 +444,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0.6
           },
           "shape": {
@@ -466,12 +466,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0.7
           },
           "shape": {
@@ -488,12 +488,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0.8
           },
           "shape": {
@@ -510,12 +510,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 0.9
           },
           "shape": {
@@ -532,12 +532,12 @@
           "material": {
             "type": "disney",
             "base_color": [
+              1,
               0,
-              0.7,
-              0.7
+              0
             ],
-            "metallic": 0.5,
-            "roughness": 0.3,
+            "metallic": 0,
+            "roughness": 0.2,
             "specular": 1
           },
           "shape": {
@@ -569,8 +569,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0
           },
           "shape": {
             "type": "sphere",
@@ -590,8 +591,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0.1
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0.1
           },
           "shape": {
             "type": "sphere",
@@ -611,8 +613,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0.2
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0.2
           },
           "shape": {
             "type": "sphere",
@@ -632,8 +635,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0.3
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0.3
           },
           "shape": {
             "type": "sphere",
@@ -653,8 +657,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0.4
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0.4
           },
           "shape": {
             "type": "sphere",
@@ -674,8 +679,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0.5
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0.5
           },
           "shape": {
             "type": "sphere",
@@ -695,8 +701,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0.6
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0.6
           },
           "shape": {
             "type": "sphere",
@@ -716,8 +723,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0.7
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0.7
           },
           "shape": {
             "type": "sphere",
@@ -737,8 +745,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0.8
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0.8
           },
           "shape": {
             "type": "sphere",
@@ -758,8 +767,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 0.9
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 0.9
           },
           "shape": {
             "type": "sphere",
@@ -779,8 +789,9 @@
               0,
               0
             ],
-            "metallic": 0,
-            "roughness": 1
+            "metallic": 0.5,
+            "roughness": 0.1,
+            "specular_tint": 1
           },
           "shape": {
             "type": "sphere",
@@ -807,8 +818,503 @@
           "material": {
             "type": "disney",
             "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -5,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.1
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -4,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.2
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -2,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.4
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.5
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.6
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
               1,
-              0.64,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.7
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              2,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.8
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.9
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              4,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.1,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              5,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          2,
+          0
+        ]
+      }
+    },
+    {
+      "children": [
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -5,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0.1
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -4,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0.2
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0.3
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -2,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0.4
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0.5
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0.6
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0.7
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              2,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0.8
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 0.9
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              4,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0.25,
+              0,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 0.3,
+            "anisotropic": 1
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              5,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "children": [
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -830,7 +1336,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -852,7 +1358,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -874,7 +1380,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -896,7 +1402,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -918,7 +1424,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -940,7 +1446,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -962,7 +1468,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -984,7 +1490,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -1006,7 +1512,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -1028,7 +1534,7 @@
             "type": "disney",
             "base_color": [
               1,
-              0.64,
+              0.28,
               0
             ],
             "metallic": 0,
@@ -1050,6 +1556,270 @@
         "position": [
           0,
           0,
+          0
+        ]
+      }
+    },
+    {
+      "children": [
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -5,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0.1
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -4,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0.2
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0.3
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -2,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0.4
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0.5
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0.6
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0.7
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              2,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0.8
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 0.9
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              4,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              1,
+              0.28,
+              0
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "sheen": 1,
+            "sheen_tint": 1
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              5,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          -1,
           0
         ]
       }
@@ -1303,6 +2073,270 @@
         "position": [
           0,
           -2,
+          0
+        ]
+      }
+    },
+    {
+      "children": [
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -5,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0.1
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -4,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0.2
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0.3
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -2,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0.4
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              -1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0.5
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0.6
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0.7
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              2,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0.8
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 0.9
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              4,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "material": {
+            "type": "disney",
+            "base_color": [
+              0,
+              0.2,
+              1
+            ],
+            "metallic": 0,
+            "roughness": 1,
+            "clearcoat": 1,
+            "clearcoat_gloss": 1
+          },
+          "shape": {
+            "type": "sphere",
+            "radius": 0.35,
+            "center": [
+              5,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "transform": {
+        "position": [
+          0,
+          -3,
           0
         ]
       }

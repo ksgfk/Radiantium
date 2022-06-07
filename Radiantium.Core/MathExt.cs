@@ -134,7 +134,7 @@ namespace Radiantium.Core
 
         public static float Pow5(float a)
         {
-            return a * a * a * a * a;
+            return (a * a) * (a * a) * a;
         }
 
         //******************

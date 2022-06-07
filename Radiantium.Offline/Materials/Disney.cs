@@ -37,25 +37,22 @@ namespace Radiantium.Offline.Materials
             ClearcoatGloss = clearcoatGloss ?? throw new ArgumentNullException(nameof(clearcoatGloss));
         }
 
-        private LambertianReflectionBrdf CreateBsdf(Vector2 uv)
+        private DisneyBsdf CreateBsdf(Vector2 uv)
         {
-            throw new NotImplementedException();
-
-            //return new DisneyBsdf(
-            //    BaseColor.Sample(uv),
-            //    Metallic.Sample(uv).R,
-            //    Roughness.Sample(uv).R,
-            //    SpecularScale.Sample(uv).R,
-            //    SpecularTint.Sample(uv).R,
-            //    Anisotropic.Sample(uv).R,
-            //    Sheen.Sample(uv).R,
-            //    SheenTint.Sample(uv).R,
-            //    Clearcoat.Sample(uv).R,
-            //    ClearcoatGloss.Sample(uv).R,
-            //    Transmission.Sample(uv).R,
-            //    TransmissionRoughness.Sample(uv).R,
-            //    Ior.Sample(uv).R
-            //);
+            return new DisneyBsdf(
+                BaseColor.Sample(uv),
+                Metallic.Sample(uv).R,
+                Eta.Sample(uv).R,
+                Roughness.Sample(uv).R,
+                SpecularTint.Sample(uv).R,
+                Anisotropic.Sample(uv).R,
+                Sheen.Sample(uv).R,
+                SheenTint.Sample(uv).R,
+                Clearcoat.Sample(uv).R,
+                ClearcoatGloss.Sample(uv).R,
+                SpecularScale.Sample(uv).R,
+                Transmission.Sample(uv).R
+            );
         }
 
         public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
