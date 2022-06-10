@@ -6,11 +6,12 @@ namespace Radiantium.Offline
     [Flags]
     public enum BxdfType
     {
-        Reflection = 0b00001,
-        Transmission = 0b00010,
-        Diffuse = 0b00100,
-        Glossy = 0b01000,
-        Specular = 0b10000
+        Reflection = 0b000001,
+        Transmission = 0b000010,
+        Diffuse = 0b000100,
+        Glossy = 0b001000,
+        Specular = 0b010000,
+        SubsurfaceScatting = 0b100000
     }
 
     public struct SampleBxdfResult

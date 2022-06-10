@@ -160,14 +160,14 @@ namespace Radiantium.Offline.Bxdf
         }
     }
 
-    internal struct DisneyBssrdf : ISeparableBssrdf
+    public struct DisneyBssrdf : ISeparableBssrdf
     {
         public Color3F R;
-        public Color3F d;
-        public DisneyBssrdf(Color3F r, Color3F d) { R = r; this.d = d; }
+        public Color3F D;
+        public DisneyBssrdf(Color3F r, Color3F d) { R = r; D = d; }
         public float PdfSr(int channel, float r)
         {
-            float a = IndexerUnsafe(ref d, channel);
+            float a = IndexerUnsafe(ref D, channel);
             return (0.25f * Exp(-r / a) / (2 * PI * a * r) + 0.75f * Exp(-r / (3 * a)) / (6 * PI * a * r));
         }
         public Color3F S(Vector3 po, Vector3 wo, Coordinate co, Vector3 pi, Vector3 wi, Coordinate ci)
@@ -195,22 +195,22 @@ namespace Radiantium.Offline.Bxdf
             if (u < 0.25f)
             {
                 u = Min(u * 4, 0.9999f);
-                return IndexerUnsafe(ref d, channel) * Log(1 / (1 - u));
+                return IndexerUnsafe(ref D, channel) * Log(1 / (1 - u));
             }
             else
             {
                 u = Min((u - 0.25f) / 0.75f, 0.9999f);
-                return 3 * IndexerUnsafe(ref d, channel) * Log(1 / (1 - u));
+                return 3 * IndexerUnsafe(ref D, channel) * Log(1 / (1 - u));
             }
         }
         public Color3F Sr(float r)
         {
             if (r < 1e-6f) { r = 1e-6f; }
-            return R * (Exp(-new Color3F(r) / d) + Exp(-new Color3F(r) / (3 * d))) / (8 * PI * d * r);
+            return R * (Exp(-new Color3F(r) / D) + Exp(-new Color3F(r) / (3 * D))) / (8 * PI * D * r);
         }
     }
 
-    public struct DisneyBsdf : IBxdf
+    public struct DisneyBsdf : IBxdf, IBssrdf
     {
         public Color3F Color;
         public float Metallic;
@@ -224,6 +224,7 @@ namespace Radiantium.Offline.Bxdf
         public float ClearcoatGloss;
         public float SpeclarScale;
         public float Transmission;
+        public Color3F ScattingDistance;
         public BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Diffuse | BxdfType.Glossy;
         public Color3F ColorTint
         {
@@ -247,7 +248,7 @@ namespace Radiantium.Offline.Bxdf
             }
         }
 
-        public DisneyBsdf(Color3F color, float metallic, float eta, float roughness, float specularTint, float anisotropic, float sheen, float sheenTint, float clearcoat, float clearcoatGloss, float specTrans, float transmission)
+        public DisneyBsdf(Color3F color, float metallic, float eta, float roughness, float specularTint, float anisotropic, float sheen, float sheenTint, float clearcoat, float clearcoatGloss, float specTrans, float transmission, Color3F scattingDistance)
         {
             Color = color;
             Metallic = metallic;
@@ -261,6 +262,7 @@ namespace Radiantium.Offline.Bxdf
             ClearcoatGloss = clearcoatGloss;
             SpeclarScale = specTrans;
             Transmission = transmission;
+            ScattingDistance = scattingDistance;
         }
 
         public Color3F Fr(Vector3 wo, Vector3 wi)
@@ -403,6 +405,21 @@ namespace Radiantium.Offline.Bxdf
             float spec = b * 2 / (2 + Clearcoat);
             float cc = b * Clearcoat / (2 + Clearcoat);
             return (diff, spec, cc);
+        }
+
+        public Color3F S(Vector3 po, Vector3 wo, Coordinate co, Vector3 pi, Vector3 wi, Coordinate ci)
+        {
+            return GetBssrdf().S(po, wo, co, pi, wi, ci);
+        }
+
+        public SampleBssrdfResult SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Scene scene, Random rand)
+        {
+            return GetBssrdf().SampleS(po, wo, co, mo, scene, rand);
+        }
+
+        private DisneyBssrdf GetBssrdf()
+        {
+            return new DisneyBssrdf(Color * DiffuseWeight, ScattingDistance);
         }
     }
 }
