@@ -160,6 +160,56 @@ namespace Radiantium.Offline.Bxdf
         }
     }
 
+    internal struct DisneyBssrdf : ISeparableBssrdf
+    {
+        public Color3F R;
+        public Color3F d;
+        public DisneyBssrdf(Color3F r, Color3F d) { R = r; this.d = d; }
+        public float PdfSr(int channel, float r)
+        {
+            float a = IndexerUnsafe(ref d, channel);
+            return (0.25f * Exp(-r / a) / (2 * PI * a * r) + 0.75f * Exp(-r / (3 * a)) / (6 * PI * a * r));
+        }
+        public Color3F S(Vector3 po, Vector3 wo, Coordinate co, Vector3 pi, Vector3 wi, Coordinate ci)
+        {
+            Vector3 a = Normalize(pi - po);
+            float fade = 1;
+            Vector3 n = co.Z;
+            float cosTheta = Dot(a, n);
+            if (cosTheta > 0)
+            {
+                float sinTheta = Sqrt(Max(0.0f, 1 - Sqr(cosTheta)));
+                Vector3 a2 = n * sinTheta - (a - n * cosTheta) * cosTheta / sinTheta;
+                fade = Max(0, Dot(ci.Z, a2));
+            }
+            float fo = DisneyBsdf.SchlickWeight(AbsCosTheta(wo));
+            float fi = DisneyBsdf.SchlickWeight(AbsCosTheta(wi));
+            return fade * (1 - fo / 2) * (1 - fi / 2) * this.Sp(po, pi) / PI;
+        }
+        public SampleBssrdfResult SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Scene scene, Random rand)
+        {
+            return Bssrdf.SeparableSampleS(po, co, mo, scene, rand, this);
+        }
+        public float SampleSr(int channel, float u)
+        {
+            if (u < 0.25f)
+            {
+                u = Min(u * 4, 0.9999f);
+                return IndexerUnsafe(ref d, channel) * Log(1 / (1 - u));
+            }
+            else
+            {
+                u = Min((u - 0.25f) / 0.75f, 0.9999f);
+                return 3 * IndexerUnsafe(ref d, channel) * Log(1 / (1 - u));
+            }
+        }
+        public Color3F Sr(float r)
+        {
+            if (r < 1e-6f) { r = 1e-6f; }
+            return R * (Exp(-new Color3F(r) / d) + Exp(-new Color3F(r) / (3 * d))) / (8 * PI * d * r);
+        }
+    }
+
     public struct DisneyBsdf : IBxdf
     {
         public Color3F Color;

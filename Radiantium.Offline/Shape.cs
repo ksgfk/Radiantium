@@ -12,10 +12,10 @@ namespace Radiantium.Offline
 
         public Vector3 N => Shading.Z;
 
-        public ShapeIntersection(Vector3 p, Vector2 uV, float t, Coordinate shading)
+        public ShapeIntersection(Vector3 p, Vector2 uv, float t, Coordinate shading)
         {
             P = p;
-            UV = uV;
+            UV = uv;
             T = t;
             Shading = shading;
         }
