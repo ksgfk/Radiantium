@@ -107,5 +107,10 @@ namespace Radiantium.Core
         {
             return new Color3F(MathF.Abs(c.R), MathF.Abs(c.G), MathF.Abs(c.B));
         }
+
+        public static Color3F Exp(Color3F c)
+        {
+            return new Color3F(MathF.Exp(c.R), MathF.Exp(c.G), MathF.Exp(c.B));
+        }
     }
 }

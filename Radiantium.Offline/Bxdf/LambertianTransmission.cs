@@ -5,12 +5,12 @@ using static System.MathF;
 
 namespace Radiantium.Offline.Bxdf
 {
-    public struct LambertianTransmission : IBxdf
+    public struct LambertianTransmissionBtdf : IBxdf
     {
         public Color3F T;
         public BxdfType Type => BxdfType.Transmission | BxdfType.Diffuse;
 
-        public LambertianTransmission(Color3F t)
+        public LambertianTransmissionBtdf(Color3F t)
         {
             T = t;
         }

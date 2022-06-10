@@ -46,6 +46,13 @@ namespace Radiantium.Offline
             //Z = n;
         }
 
+        public Coordinate(Vector3 x, Vector3 y, Vector3 z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
         public Vector3 ToLocal(Vector3 v)
         {
             return new Vector3(Dot(v, X), Dot(v, Y), Dot(v, Z));

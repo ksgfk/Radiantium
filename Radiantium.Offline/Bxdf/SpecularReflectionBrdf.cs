@@ -3,12 +3,12 @@ using System.Numerics;
 
 namespace Radiantium.Offline.Bxdf
 {
-    public struct IdealReflectionBrdf : IBxdf
+    public struct SpecularReflectionBrdf : IBxdf
     {
         public Color3F R;
         public BxdfType Type => BxdfType.Reflection | BxdfType.Specular;
 
-        public IdealReflectionBrdf(Color3F r)
+        public SpecularReflectionBrdf(Color3F r)
         {
             R = r;
         }
