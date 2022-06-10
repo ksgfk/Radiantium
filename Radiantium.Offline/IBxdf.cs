@@ -21,6 +21,10 @@ namespace Radiantium.Offline
         public float Pdf;
         public BxdfType Type;
 
+        public bool HasSubsurface => (Type & BxdfType.SubsurfaceScatting) != 0;
+        public bool HasTransmission => (Type & BxdfType.Transmission) != 0;
+        public bool HasSpecular => (Type & BxdfType.Specular) != 0;
+
         public SampleBxdfResult(Vector3 wi, Color3F fr, float pdf, BxdfType type)
         {
             Wi = wi;

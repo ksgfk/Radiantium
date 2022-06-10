@@ -265,7 +265,7 @@ namespace Radiantium.Offline.Bxdf
             ScattingDistance = scattingDistance;
         }
 
-        public Color3F Fr(Vector3 wo, Vector3 wi)
+        private Color3F FrImpl(Vector3 wo, Vector3 wi, Color3F specialDiff)
         {
             Color3F diffuse = new Color3F(0.0f);
             if (DiffuseWeight > 0)
@@ -277,8 +277,15 @@ namespace Radiantium.Offline.Bxdf
                     Color3F sheenColor = Lerp(SheenTint, new Color3F(1.0f), ColorTint);
                     sheen = GetSheenBrdf(sheenColor).Fr(wo, wi);
                 }
-                Color3F disneyDiffuse = GetDiffuseBrdf().Fr(wo, wi);
-                diffuse = retro + sheen + disneyDiffuse;
+                if (ScattingDistance == Black)
+                {
+                    Color3F disneyDiffuse = GetDiffuseBrdf().Fr(wo, wi);
+                    diffuse = retro + sheen + disneyDiffuse;
+                }
+                else
+                {
+                    diffuse = retro + sheen + specialDiff;
+                }
             }
             Color3F specular = GetSpecularBrdf().Fr(wo, wi);
             Color3F clearcoat = new Color3F(0.0f);
@@ -289,15 +296,33 @@ namespace Radiantium.Offline.Bxdf
             return diffuse + specular + clearcoat;
         }
 
-        public float Pdf(Vector3 wo, Vector3 wi)
+        public Color3F Fr(Vector3 wo, Vector3 wi)
+        {
+            return FrImpl(wo, wi, new Color3F(0.0f));
+        }
+
+        private float PdfImpl(Vector3 wo, Vector3 wi, float specialDiffPdf)
         {
             var (diffuseWeight, specularWeight, clearcoatWeight) = GetSampleWeight();
 
-            float diffusePdf = GetDiffuseBrdf().Pdf(wo, wi);
+            float diffusePdf;
+            if (ScattingDistance == Black)
+            {
+                diffusePdf = GetDiffuseBrdf().Pdf(wo, wi);
+            }
+            else
+            {
+                diffusePdf = specialDiffPdf;
+            }
             float specularPdf = GetSpecularBrdf().Pdf(wo, wi);
             float clearcoatPdf = GetClearcoatBrdf().Pdf(wo, wi);
 
             return diffusePdf * diffuseWeight + specularPdf * specularWeight + clearcoatPdf * clearcoatWeight;
+        }
+
+        public float Pdf(Vector3 wo, Vector3 wi)
+        {
+            return PdfImpl(wo, wi, 0);
         }
 
         public SampleBxdfResult Sample(Vector3 wo, Random rand)
@@ -306,11 +331,23 @@ namespace Radiantium.Offline.Bxdf
             float rng = rand.NextFloat();
             if (rng < diffuseWeight)
             {
-                SampleBxdfResult result = GetDiffuseBrdf().Sample(wo, rand);
-                if (result.Pdf == 0) { return new SampleBxdfResult(); }
-                result.Fr = Fr(wo, result.Wi);
-                result.Pdf = Pdf(wo, result.Wi);
-                return result;
+                if (ScattingDistance == Black)
+                {
+                    SampleBxdfResult result = GetDiffuseBrdf().Sample(wo, rand);
+                    if (result.Pdf == 0) { return new SampleBxdfResult(); }
+                    result.Fr = Fr(wo, result.Wi);
+                    result.Pdf = Pdf(wo, result.Wi);
+                    return result;
+                }
+                else
+                {
+                    SpecularTransmissionBtdf specular = new SpecularTransmissionBtdf(new Color3F(1.0f), 1, Eta);
+                    SampleBxdfResult sample = specular.Sample(wo, rand);
+                    sample.Type |= BxdfType.SubsurfaceScatting;
+                    sample.Fr = FrImpl(wo, sample.Wi, sample.Fr);
+                    sample.Pdf = PdfImpl(wo, sample.Wi, sample.Pdf);
+                    return sample;
+                }
             }
             else
             {

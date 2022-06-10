@@ -15,14 +15,18 @@ namespace Radiantium.Offline
         public Coordinate Coord;
         public Color3F S;
         public float Pdf;
+        public Vector2 UV;
+        public float T;
 
-        public SampleBssrdfResult(Vector3 p, Vector3 w, Coordinate coord, Color3F s, float pdf)
+        public SampleBssrdfResult(Vector3 p, Vector3 w, Coordinate coord, Color3F s, float pdf, Vector2 uv, float t)
         {
             P = p;
             W = w;
             Coord = coord;
             S = s;
             Pdf = pdf;
+            UV = uv;
+            T = t;
         }
     }
 
@@ -82,31 +86,27 @@ namespace Radiantium.Offline
             float u1 = rand.NextFloat();
             if (u1 < 0.5f)
             {
-                coord = co; u1 *= 2;
+                coord = co;
             }
             else if (u1 < 0.75f)
             {
-                coord = new Coordinate(co.Y, co.Z, co.X); u1 = (u1 - 0.5f) * 4;
+                coord = new Coordinate(co.Y, co.Z, co.X);
             }
             else
             {
-                coord = new Coordinate(co.Z, co.X, co.Y); u1 = (u1 - 0.75f) * 4;
+                coord = new Coordinate(co.Z, co.X, co.Y);
             }
-            int channel = Math.Clamp((int)(u1 * 3), 0, 2);
-            u1 = u1 * 3 - channel;
+            int channel = Math.Clamp((int)(rand.NextFloat() * 3), 0, 2);
             float r = SampleSr(channel, rand.NextFloat());
             if (r < 0) { return new SampleBssrdfResult(); }
             float phi = 2 * PI * rand.NextFloat();
             float rMax = SampleSr(channel, 0.999f);
             if (r >= rMax) { return new SampleBssrdfResult(); }
             float l = 2 * Sqrt(Sqr(rMax) - Sqr(r));
-            Ray3F ray = new Ray3F();
             var (sinPhi, cosPhi) = SinCos(phi);
-            ray.O = po + r * (coord.X * cosPhi) + coord.Y * sinPhi - l * coord.Z * 0.5f;
-            Vector3 target = ray.O + l * coord.Z;
-            ray.D = Normalize(target - ray.O);
-            ray.MinT = 0.0001f;
-            ray.MaxT = l;
+            Vector3 ori = new Vector3(r * cosPhi, sinPhi, -l);
+            Vector3 dir = Normalize(coord.Z);
+            Ray3F ray = new Ray3F(po + coord.ToWorld(ori), dir, 0.0001f, l);
             //I don't know if the CLR has escape analysis
             //So we cache the List per thread to avoid GC
             List<Intersection> hitList = Bssrdf.GetIntersectChainCache();
@@ -118,15 +118,20 @@ namespace Radiantium.Offline
                 {
                     hitList.Add(inct);
                 }
+                ray.O += ray.At(inct.T + 0.0001f);
+                ray.MaxT -= inct.T + 0.0001f;
             }
             if (hitList.Count == 0) { return new SampleBssrdfResult(); }
-            int selected = Math.Clamp((int)(u1 * hitList.Count), 0, hitList.Count - 1);
+            int selected = Math.Clamp((int)(rand.NextFloat() * hitList.Count), 0, hitList.Count - 1);
             Vector3 pi = hitList[selected].P;
             Vector3 wi = -ray.D;
             Coordinate ci = hitList[selected].Shading;
             Color3F s = Sp(po, hitList[selected].P);
-            float pdf = PdfSp(po, co, pi, ci);
-            return new SampleBssrdfResult(pi, wi, ci, s, pdf);
+            float pdf = PdfSp(po, co, pi, ci) / hitList.Count;
+            Vector2 uv = hitList[selected].UV;
+            float t = hitList[selected].T;
+            hitList.Clear();
+            return new SampleBssrdfResult(pi, wi, ci, s, pdf, uv, t);
         }
     }
 
@@ -183,7 +188,7 @@ namespace Radiantium.Offline
             SampleBssrdfResult result = bssrdf.SampleSp(po, co, mo, scene, rand);
             if (result.S != Color3F.Black)
             {
-                result.W = result.Coord.Z;
+                //result.W = result.Coord.Z;
             }
             return result;
         }

@@ -212,32 +212,7 @@ namespace Radiantium.Offline.Integrators
                     bounces--;
                     continue;
                 }
-                switch (Strategy)
-                {
-                    case LightSampleStrategy.Uniform:
-                        {
-                            float lightPdf = scene.SampleLight(rand, out Light light);
-                            if (lightPdf > 0.0f)
-                            {
-                                radiance += coeff * EstimateDirect(scene, rand, light, inct, wo) / lightPdf;
-#if DEBUG
-                                if (!radiance.IsValid)
-                                {
-                                    throw new InvalidOperationException($"{radiance}");
-                                }
-#endif
-                            }
-                        }
-                        break;
-                    case LightSampleStrategy.All:
-                        {
-                            foreach (Light light in scene.Lights)
-                            {
-                                radiance += coeff * EstimateDirect(scene, rand, light, inct, wo);
-                            }
-                        }
-                        break;
-                }
+                radiance += coeff * SampleLightToEstimateDirect(scene, rand, inct, wo, Strategy);
                 SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
                 isSpecularPath = (sample.Type & BxdfType.Specular) != 0;
                 if (sample.Pdf > 0.0f)
@@ -255,6 +230,22 @@ namespace Radiantium.Offline.Integrators
                     break;
                 }
                 ray = inct.SpawnRay(inct.ToWorld(sample.Wi));
+                if (sample.HasSubsurface && sample.HasTransmission)
+                {
+                    SampleBssrdfResult exit = inct.Surface.SampleS(inct.P, wo, inct.Shading, inct.Surface, inct.UV, scene, rand);
+                    if (exit.Pdf == 0 || exit.S == Color3F.Black) { break; }
+                    coeff *= exit.S / exit.Pdf;
+                    Material adapter = inct.Surface.BssrdfAdapter!;
+                    Intersection inctI = new Intersection(exit.P, exit.UV, exit.T, inct.Shape, exit.Coord);
+                    radiance += coeff * SampleLightToEstimateDirect(scene, rand,
+                        inctI, exit.Coord.Z,
+                        Strategy, adapter);
+                    SampleBxdfResult adapterSample = adapter.Sample(exit.W, inctI, rand);
+                    if (adapterSample.Pdf == 0 || adapterSample.Fr == Color3F.Black) { break; }
+                    coeff *= adapterSample.Fr * Coordinate.AbsCosTheta(adapterSample.Wi) / adapterSample.Pdf;
+                    isSpecularPath = adapterSample.HasSpecular;
+                    ray = inctI.SpawnRay(inctI.ToWorld(adapterSample.Wi));
+                }
                 if (bounces > MinDepth)
                 {
                     float q = Min(MaxElement(coeff), RRThreshold);
@@ -267,16 +258,63 @@ namespace Radiantium.Offline.Integrators
             }
             return radiance;
 
+            static Color3F SampleLightToEstimateDirect(
+                Scene scene, Random rand,
+                Intersection inct, Vector3 wo,
+                LightSampleStrategy strategy,
+                Material? bssrdfAdapter = null)
+            {
+                Color3F result = new Color3F();
+                switch (strategy)
+                {
+                    case LightSampleStrategy.Uniform:
+                        {
+                            float lightPdf = scene.SampleLight(rand, out Light light);
+                            if (lightPdf > 0.0f)
+                            {
+                                result += EstimateDirect(scene, rand, light, inct, wo, bssrdfAdapter) / lightPdf;
+#if DEBUG
+                                if (!result.IsValid)
+                                {
+                                    throw new InvalidOperationException($"{result}");
+                                }
+#endif
+                            }
+                        }
+                        break;
+                    case LightSampleStrategy.All:
+                        {
+                            foreach (Light light in scene.Lights)
+                            {
+                                result += EstimateDirect(scene, rand, light, inct, wo, bssrdfAdapter);
+                            }
+                        }
+                        break;
+                }
+                return result;
+            }
+
             static Color3F EstimateDirect(
                 Scene scene, Random rand, Light light,
-                Intersection inct, Vector3 wo)
+                Intersection inct, Vector3 wo,
+                Material? bssrdfAdapter)
             {
                 Color3F le = new Color3F(0.0f);
                 (Vector3 lightP, Vector3 lightWi, float lightPdf, Color3F lightLi) = light.SampleLi(inct, rand);
                 if (lightPdf > 0.0f && lightLi != Color3F.Black)
                 {
-                    Color3F fr = inct.Surface.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
-                    float scatteringPdf = inct.Surface.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                    Color3F fr;
+                    float scatteringPdf;
+                    if (bssrdfAdapter == null)
+                    {
+                        fr = inct.Surface.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                        scatteringPdf = inct.Surface.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                    }
+                    else
+                    {
+                        fr = bssrdfAdapter.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                        scatteringPdf = bssrdfAdapter.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                    }
                     if (fr != Color3F.Black)
                     {
                         if (!scene.IsOccluded(inct.P, lightP))
@@ -296,7 +334,16 @@ namespace Radiantium.Offline.Integrators
                 }
                 if (!light.IsDelta)
                 {
-                    SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
+                    //SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
+                    SampleBxdfResult sample;
+                    if (bssrdfAdapter == null)
+                    {
+                        sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
+                    }
+                    else
+                    {
+                        sample = bssrdfAdapter.Sample(inct.ToLocal(wo), inct, rand);
+                    }
                     Color3F fr = sample.Fr * Coordinate.AbsCosTheta(sample.Wi);
                     float scatteringPdf = sample.Pdf;
                     bool sampledSpecular = (sample.Type & BxdfType.Specular) != 0;

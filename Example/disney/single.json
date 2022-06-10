@@ -1,6 +1,7 @@
 {
   "renderer": {
-    "spp": 64
+    "spp": 64,
+    "threads": -1
   },
   "integrator": {
     "type": "path"
@@ -72,15 +73,16 @@
           0.5,
           0.5
         ],
-        "metallic": 0.5,
-        "roughness": 0.2,
+        "metallic": 0,
+        "roughness": 1,
         "specular": 1,
         "specular_tint": 0,
         "anisotropic": 0,
         "sheen": 0,
         "sheen_tint": 0,
         "clearcoat": 0,
-        "clearcoat_gloss": 0
+        "clearcoat_gloss": 0,
+        "scatting_distance": 0.1
       },
       "shape": {
         "type": "sphere",
