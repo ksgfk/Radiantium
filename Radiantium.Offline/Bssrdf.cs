@@ -1,11 +1,11 @@
 ﻿using Radiantium.Core;
 using Radiantium.Offline.Bxdf;
 using System.Numerics;
+using static Radiantium.Core.Color3F;
 using static Radiantium.Core.MathExt;
 using static Radiantium.Offline.Coordinate;
 using static System.MathF;
 using static System.Numerics.Vector3;
-using static Radiantium.Core.Color3F;
 
 namespace Radiantium.Offline
 {
@@ -123,11 +123,11 @@ namespace Radiantium.Offline
             }
             else if (rng < 0.75f)
             {
-                projCoord = new Coordinate(Po.Coord.Y, Po.Coord.Z, Po.Coord.X);
+                projCoord = new Coordinate(Po.Coord.X, Po.Coord.Z, Po.Coord.Y);
             }
             else
             {
-                projCoord = new Coordinate(Po.Coord.Z, Po.Coord.X, Po.Coord.Y);
+                projCoord = new Coordinate(Po.Coord.Z, Po.Coord.Y, Po.Coord.X);
             }
             SampleRadialResult sr = Func.SampleSr(channel, rand.NextFloat());
             float rMax = Func.SampleSr(channel, 0.996f).Distance;
@@ -158,7 +158,7 @@ namespace Radiantium.Offline
             Intersection entry = hitList[select];
             BssrdfSurfacePoint pi = new BssrdfSurfacePoint(entry.P, entry.UV, entry.Shading, entry.Wr);
             float pdf = PdfPi(pi) / (2 * PI) / hitList.Count;
-            float fro = 1 - Fresnel.DielectricFunc(CosTheta(Po.Wr), 1, Eta);
+            float fro = 1 - Fresnel.DielectricFunc(CosTheta(Po.Coord.ToLocal(Po.Wr)), 1, Eta);
             Color3F s = Func.Sr(Distance(Po.Pos, pi.Pos)) * fro;
             hitList.Clear();
             return new SampleBssrdfResult(s, pdf, pi);

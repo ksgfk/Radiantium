@@ -212,7 +212,7 @@ namespace Radiantium.Offline.Integrators
                     bounces--;
                     continue;
                 }
-                radiance += coeff * SampleLightToEstimateDirect(scene, rand, inct, wo, Strategy);
+                radiance += coeff * SampleLightToEstimateDirect(scene, rand, inct, Strategy);
                 SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
                 isSpecularPath = (sample.Type & BxdfType.Specular) != 0;
                 if (sample.Pdf > 0.0f)
@@ -232,7 +232,19 @@ namespace Radiantium.Offline.Integrators
                 ray = inct.SpawnRay(inct.ToWorld(sample.Wi));
                 if (sample.HasSubsurface && sample.HasTransmission)
                 {
-                    //holy xxxx, i really have no idea how to impl bssrdf
+                    ref readonly Intersection po = ref inct;
+                    SampleBssrdfResult samSss = inct.Surface.SamplePi(po, scene, rand);
+                    if (samSss.Pdf == 0 || samSss.S == Color3F.Black) { break; }
+                    coeff *= samSss.S / samSss.Pdf;
+                    ref readonly BssrdfSurfacePoint surface = ref samSss.Pi;
+                    Intersection pi = new Intersection(surface.Pos, surface.UV, Distance(inct.P, surface.Pos), inct.Shape, surface.Coord, surface.Wr);
+                    radiance += coeff * SampleLightToEstimateDirect(scene, rand, pi, Strategy, inct.Surface.BssrdfAdapter);
+                    Material adapter = inct.Surface.BssrdfAdapter!;
+                    SampleBxdfResult newSample = adapter.Sample(pi.ToLocal(surface.Wr), pi, rand);
+                    if (newSample.Pdf == 0 || newSample.Fr == Color3F.Black) { break; }
+                    coeff *= newSample.Fr * Coordinate.AbsCosTheta(newSample.Wi) / newSample.Pdf;
+                    isSpecularPath = newSample.HasSpecular;
+                    ray = pi.SpawnRay(pi.ToWorld(newSample.Wi));
                 }
                 if (bounces > MinDepth)
                 {
@@ -248,7 +260,7 @@ namespace Radiantium.Offline.Integrators
 
             static Color3F SampleLightToEstimateDirect(
                 Scene scene, Random rand,
-                Intersection inct, Vector3 wo,
+                Intersection inct,
                 LightSampleStrategy strategy,
                 Material? bssrdfAdapter = null)
             {
@@ -260,7 +272,7 @@ namespace Radiantium.Offline.Integrators
                             float lightPdf = scene.SampleLight(rand, out Light light);
                             if (lightPdf > 0.0f)
                             {
-                                result += EstimateDirect(scene, rand, light, inct, wo, bssrdfAdapter) / lightPdf;
+                                result += EstimateDirect(scene, rand, light, inct, bssrdfAdapter) / lightPdf;
 #if DEBUG
                                 if (!result.IsValid)
                                 {
@@ -274,7 +286,7 @@ namespace Radiantium.Offline.Integrators
                         {
                             foreach (Light light in scene.Lights)
                             {
-                                result += EstimateDirect(scene, rand, light, inct, wo, bssrdfAdapter);
+                                result += EstimateDirect(scene, rand, light, inct, bssrdfAdapter);
                             }
                         }
                         break;
@@ -284,9 +296,10 @@ namespace Radiantium.Offline.Integrators
 
             static Color3F EstimateDirect(
                 Scene scene, Random rand, Light light,
-                Intersection inct, Vector3 wo,
+                Intersection inct,
                 Material? bssrdfAdapter)
             {
+                Vector3 wo = inct.Wr;
                 Color3F le = new Color3F(0.0f);
                 (Vector3 lightP, Vector3 lightWi, float lightPdf, Color3F lightLi) = light.SampleLi(inct, rand);
                 if (lightPdf > 0.0f && lightLi != Color3F.Black)

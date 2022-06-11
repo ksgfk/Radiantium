@@ -6,7 +6,6 @@ namespace Radiantium.Offline.Materials
 {
     public class Disney : Material
     {
-        readonly BssrdfAdapter _adapter;
         public Texture2D BaseColor { get; }
         public Texture2D Metallic { get; }
         public Texture2D Eta { get; }
@@ -23,8 +22,6 @@ namespace Radiantium.Offline.Materials
 
         public override BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Diffuse | BxdfType.Glossy;
 
-        public override Material BssrdfAdapter => _adapter;
-
         public Disney(Texture2D baseColor, Texture2D metallic, Texture2D roughness, Texture2D transmission, Texture2D eta, Texture2D specularScale, Texture2D specularTint, Texture2D anisotropic, Texture2D sheen, Texture2D sheenTint, Texture2D clearcoat, Texture2D clearcoatGloss, Texture2D scattingDistance)
         {
             BaseColor = baseColor ?? throw new ArgumentNullException(nameof(baseColor));
@@ -40,7 +37,6 @@ namespace Radiantium.Offline.Materials
             Clearcoat = clearcoat ?? throw new ArgumentNullException(nameof(clearcoat));
             ClearcoatGloss = clearcoatGloss ?? throw new ArgumentNullException(nameof(clearcoatGloss));
             ScattingDistance = scattingDistance ?? throw new ArgumentNullException(nameof(scattingDistance));
-            _adapter = new BssrdfAdapter(Eta);
         }
 
         private DisneyBsdf CreateBsdf(Vector2 uv)
@@ -75,16 +71,6 @@ namespace Radiantium.Offline.Materials
         public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
         {
             return CreateBsdf(inct.UV).Sample(wo, rand);
-        }
-
-        public override Color3F S(Vector3 po, Vector3 wo, Coordinate co, Vector3 pi, Vector3 wi, Coordinate ci, Vector2 uv)
-        {
-            return CreateBsdf(uv).S(po, wo, co, pi, wi, ci);
-        }
-
-        public override BssrdfSurfacePoint SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Vector2 uv, Scene scene, Random rand)
-        {
-            return CreateBsdf(uv).SampleS(po, wo, co, mo, scene, rand);
         }
     }
 }

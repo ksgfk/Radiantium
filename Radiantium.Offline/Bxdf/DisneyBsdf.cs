@@ -418,24 +418,24 @@ namespace Radiantium.Offline.Bxdf
             return (diff, spec, cc);
         }
 
-        public Color3F S(Vector3 po, Vector3 wo, Coordinate co, Vector3 pi, Vector3 wi, Coordinate ci)
-        {
-            //return GetBssrdf().S(po, wo, co, pi, wi, ci);
-            //return new Color3F();
-            throw new NotImplementedException();
-        }
+        //public Color3F S(Vector3 po, Vector3 wo, Coordinate co, Vector3 pi, Vector3 wi, Coordinate ci)
+        //{
+        //    //return GetBssrdf().S(po, wo, co, pi, wi, ci);
+        //    //return new Color3F();
+        //    throw new NotImplementedException();
+        //}
 
-        public BssrdfSurfacePoint SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Scene scene, Random rand)
-        {
-            //return GetBssrdf().SampleS(po, wo, co, mo, scene, rand);
-            //return GetBssrdf().SampleS(po, co, mo, scene, rand);
-            throw new NotImplementedException();
-        }
+        //public BssrdfSurfacePoint SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Scene scene, Random rand)
+        //{
+        //    //return GetBssrdf().SampleS(po, wo, co, mo, scene, rand);
+        //    //return GetBssrdf().SampleS(po, co, mo, scene, rand);
+        //    throw new NotImplementedException();
+        //}
 
-        private Bssrdf GetBssrdf()
-        {
-            //return new Bssrdf(Color * DiffuseWeight, ScattingDistance);
-            throw new NotImplementedException();
-        }
+        //private Bssrdf GetBssrdf()
+        //{
+        //    //return new Bssrdf(Color * DiffuseWeight, ScattingDistance);
+        //    throw new NotImplementedException();
+        //}
     }
 }

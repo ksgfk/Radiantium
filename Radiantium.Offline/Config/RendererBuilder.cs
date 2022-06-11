@@ -141,6 +141,15 @@ namespace Radiantium.Offline.Config
                 Texture2D scattingDistance = param.ReadTex2D("scatting_distance", builder, new Color3F(0.0f));
                 return new Disney(baseColor, metallic, roughness, transmission, eta, specularScale, specularTint, anisotropic, sheen, sheenTint, clearcoat, clearcoatGloss, scattingDistance);
             });
+            builder.AddMaterialBuilder("subsurface", (builder, images, param) =>
+            {
+                Texture2D r = param.ReadTex2D("r", builder, new Color3F(1));
+                Texture2D t = param.ReadTex2D("t", builder, new Color3F(1));
+                Texture2D scatting = param.ReadTex2D("scatting_distance", builder, new Color3F(0));
+                float etaA = param.ReadFloat("etaA", 1.000277f);
+                float etaB = param.ReadFloat("etaB", 1.5046f);
+                return new Subsurface(r, t, scatting, etaA, etaB);
+            });
             builder.AddAreaLightBuilder("diffuse_area", (_, shape, param) =>
             {
                 Vector3 le = param.ReadVec3Float("le", new Vector3(1));
