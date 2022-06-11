@@ -6,7 +6,7 @@ namespace Radiantium.Offline.Materials
 {
     public class Disney : Material
     {
-        readonly SeparableBssrdfAdapter _adapter;
+        readonly BssrdfAdapter _adapter;
         public Texture2D BaseColor { get; }
         public Texture2D Metallic { get; }
         public Texture2D Eta { get; }
@@ -40,7 +40,7 @@ namespace Radiantium.Offline.Materials
             Clearcoat = clearcoat ?? throw new ArgumentNullException(nameof(clearcoat));
             ClearcoatGloss = clearcoatGloss ?? throw new ArgumentNullException(nameof(clearcoatGloss));
             ScattingDistance = scattingDistance ?? throw new ArgumentNullException(nameof(scattingDistance));
-            _adapter = new SeparableBssrdfAdapter(Eta);
+            _adapter = new BssrdfAdapter(Eta);
         }
 
         private DisneyBsdf CreateBsdf(Vector2 uv)

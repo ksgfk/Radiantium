@@ -232,19 +232,7 @@ namespace Radiantium.Offline.Integrators
                 ray = inct.SpawnRay(inct.ToWorld(sample.Wi));
                 if (sample.HasSubsurface && sample.HasTransmission)
                 {
-                    SampleBssrdfResult exit = inct.Surface.SampleS(inct.P, wo, inct.Shading, inct.Surface, inct.UV, scene, rand);
-                    if (exit.Pdf == 0 || exit.S == Color3F.Black) { break; }
-                    coeff *= exit.S / exit.Pdf;
-                    Material adapter = inct.Surface.BssrdfAdapter!;
-                    Intersection inctI = new Intersection(exit.P, exit.UV, exit.T, inct.Shape, exit.Coord);
-                    radiance += coeff * SampleLightToEstimateDirect(scene, rand,
-                        inctI, exit.Coord.Z,
-                        Strategy, adapter);
-                    SampleBxdfResult adapterSample = adapter.Sample(exit.W, inctI, rand);
-                    if (adapterSample.Pdf == 0 || adapterSample.Fr == Color3F.Black) { break; }
-                    coeff *= adapterSample.Fr * Coordinate.AbsCosTheta(adapterSample.Wi) / adapterSample.Pdf;
-                    isSpecularPath = adapterSample.HasSpecular;
-                    ray = inctI.SpawnRay(inctI.ToWorld(adapterSample.Wi));
+                    //holy xxxx, i really have no idea how to impl bssrdf
                 }
                 if (bounces > MinDepth)
                 {
@@ -334,7 +322,6 @@ namespace Radiantium.Offline.Integrators
                 }
                 if (!light.IsDelta)
                 {
-                    //SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
                     SampleBxdfResult sample;
                     if (bssrdfAdapter == null)
                     {

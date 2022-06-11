@@ -58,6 +58,11 @@ namespace Radiantium.Core
             return Max(Max(v.R, v.G), v.B);
         }
 
+        public static Vector3 Exp(Vector3 v)
+        {
+            return new Vector3(MathF.Exp(v.X), MathF.Exp(v.Y), MathF.Exp(v.Z));
+        }
+
         //********
         //* Math *
         //********
