@@ -17,6 +17,6 @@ namespace Radiantium.Offline
 
         public virtual Color3F S(Vector3 po, Vector3 wo, Coordinate co, Vector3 pi, Vector3 wi, Coordinate ci, Vector2 uv) { return new Color3F(0.0f); }
 
-        public virtual SampleBssrdfResult SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Vector2 uv, Scene scene, Random rand) { return new SampleBssrdfResult(); }
+        public virtual BssrdfSurfacePoint SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Vector2 uv, Scene scene, Random rand) { return new BssrdfSurfacePoint(); }
     }
 }

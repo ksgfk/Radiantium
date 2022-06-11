@@ -425,7 +425,7 @@ namespace Radiantium.Offline.Bxdf
             throw new NotImplementedException();
         }
 
-        public SampleBssrdfResult SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Scene scene, Random rand)
+        public BssrdfSurfacePoint SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Scene scene, Random rand)
         {
             //return GetBssrdf().SampleS(po, wo, co, mo, scene, rand);
             //return GetBssrdf().SampleS(po, co, mo, scene, rand);

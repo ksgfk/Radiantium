@@ -82,7 +82,7 @@ namespace Radiantium.Offline.Materials
             return CreateBsdf(uv).S(po, wo, co, pi, wi, ci);
         }
 
-        public override SampleBssrdfResult SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Vector2 uv, Scene scene, Random rand)
+        public override BssrdfSurfacePoint SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Vector2 uv, Scene scene, Random rand)
         {
             return CreateBsdf(uv).SampleS(po, wo, co, mo, scene, rand);
         }
