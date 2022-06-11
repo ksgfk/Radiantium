@@ -39,7 +39,7 @@ namespace Radiantium.Offline
             if (isHit)
             {
                 ShapeIntersection shape = Shape.GetIntersection(ray, surface);
-                inct = new Intersection(shape.P, shape.UV, shape.T, this, shape.Shading);
+                inct = new Intersection(shape.P, shape.UV, shape.T, this, shape.Shading, shape.Wr);
             }
             else
             {
@@ -100,7 +100,7 @@ namespace Radiantium.Offline
             if (isHit)
             {
                 ShapeIntersection shape = Shape.GetIntersection(ray, surface);
-                inct = new Intersection(shape.P, shape.UV, shape.T, this, shape.Shading);
+                inct = new Intersection(shape.P, shape.UV, shape.T, this, shape.Shading, shape.Wr);
             }
             else
             {
@@ -146,7 +146,8 @@ namespace Radiantium.Offline
                 Vector3 p = Vector3.Transform(modelInct.P, toWorld);
                 Vector3 n = Vector3.Normalize(Vector3.TransformNormal(modelInct.N, toWorld));
                 Coordinate coord = new Coordinate(n);
-                inct = new Intersection(p, modelInct.UV, Vector3.Distance(ray.O, p), this, coord);
+                Vector3 wr = Vector3.Normalize(Vector3.TransformNormal(modelInct.Wr, toWorld));
+                inct = new Intersection(p, modelInct.UV, Vector3.Distance(ray.O, p), this, coord, wr);
             }
             else
             {

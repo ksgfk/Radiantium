@@ -44,7 +44,7 @@ namespace Radiantium.Offline.Shapes
             float u = phi / (2 * MathF.PI);
             float v = theta / MathF.PI;
 
-            return new ShapeIntersection(p, new Vector2(u, v), t, coord);
+            return new ShapeIntersection(p, new Vector2(u, v), t, coord, -ray.D);
         }
 
         public override bool Intersect(Ray3F ray)
@@ -79,12 +79,12 @@ namespace Radiantium.Offline.Shapes
             return isHit;
         }
 
-        public override float Pdf(ShapeIntersection inct)
+        public override float Pdf(ShapeSurfacePoint inct)
         {
             return 1 / SurfaceArea;
         }
 
-        public override ShapeIntersection Sample(Random rand, out float pdf)
+        public override ShapeSurfacePoint Sample(Random rand, out float pdf)
         {
             Vector3 rng = Probability.SquareToUniformSphere(rand.NextVec2());
             Vector3 n = Normalize(rng);
@@ -98,7 +98,7 @@ namespace Radiantium.Offline.Shapes
             float u = phi / (2 * MathF.PI);
             float v = theta / MathF.PI;
 
-            return new ShapeIntersection(p, new Vector2(u, v), 0, coord);
+            return new ShapeSurfacePoint(p, new Vector2(u, v), coord);
         }
     }
 }

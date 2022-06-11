@@ -24,6 +24,7 @@ namespace Radiantium.Offline
         public float T;
         public Primitive Shape;
         public Coordinate Shading;
+        public Vector3 Wr;
 
         public Vector3 N => Shading.Z;
         public bool IsLight => Shape.Light != null;
@@ -34,13 +35,14 @@ namespace Radiantium.Offline
         public bool HasOutsideMedium => Shape.Medium.HasOutsideMedium;
         public bool HasInsideMedium => Shape.Medium.HasInsideMedium;
 
-        public Intersection(Vector3 p, Vector2 uV, float t, Primitive shape, Coordinate shading)
+        public Intersection(Vector3 p, Vector2 uv, float t, Primitive shape, Coordinate shading, Vector3 wr)
         {
             P = p;
-            UV = uV;
+            UV = uv;
             T = t;
             Shape = shape ?? throw new ArgumentNullException(nameof(shape));
             Shading = shading;
+            Wr = wr;
         }
 
         public Ray3F SpawnRay(Vector3 d)

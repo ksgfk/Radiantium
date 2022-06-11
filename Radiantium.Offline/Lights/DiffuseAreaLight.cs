@@ -43,7 +43,7 @@ namespace Radiantium.Offline.Lights
 
         public override LightSampleResult SampleLi(LightEvalParam inct, Random rand)
         {
-            ShapeIntersection shape = Shape.Sample(rand, out float shapePdf);
+            ShapeSurfacePoint shape = Shape.Sample(rand, out float shapePdf);
             Vector3 wi = shape.P - inct.P;
             Color3F li = (Dot(shape.N, -wi) > 0) ? Lemit : new Color3F(0.0f);
             float pdf;

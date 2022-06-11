@@ -10,23 +10,66 @@ namespace Radiantium.Offline
 {
     public struct SampleBssrdfResult
     {
-        public Vector3 P;
-        public Vector3 W;
-        public Coordinate Coord;
-        public Color3F S;
-        public float Pdf;
+        public Vector3 Pos;
         public Vector2 UV;
-        public float T;
+        public Coordinate Coord;
+        public Vector3 Wr;
 
-        public SampleBssrdfResult(Vector3 p, Vector3 w, Coordinate coord, Color3F s, float pdf, Vector2 uv, float t)
+        public SampleBssrdfResult(Vector3 pos, Vector2 uV, Coordinate coord, Vector3 wr)
         {
-            P = p;
-            W = w;
+            Pos = pos;
+            UV = uV;
             Coord = coord;
-            S = s;
+            Wr = wr;
+        }
+    }
+
+    public struct SampleRadialResult
+    {
+        public Color3F Sr;
+        public float Distance;
+        public float Pdf;
+
+        public SampleRadialResult(Color3F sr, float distance, float pdf)
+        {
+            Sr = sr;
+            Distance = distance;
             Pdf = pdf;
-            UV = uv;
-            T = t;
+        }
+    }
+
+    public interface IRadialProfileFunction
+    {
+        Color3F Sr();
+
+        float PdfSr(int channel, float distance);
+
+        SampleRadialResult SampleSr(int channel, Random rand);
+    }
+
+    public struct SeparableBssrdf<T> where T : IRadialProfileFunction
+    {
+        public SampleBssrdfResult Po;
+        public Primitive Shape;
+        public float Eta;
+        public T Func;
+
+        public SeparableBssrdf(Intersection po, float eta, T func)
+        {
+            Po = new SampleBssrdfResult(po.P, po.UV, po.Shading, po.Wr);
+            Shape = po.Shape;
+            Eta = eta;
+            Func = func;
+        }
+
+        public SampleBssrdfResult SamplePi(Random rand)
+        {
+            throw new NotImplementedException();
+        }
+
+        public float PdfPi(SampleBssrdfResult pi)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -42,11 +85,7 @@ namespace Radiantium.Offline
 
         public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
         {
-            float eta = Eta.Sample(inct.UV).R;
-            float fi = Bssrdf.EvalWi(eta, wi);
-            Color3F f = new Color3F(fi);
-            f *= Sqr(eta);
-            return f;
+            throw new NotImplementedException();
         }
 
         public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
@@ -68,156 +107,15 @@ namespace Radiantium.Offline
         }
     }
 
-    public struct Bssrdf
+    public static class BssrdfUtility
     {
-        public Color3F R;
-        public Color3F FreePathDistance;
-
-        public Bssrdf(Color3F r, Color3F freePathD)
-        {
-            R = r;
-            FreePathDistance = freePathD;
-        }
-
-        public static float EvalWi(float eta, Vector3 wi)
-        {
-            float fi = Fresnel.DielectricFunc(CosTheta(wi), 1, eta);
-            return 1 - fi;
-        }
-
-        public Vector3 NormalizeDiffusion(float r, Vector3 d)
-        {
-            if (r == 0.0f)
-            {
-                return new Vector3(0.0f);
-            }
-            return (Exp(new Vector3(-r) / d) + Exp(new Vector3(-r) / (3.0f * d))) / (8.0f * PI * d * r);
-        }
-
-        public float NormalizeDiffusion(float r, float d)
-        {
-            if (r == 0.0f)
-            {
-                return 0.0f;
-            }
-            return (Exp(-r / d) + Exp(-r / (3.0f * d))) / (8.0f * PI * d * r);
-        }
-
-        public float SampleRadius(float u, float d, out float pdf)
-        {
-            float offset = Min(u * _scattingLUT.Length, _scattingLUT.Length - 1);
-            uint basic = (uint)Floor(offset);
-            uint upper = (uint)Ceiling(offset);
-            float baseDistance = Lerp(offset - basic, _scattingLUT[basic], _scattingLUT[upper]);
-            float radius = baseDistance * d;
-            pdf = PdfRadius(radius, d);
-            return radius;
-        }
-
-        public float PdfRadius(float radius, float d)
-        {
-            return NormalizeDiffusion(radius, d) * PI * 2 * radius;
-        }
-
-        public SampleBssrdfResult SampleS(Vector3 po, Coordinate co, Material mo, Scene scene, Random rand)
-        {
-            float u1 = rand.NextFloat();
-            Coordinate coord;
-            if (u1 < 0.5f)
-            {
-                coord = co;
-            }
-            else if (u1 < 0.75f)
-            {
-                coord = new Coordinate(co.Y, co.Z, co.X);
-            }
-            else
-            {
-                coord = new Coordinate(co.Z, co.X, co.Y);
-            }
-            int channel = Math.Clamp((int)(rand.NextFloat() * 3), 0, 2);
-            Vector3 s = new Vector3(Fit(R.R), Fit(R.G), Fit(R.B));
-            Vector3 D = FreePathDistance / s;
-            float d = IndexerUnsafe(ref D, channel);
-            float radius = SampleRadius(rand.NextFloat(), d, out _);
-            float maxDist = SampleRadius(0.996f, d, out _);
-            if (radius > maxDist)
-            {
-                return new SampleBssrdfResult();
-            }
-            float phi = 2 * PI * rand.NextFloat();
-            float height = 2 * Sqrt(Sqr(maxDist) - Sqr(radius));
-            var (sinPhi, cosPhi) = SinCos(phi);
-            Vector3 start = po + radius * (coord.X * cosPhi + coord.Y * sinPhi) + coord.Z * 0.5f * height;
-            Vector3 target = po - height * coord.Z;
-            Vector3 dir = Normalize(target - start);
-            Ray3F ray = new Ray3F(start, dir, 0.0001f, height);
-            List<Intersection> hits = GetIntersectChainCache();
-            while (true)
-            {
-                if (ray.MinT >= ray.MaxT) { break; }
-                if (!scene.Intersect(ray, out Intersection inct))
-                {
-                    break;
-                }
-                if (inct.HasSurface && inct.Surface == mo)
-                {
-                    hits.Add(inct);
-                }
-                ray.O = inct.P;
-                ray.MaxT -= inct.T;
-            }
-            if (hits.Count == 0) { return new SampleBssrdfResult(); }
-            int selected = Math.Clamp((int)(rand.NextFloat() * hits.Count), 0, hits.Count - 1);
-            Vector3 pi = hits[selected].P;
-            Vector3 wi = -ray.D;
-            Coordinate ci = hits[selected].Shading;
-            Vector2 uv = hits[selected].UV;
-            float actualDist = Distance(po, pi);
-            float t = actualDist;
-            float pdf = PdfS(radius, D, po, pi, co, ci) / hits.Count;
-            Color3F sss = new Color3F(NormalizeDiffusion(actualDist, D) * actualDist) * (1 / PI);
-            hits.Clear();
-            return new SampleBssrdfResult(pi, wi, ci, sss, pdf, uv, t);
-
-            static float Fit(float a)
-            {
-                float tempTerm = a - 0.33f;
-                return 3.5f + 100.0f * Sqr(Sqr(tempTerm));
-            }
-        }
-
-        public float PdfS(float radius, Vector3 dis, Vector3 po, Vector3 pi, Coordinate co, Coordinate ci)
-        {
-            Vector3 d = po - pi;
-            Vector3 localD = co.ToLocal(d);
-            Vector3 localDotN = co.ToLocal(ci.Z);
-            Span<float> projRadius = stackalloc float[3];
-            projRadius[0] = Sqrt(localD.Y * localD.Y + localD.Z * localD.Z);
-            projRadius[1] = Sqrt(localD.Z * localD.Z + localD.X * localD.X);
-            projRadius[2] = Sqrt(localD.X * localD.X + localD.Y * localD.Y);
-            float pdf = 0.0f;
-            Span<float> axisProb = stackalloc[] { 0.25f, 0.25f, 0.5f };
-            float chProb = 1.0f / 3.0f;
-            for (int axis = 0; axis < 3; axis++)
-            {
-                for (int ch = 0; ch < 3; ch++)
-                {
-                    float disC = IndexerUnsafe(ref dis, ch);
-                    float dotN = IndexerUnsafe(ref localDotN, axis);
-                    pdf += PdfRadius(projRadius[axis], disC) * Abs(dotN) * chProb * axisProb[axis];// * (1 / (2 * PI));
-                }
-            }
-            return pdf;
-        }
-
         private static readonly ThreadLocal<List<Intersection>> _threadInctChainCache;
-        static Bssrdf()
+        static BssrdfUtility()
         {
             _threadInctChainCache = new ThreadLocal<List<Intersection>>(() => new List<Intersection>());
         }
-        private static List<Intersection> GetIntersectChainCache() { return _threadInctChainCache.Value!; }
-        private static readonly float[] _scattingLUT = {
+        internal static List<Intersection> GetIntersectChainCache() { return _threadInctChainCache.Value!; }
+        internal static readonly float[] ScattingLUT = {
             0.0f, 0.00195631f, 0.00391517f, 0.0058766f, 0.00784058f,
             0.00980714f, 0.0117763f, 0.013748f, 0.0157223f, 0.0176992f,
             0.0196787f, 0.0216608f, 0.0236456f, 0.0256329f, 0.0276229f,
