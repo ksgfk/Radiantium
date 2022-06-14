@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 256
+    "spp": 64
   },
   "integrator": {
     "type": "path"
@@ -120,7 +120,8 @@
         "type": "subsurface",
         "scatting_distance": 0.01,
         "t": 1,
-        "r": 1
+        "r": 1,
+        "a": 0.5
       },
       "shape": {
         "type": "sphere",

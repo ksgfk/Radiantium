@@ -9,16 +9,18 @@ namespace Radiantium.Offline.Materials
     {
         public Texture2D R { get; }
         public Texture2D T { get; }
+        public Texture2D A { get; }
         public Texture2D ScattingDistance { get; }
         public float EtaA { get; }
         public float EtaB { get; }
         public override Material? BssrdfAdapter { get; }
         public override BxdfType Type => BxdfType.Specular | BxdfType.Transmission | BxdfType.SubsurfaceScatting;
 
-        public Subsurface(Texture2D r, Texture2D t, Texture2D scattingDistance, float etaA, float etaB)
+        public Subsurface(Texture2D r, Texture2D t, Texture2D a, Texture2D scattingDistance, float etaA, float etaB)
         {
             R = r;
             T = t;
+            A = a;
             ScattingDistance = scattingDistance;
             EtaA = etaA;
             EtaB = etaB;
@@ -54,10 +56,10 @@ namespace Radiantium.Offline.Materials
 
         public override SampleBssrdfResult SamplePi(Intersection po, Scene scene, Random rand)
         {
-            Color3F r = R.Sample(po.UV);
+            Color3F a = A.Sample(po.UV);
             Color3F sd = ScattingDistance.Sample(po.UV);
             float eta = EtaB / EtaA;
-            NormalizedDiffusionRadialProfile n = new NormalizedDiffusionRadialProfile(r, sd);
+            NormalizedDiffusionRadialProfile n = new NormalizedDiffusionRadialProfile(a, sd);
             SeparableBssrdf<NormalizedDiffusionRadialProfile> bssrdf = new(po, eta, n);
             return bssrdf.SamplePi(scene, rand);
         }

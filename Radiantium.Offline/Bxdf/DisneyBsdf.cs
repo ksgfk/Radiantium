@@ -160,56 +160,6 @@ namespace Radiantium.Offline.Bxdf
         }
     }
 
-    //public struct DisneyBssrdf : ISeparableBssrdf
-    //{
-    //    public Color3F R;
-    //    public Color3F D;
-    //    public DisneyBssrdf(Color3F r, Color3F d) { R = r; D = d; }
-    //    public float PdfSr(int channel, float r)
-    //    {
-    //        float a = IndexerUnsafe(ref D, channel);
-    //        return (0.25f * Exp(-r / a) / (2 * PI * a * r) + 0.75f * Exp(-r / (3 * a)) / (6 * PI * a * r));
-    //    }
-    //    public Color3F S(Vector3 po, Vector3 wo, Coordinate co, Vector3 pi, Vector3 wi, Coordinate ci)
-    //    {
-    //        Vector3 a = Normalize(pi - po);
-    //        float fade = 1;
-    //        Vector3 n = co.Z;
-    //        float cosTheta = Dot(a, n);
-    //        if (cosTheta > 0)
-    //        {
-    //            float sinTheta = Sqrt(Max(0.0f, 1 - Sqr(cosTheta)));
-    //            Vector3 a2 = n * sinTheta - (a - n * cosTheta) * cosTheta / sinTheta;
-    //            fade = Max(0, Dot(ci.Z, a2));
-    //        }
-    //        float fo = DisneyBsdf.SchlickWeight(AbsCosTheta(wo));
-    //        float fi = DisneyBsdf.SchlickWeight(AbsCosTheta(wi));
-    //        return fade * (1 - fo / 2) * (1 - fi / 2) * this.Sp(po, pi) / PI;
-    //    }
-    //    public SampleBssrdfResult SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Scene scene, Random rand)
-    //    {
-    //        return Bssrdf.SeparableSampleS(po, co, mo, scene, rand, this);
-    //    }
-    //    public float SampleSr(int channel, float u)
-    //    {
-    //        if (u < 0.25f)
-    //        {
-    //            u = Min(u * 4, 0.9999f);
-    //            return IndexerUnsafe(ref D, channel) * Log(1 / (1 - u));
-    //        }
-    //        else
-    //        {
-    //            u = Min((u - 0.25f) / 0.75f, 0.9999f);
-    //            return 3 * IndexerUnsafe(ref D, channel) * Log(1 / (1 - u));
-    //        }
-    //    }
-    //    public Color3F Sr(float r)
-    //    {
-    //        if (r < 1e-6f) { r = 1e-6f; }
-    //        return R * (Exp(-new Color3F(r) / D) + Exp(-new Color3F(r) / (3 * D))) / (8 * PI * D * r);
-    //    }
-    //}
-
     public struct DisneyBsdf : IBxdf
     {
         public Color3F Color;
@@ -223,8 +173,8 @@ namespace Radiantium.Offline.Bxdf
         public float Clearcoat;
         public float ClearcoatGloss;
         public float SpeclarScale;
+        public Color3F ScattingDistance;
         //public float Transmission;
-        //public Color3F ScattingDistance;
         public BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Diffuse | BxdfType.Glossy;
         public Color3F ColorTint
         {
@@ -261,11 +211,11 @@ namespace Radiantium.Offline.Bxdf
             Clearcoat = clearcoat;
             ClearcoatGloss = clearcoatGloss;
             SpeclarScale = specTrans;
+            ScattingDistance = scattingDistance;
             //Transmission = transmission;
-            //ScattingDistance = scattingDistance;
         }
 
-        private Color3F FrImpl(Vector3 wo, Vector3 wi, Color3F specialDiff)
+        private Color3F FrImpl(Vector3 wo, Vector3 wi)
         {
             Color3F diffuse = new Color3F(0.0f);
             if (DiffuseWeight > 0)
@@ -277,7 +227,11 @@ namespace Radiantium.Offline.Bxdf
                     Color3F sheenColor = Lerp(SheenTint, new Color3F(1.0f), ColorTint);
                     sheen = GetSheenBrdf(sheenColor).Fr(wo, wi);
                 }
-                Color3F disneyDiffuse = GetDiffuseBrdf().Fr(wo, wi);
+                Color3F disneyDiffuse = new Color3F(0.0f);
+                if (ScattingDistance == Black)
+                {
+                    disneyDiffuse = GetDiffuseBrdf().Fr(wo, wi);
+                }
                 diffuse = retro + sheen + disneyDiffuse;
             }
             Color3F specular = GetSpecularBrdf().Fr(wo, wi);
@@ -291,14 +245,18 @@ namespace Radiantium.Offline.Bxdf
 
         public Color3F Fr(Vector3 wo, Vector3 wi)
         {
-            return FrImpl(wo, wi, new Color3F(0.0f));
+            return FrImpl(wo, wi);
         }
 
-        private float PdfImpl(Vector3 wo, Vector3 wi, float specialDiffPdf)
+        private float PdfImpl(Vector3 wo, Vector3 wi)
         {
             var (diffuseWeight, specularWeight, clearcoatWeight) = GetSampleWeight();
 
-            float diffusePdf = GetDiffuseBrdf().Pdf(wo, wi);
+            float diffusePdf = 0;
+            if (ScattingDistance == Black)
+            {
+                diffusePdf = GetDiffuseBrdf().Pdf(wo, wi);
+            }
             float specularPdf = GetSpecularBrdf().Pdf(wo, wi);
             float clearcoatPdf = GetClearcoatBrdf().Pdf(wo, wi);
 
@@ -307,7 +265,7 @@ namespace Radiantium.Offline.Bxdf
 
         public float Pdf(Vector3 wo, Vector3 wi)
         {
-            return PdfImpl(wo, wi, 0);
+            return PdfImpl(wo, wi);
         }
 
         public SampleBxdfResult Sample(Vector3 wo, Random rand)
@@ -316,11 +274,21 @@ namespace Radiantium.Offline.Bxdf
             float rng = rand.NextFloat();
             if (rng < diffuseWeight)
             {
-                SampleBxdfResult result = GetDiffuseBrdf().Sample(wo, rand);
-                if (result.Pdf == 0) { return new SampleBxdfResult(); }
-                result.Fr = Fr(wo, result.Wi);
-                result.Pdf = Pdf(wo, result.Wi);
-                return result;
+                if (ScattingDistance == Black)
+                {
+                    SampleBxdfResult result = GetDiffuseBrdf().Sample(wo, rand);
+                    if (result.Pdf == 0) { return new SampleBxdfResult(); }
+                    result.Fr = Fr(wo, result.Wi);
+                    result.Pdf = Pdf(wo, result.Wi);
+                    return result;
+                }
+                else
+                {
+                    SampleBxdfResult result = new SpecularTransmissionBtdf(new Color3F(1), 1, Eta).Sample(wo, rand);
+                    result.Pdf *= diffuseWeight;
+                    result.Type |= BxdfType.SubsurfaceScatting;
+                    return result;
+                }
             }
             else
             {
@@ -418,24 +386,10 @@ namespace Radiantium.Offline.Bxdf
             return (diff, spec, cc);
         }
 
-        //public Color3F S(Vector3 po, Vector3 wo, Coordinate co, Vector3 pi, Vector3 wi, Coordinate ci)
-        //{
-        //    //return GetBssrdf().S(po, wo, co, pi, wi, ci);
-        //    //return new Color3F();
-        //    throw new NotImplementedException();
-        //}
-
-        //public BssrdfSurfacePoint SampleS(Vector3 po, Vector3 wo, Coordinate co, Material mo, Scene scene, Random rand)
-        //{
-        //    //return GetBssrdf().SampleS(po, wo, co, mo, scene, rand);
-        //    //return GetBssrdf().SampleS(po, co, mo, scene, rand);
-        //    throw new NotImplementedException();
-        //}
-
-        //private Bssrdf GetBssrdf()
-        //{
-        //    //return new Bssrdf(Color * DiffuseWeight, ScattingDistance);
-        //    throw new NotImplementedException();
-        //}
+        public SeparableBssrdf<NormalizedDiffusionRadialProfile> GetBssrdf(Intersection po)
+        {
+            NormalizedDiffusionRadialProfile func = new(Color * DiffuseWeight, ScattingDistance);
+            return new SeparableBssrdf<NormalizedDiffusionRadialProfile>(po, Eta, func);
+        }
     }
 }

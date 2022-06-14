@@ -19,7 +19,7 @@ namespace Radiantium.Offline.Materials
         public Texture2D SpecularScale { get; }
         public Texture2D Transmission { get; }
         public Texture2D ScattingDistance { get; }
-
+        public override Material BssrdfAdapter { get; }
         public override BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Diffuse | BxdfType.Glossy;
 
         public Disney(Texture2D baseColor, Texture2D metallic, Texture2D roughness, Texture2D transmission, Texture2D eta, Texture2D specularScale, Texture2D specularTint, Texture2D anisotropic, Texture2D sheen, Texture2D sheenTint, Texture2D clearcoat, Texture2D clearcoatGloss, Texture2D scattingDistance)
@@ -37,6 +37,7 @@ namespace Radiantium.Offline.Materials
             Clearcoat = clearcoat ?? throw new ArgumentNullException(nameof(clearcoat));
             ClearcoatGloss = clearcoatGloss ?? throw new ArgumentNullException(nameof(clearcoatGloss));
             ScattingDistance = scattingDistance ?? throw new ArgumentNullException(nameof(scattingDistance));
+            BssrdfAdapter = new BssrdfAdapter(Eta);
         }
 
         private DisneyBsdf CreateBsdf(Vector2 uv)
@@ -71,6 +72,11 @@ namespace Radiantium.Offline.Materials
         public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
         {
             return CreateBsdf(inct.UV).Sample(wo, rand);
+        }
+
+        public override SampleBssrdfResult SamplePi(Intersection po, Scene scene, Random rand)
+        {
+            return CreateBsdf(po.UV).GetBssrdf(po).SamplePi(scene, rand);
         }
     }
 }
