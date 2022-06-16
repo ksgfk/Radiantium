@@ -129,7 +129,6 @@ namespace Radiantium.Offline.Config
                 Texture2D baseColor = param.ReadTex2D("base_color", builder, new Color3F(0.5f));
                 Texture2D metallic = param.ReadTex2D("metallic", builder, new Color3F(0.0f));
                 Texture2D roughness = param.ReadTex2D("roughness", builder, new Color3F(1.0f));
-                Texture2D transmission = param.ReadTex2D("transmission", builder, new Color3F(0.0f));
                 Texture2D eta = param.ReadTex2D("eta", builder, new Color3F(1.5f));
                 Texture2D specularScale = param.ReadTex2D("specular", builder, new Color3F(1.0f));
                 Texture2D specularTint = param.ReadTex2D("specular_tint", builder, new Color3F(0.0f));
@@ -139,7 +138,27 @@ namespace Radiantium.Offline.Config
                 Texture2D clearcoat = param.ReadTex2D("clearcoat", builder, new Color3F(0.0f));
                 Texture2D clearcoatGloss = param.ReadTex2D("clearcoat_gloss", builder, new Color3F(0.0f));
                 Texture2D scattingDistance = param.ReadTex2D("scatting_distance", builder, new Color3F(0.0f));
-                return new Disney(baseColor, metallic, roughness, transmission, eta, specularScale, specularTint, anisotropic, sheen, sheenTint, clearcoat, clearcoatGloss, scattingDistance);
+                bool isThin = param.ReadBool("is_thin", false);
+                Texture2D transmission = param.ReadTex2D("transmission", builder, new Color3F(0.0f));
+                Texture2D transmissionRoughness = param.ReadTex2D("transmission_roughness", builder, new Color3F(0.0f));
+                Texture2D flatness = param.ReadTex2D("flatness", builder, new Color3F(0.0f));
+                return new Disney(
+                    baseColor,
+                    metallic,
+                    roughness,
+                    eta,
+                    specularScale,
+                    specularTint,
+                    anisotropic,
+                    sheen,
+                    sheenTint,
+                    clearcoat,
+                    clearcoatGloss,
+                    scattingDistance,
+                    isThin,
+                    transmission,
+                    transmissionRoughness,
+                    flatness);
             });
             builder.AddMaterialBuilder("subsurface", (builder, images, param) =>
             {

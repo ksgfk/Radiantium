@@ -55,7 +55,8 @@ namespace Radiantium.Offline.Bxdf
             if (Dot(wo, wh) * Dot(wi, wh) > 0) { return 0; }
             float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
             float dwhdwi = MathF.Abs((eta * eta * Dot(wi, wh)) / (sqrtDenom * sqrtDenom));
-            return Distribution.Pdf(wo, wh) * dwhdwi;
+            float result = Distribution.Pdf(wo, wh) * dwhdwi;
+            return result;
         }
 
         public SampleBxdfResult Sample(Vector3 wo, Random rand)

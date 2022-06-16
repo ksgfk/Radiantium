@@ -25,16 +25,8 @@ namespace Radiantium.Offline.Bxdf
             float rr = 2 * Roughness * cosThetaD * cosThetaD;
             return R * (1 / PI) * rr * (fo + fi + fo * fi * (rr - 1));
         }
-        public float Pdf(Vector3 wo, Vector3 wi) { return SameHemisphere(wo, wi) ? AbsCosTheta(wi) / PI : 0.0F; }
-        public SampleBxdfResult Sample(Vector3 wo, Random rand)
-        {
-            Vector3 wi = Normalize(Probability.SquareToCosineHemisphere(rand.NextVec2()));
-            if (wo.Z < 0) { wi.Z *= -1; }
-            if (!SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
-            float pdf = Pdf(wo, wi);
-            Color3F fr = R / PI;
-            return new SampleBxdfResult(wi, fr, pdf, Type);
-        }
+        public float Pdf(Vector3 wo, Vector3 wi) { return DisneyBsdf.DiffusePdf(wo, wi); }
+        public SampleBxdfResult Sample(Vector3 wo, Random rand) { return DisneyBsdf.DiffuseSample(wo, rand, R, Type); }
     }
 
     internal struct DisneySheenBrdf : IBxdf
@@ -50,16 +42,8 @@ namespace Radiantium.Offline.Bxdf
             float cosThetaD = Dot(wi, wh);
             return R * DisneyBsdf.SchlickWeight(cosThetaD);
         }
-        public float Pdf(Vector3 wo, Vector3 wi) { return SameHemisphere(wo, wi) ? AbsCosTheta(wi) / PI : 0.0F; }
-        public SampleBxdfResult Sample(Vector3 wo, Random rand)
-        {
-            Vector3 wi = Normalize(Probability.SquareToCosineHemisphere(rand.NextVec2()));
-            if (wo.Z < 0) { wi.Z *= -1; }
-            if (!SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
-            float pdf = Pdf(wo, wi);
-            Color3F fr = R / PI;
-            return new SampleBxdfResult(wi, fr, pdf, Type);
-        }
+        public float Pdf(Vector3 wo, Vector3 wi) { return DisneyBsdf.DiffusePdf(wo, wi); }
+        public SampleBxdfResult Sample(Vector3 wo, Random rand) { return DisneyBsdf.DiffuseSample(wo, rand, R, Type); }
     }
 
     internal struct DisneyDiffuseBrdf : IBxdf
@@ -73,16 +57,8 @@ namespace Radiantium.Offline.Bxdf
             float fi = DisneyBsdf.SchlickWeight(AbsCosTheta(wi));
             return R * (1 / PI) * (1 - fo / 2) * (1 - fi / 2);
         }
-        public float Pdf(Vector3 wo, Vector3 wi) { return SameHemisphere(wo, wi) ? AbsCosTheta(wi) / PI : 0.0F; }
-        public SampleBxdfResult Sample(Vector3 wo, Random rand)
-        {
-            Vector3 wi = Normalize(Probability.SquareToCosineHemisphere(rand.NextVec2()));
-            if (wo.Z < 0) { wi.Z *= -1; }
-            if (!SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
-            float pdf = Pdf(wo, wi);
-            Color3F fr = R / PI;
-            return new SampleBxdfResult(wi, fr, pdf, Type);
-        }
+        public float Pdf(Vector3 wo, Vector3 wi) { return DisneyBsdf.DiffusePdf(wo, wi); }
+        public SampleBxdfResult Sample(Vector3 wo, Random rand) { return DisneyBsdf.DiffuseSample(wo, rand, R, Type); }
     }
 
     internal struct DisneyDistributionGtr2 : IMicrofacetDistribution
@@ -160,9 +136,33 @@ namespace Radiantium.Offline.Bxdf
         }
     }
 
+    internal struct DisneyFakeSubsurfaceBrdf : IBxdf
+    {
+        public Color3F R;
+        public float Roughness;
+        public BxdfType Type => BxdfType.Reflection | BxdfType.Diffuse;
+        public DisneyFakeSubsurfaceBrdf(Color3F r, float roughness) { R = r; Roughness = roughness; }
+        public Color3F Fr(Vector3 wo, Vector3 wi)
+        {
+            Vector3 wh = wo + wi;
+            if (wh.X == 0 && wh.Y == 0 && wh.Z == 0) { return new Color3F(0); }
+            wh = Normalize(wh);
+            float cosThetaD = Dot(wi, wh);
+            float fss90 = cosThetaD * cosThetaD * Roughness;
+            float fo = DisneyBsdf.SchlickWeight(AbsCosTheta(wo));
+            float fi = DisneyBsdf.SchlickWeight(AbsCosTheta(wi));
+            float fss = Lerp(fo, 1.0f, fss90) * Lerp(fi, 1.0f, fss90);
+            float ss = 1.25f * (fss * (1 / (AbsCosTheta(wo) + AbsCosTheta(wi)) - 0.5f) + 0.5f);
+            return R * (1 / PI) * ss;
+        }
+        public float Pdf(Vector3 wo, Vector3 wi) { return DisneyBsdf.DiffusePdf(wo, wi); }
+        public SampleBxdfResult Sample(Vector3 wo, Random rand) { return DisneyBsdf.DiffuseSample(wo, rand, R, Type); }
+    }
+
     public struct DisneyBsdf : IBxdf
     {
         public Color3F Color;
+        public Color3F ScattingDistance;
         public float Metallic;
         public float Eta;
         public float Roughness;
@@ -172,10 +172,12 @@ namespace Radiantium.Offline.Bxdf
         public float SheenTint;
         public float Clearcoat;
         public float ClearcoatGloss;
-        public float SpeclarScale;
-        public Color3F ScattingDistance;
-        //public float Transmission;
-        public BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Diffuse | BxdfType.Glossy;
+        public float SpecularScale;
+        public float Transmission;
+        public float TransmissionRoughness;
+        public float Flatness;
+        public bool IsThin;
+        public BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Diffuse | BxdfType.Glossy | BxdfType.Specular | BxdfType.SubsurfaceScatting;
         public Color3F ColorTint
         {
             get
@@ -187,18 +189,24 @@ namespace Radiantium.Offline.Bxdf
         public float MetallicWeight => Metallic;
         public float DiffuseWeight => 1 - MetallicWeight;
         public float SheenWeight => Sheen;
-        public (float, float) AnisAlpha
-        {
-            get
-            {
-                float aspect = Sqrt(1 - Anisotropic * 0.9f);
-                float ax = Max(0.001f, Sqr(Roughness) / aspect);
-                float ay = Max(0.001f, Sqr(Roughness) * aspect);
-                return (ax, ay);
-            }
-        }
 
-        public DisneyBsdf(Color3F color, float metallic, float eta, float roughness, float specularTint, float anisotropic, float sheen, float sheenTint, float clearcoat, float clearcoatGloss, float specTrans, float transmission, Color3F scattingDistance)
+        public DisneyBsdf(
+            Color3F color,
+            float metallic,
+            float eta,
+            float roughness,
+            float specularTint,
+            float anisotropic,
+            float sheen,
+            float sheenTint,
+            float clearcoat,
+            float clearcoatGloss,
+            float speclarScale,
+            Color3F scattingDistance,
+            bool isThin,
+            float transmission,
+            float transmissionRoughness,
+            float flatness)
         {
             Color = color;
             Metallic = metallic;
@@ -210,29 +218,53 @@ namespace Radiantium.Offline.Bxdf
             SheenTint = sheenTint;
             Clearcoat = clearcoat;
             ClearcoatGloss = clearcoatGloss;
-            SpeclarScale = specTrans;
+            SpecularScale = speclarScale;
             ScattingDistance = scattingDistance;
-            //Transmission = transmission;
+            IsThin = isThin;
+            Transmission = transmission;
+            TransmissionRoughness = transmissionRoughness;
+            Flatness = flatness;
         }
 
         private Color3F FrImpl(Vector3 wo, Vector3 wi)
         {
+            if (!SameHemisphere(wo, wi))
+            {
+                if (Transmission == 0) { return new Color3F(0.0f); }
+                Color3F transmission = GetSpecularBtdf().Fr(wo, wi);
+                return transmission;
+            }
+            if (CosTheta(wo) < 0 && CosTheta(wi) < 0)
+            {
+                Color3F inner = GetInnerBrdf().Fr(wo, wi);
+                return inner;
+            }
             Color3F diffuse = new Color3F(0.0f);
             if (DiffuseWeight > 0)
             {
+                Color3F disneyDiffuse;
+                if (IsThin)
+                {
+                    Color3F diff = GetDiffuseBrdf().Fr(wo, wi) * (1 - Flatness);
+                    Color3F fakeSS = GetFakeSSBrdf().Fr(wo, wi) * Flatness;
+                    disneyDiffuse = diff + fakeSS;
+                }
+                else
+                {
+                    disneyDiffuse = new Color3F(0.0f);
+                    if (ScattingDistance == Black)
+                    {
+                        disneyDiffuse = GetDiffuseBrdf().Fr(wo, wi);
+                    }
+                }
                 Color3F retro = GetRetroBrdf().Fr(wo, wi);
                 Color3F sheen = new Color3F(0.0f);
-                if (Sheen > 0)
+                if (SheenWeight > 0)
                 {
                     Color3F sheenColor = Lerp(SheenTint, new Color3F(1.0f), ColorTint);
                     sheen = GetSheenBrdf(sheenColor).Fr(wo, wi);
                 }
-                Color3F disneyDiffuse = new Color3F(0.0f);
-                if (ScattingDistance == Black)
-                {
-                    disneyDiffuse = GetDiffuseBrdf().Fr(wo, wi);
-                }
-                diffuse = retro + sheen + disneyDiffuse;
+                diffuse = (retro + sheen + disneyDiffuse) * (1 - Transmission);
             }
             Color3F specular = GetSpecularBrdf().Fr(wo, wi);
             Color3F clearcoat = new Color3F(0.0f);
@@ -250,17 +282,35 @@ namespace Radiantium.Offline.Bxdf
 
         private float PdfImpl(Vector3 wo, Vector3 wi)
         {
-            var (diffuseWeight, specularWeight, clearcoatWeight) = GetSampleWeight();
-
+            var (diffuseWeight, transmissionWeight, specularWeight, clearcoatWeight) = GetSampleWeight();
+            if (CosTheta(wo) < 0)
+            {
+                if (Transmission == 0) { return 0; }
+                float fresnel = Fresnel.DielectricFunc(CosTheta(wo), 1, Eta);
+                fresnel = Math.Clamp(fresnel, 0.1f, 0.9f);
+                if (CosTheta(wi) > 0)
+                {
+                    return GetSpecularBtdf().Pdf(wo, wi) * (1 - fresnel);
+                }
+                else
+                {
+                    return GetInnerBrdf().Pdf(wo, wi) * fresnel;
+                }
+            }
+            if (CosTheta(wi) < 0)
+            {
+                return GetSpecularBtdf().Pdf(wo, wi) * transmissionWeight;
+            }
             float diffusePdf = 0;
-            if (ScattingDistance == Black)
+            if (IsThin || ScattingDistance == Black)
             {
                 diffusePdf = GetDiffuseBrdf().Pdf(wo, wi);
             }
             float specularPdf = GetSpecularBrdf().Pdf(wo, wi);
             float clearcoatPdf = GetClearcoatBrdf().Pdf(wo, wi);
-
-            return diffusePdf * diffuseWeight + specularPdf * specularWeight + clearcoatPdf * clearcoatWeight;
+            return diffusePdf * diffuseWeight +
+                specularPdf * specularWeight +
+                clearcoatPdf * clearcoatWeight;
         }
 
         public float Pdf(Vector3 wo, Vector3 wi)
@@ -270,11 +320,33 @@ namespace Radiantium.Offline.Bxdf
 
         public SampleBxdfResult Sample(Vector3 wo, Random rand)
         {
-            var (diffuseWeight, specularWeight, clearcoatWeight) = GetSampleWeight();
+            if (CosTheta(wo) < 0)
+            {
+                if (Transmission == 0) { return new SampleBxdfResult(); }
+                float fresnel = Fresnel.DielectricFunc(CosTheta(wo), 1, Eta);
+                fresnel = Math.Clamp(fresnel, 0.1f, 0.9f);
+                if (rand.NextFloat() >= fresnel)
+                {
+                    SampleBxdfResult result = GetSpecularBtdf().Sample(wo, rand);
+                    if (result.Pdf == 0) { return new SampleBxdfResult(); }
+                    result.Fr = Fr(wo, result.Wi);
+                    result.Pdf = Pdf(wo, result.Wi);
+                    return result;
+                }
+                else
+                {
+                    SampleBxdfResult result = GetInnerBrdf().Sample(wo, rand);
+                    if (result.Pdf == 0) { return new SampleBxdfResult(); }
+                    result.Fr = Fr(wo, result.Wi);
+                    result.Pdf = Pdf(wo, result.Wi);
+                    return result;
+                }
+            }
+            var (diffuseWeight, transmissionWeight, specularWeight, _) = GetSampleWeight();
             float rng = rand.NextFloat();
             if (rng < diffuseWeight)
             {
-                if (ScattingDistance == Black)
+                if (IsThin || ScattingDistance == Black)
                 {
                     SampleBxdfResult result = GetDiffuseBrdf().Sample(wo, rand);
                     if (result.Pdf == 0) { return new SampleBxdfResult(); }
@@ -293,9 +365,9 @@ namespace Radiantium.Offline.Bxdf
             else
             {
                 rng -= diffuseWeight;
-                if (rng < specularWeight)
+                if (rng < transmissionWeight)
                 {
-                    SampleBxdfResult result = GetSpecularBrdf().Sample(wo, rand);
+                    SampleBxdfResult result = GetSpecularBtdf().Sample(wo, rand);
                     if (result.Pdf == 0) { return new SampleBxdfResult(); }
                     result.Fr = Fr(wo, result.Wi);
                     result.Pdf = Pdf(wo, result.Wi);
@@ -303,11 +375,23 @@ namespace Radiantium.Offline.Bxdf
                 }
                 else
                 {
-                    SampleBxdfResult result = GetClearcoatBrdf().Sample(wo, rand);
-                    if (result.Pdf == 0) { return new SampleBxdfResult(); }
-                    result.Fr = Fr(wo, result.Wi);
-                    result.Pdf = Pdf(wo, result.Wi);
-                    return result;
+                    rng -= transmissionWeight;
+                    if (rng < specularWeight)
+                    {
+                        SampleBxdfResult result = GetSpecularBrdf().Sample(wo, rand);
+                        if (result.Pdf == 0) { return new SampleBxdfResult(); }
+                        result.Fr = Fr(wo, result.Wi);
+                        result.Pdf = Pdf(wo, result.Wi);
+                        return result;
+                    }
+                    else
+                    {
+                        SampleBxdfResult result = GetClearcoatBrdf().Sample(wo, rand);
+                        if (result.Pdf == 0) { return new SampleBxdfResult(); }
+                        result.Fr = Fr(wo, result.Wi);
+                        result.Pdf = Pdf(wo, result.Wi);
+                        return result;
+                    }
                 }
             }
         }
@@ -342,6 +426,26 @@ namespace Radiantium.Offline.Bxdf
             return 2 / (1 + Sqrt(1 + alpha2 * (1 - cosTheta2) / cosTheta2));
         }
 
+        public static float DiffusePdf(Vector3 wo, Vector3 wi) { return SameHemisphere(wo, wi) ? AbsCosTheta(wi) / PI : 0.0F; }
+
+        public static SampleBxdfResult DiffuseSample(Vector3 wo, Random rand, Color3F r, BxdfType type)
+        {
+            Vector3 wi = Normalize(Probability.SquareToCosineHemisphere(rand.NextVec2()));
+            if (wo.Z < 0) { wi.Z *= -1; }
+            if (!SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
+            float pdf = DiffusePdf(wo, wi);
+            Color3F fr = r / PI;
+            return new SampleBxdfResult(wi, fr, pdf, type);
+        }
+
+        private (float, float) AnisAlpha(float roughness)
+        {
+            float aspect = Sqrt(1 - Anisotropic * 0.9f);
+            float ax = Max(0.001f, Sqr(roughness) / aspect);
+            float ay = Max(0.001f, Sqr(roughness) * aspect);
+            return (ax, ay);
+        }
+
         private DisneyRetroBrdf GetRetroBrdf()
         {
             return new DisneyRetroBrdf(DiffuseWeight * Color, Roughness);
@@ -357,13 +461,35 @@ namespace Radiantium.Offline.Bxdf
             return new DisneyDiffuseBrdf(DiffuseWeight * Color);
         }
 
+        private DisneyFakeSubsurfaceBrdf GetFakeSSBrdf()
+        {
+            return new DisneyFakeSubsurfaceBrdf(DiffuseWeight * Color, Roughness);
+        }
+
         private MicrofacetReflectionBrdf<DisneyFresnel, DisneyDistributionGtr2> GetSpecularBrdf()
         {
-            var (ax, ay) = AnisAlpha;
+            var (ax, ay) = AnisAlpha(Roughness);
             DisneyDistributionGtr2 dist = new DisneyDistributionGtr2(ax, ay);
             Color3F r0 = ColorTint * SchlickR0FromEta(Eta);
-            DisneyFresnel fresnel = new DisneyFresnel(r0, Color, MetallicWeight, Eta, SpecularTint, SpeclarScale);
+            DisneyFresnel fresnel = new DisneyFresnel(r0, Color, MetallicWeight, Eta, SpecularTint, SpecularScale);
             return new MicrofacetReflectionBrdf<DisneyFresnel, DisneyDistributionGtr2>(new Color3F(1.0f), fresnel, dist);
+        }
+
+        private MicrofacetTransmissionBtdf<DisneyDistributionGtr2> GetSpecularBtdf()
+        {
+            var (ax, ay) = AnisAlpha(TransmissionRoughness);
+            Color3F t = (1 - Metallic) * Transmission * Sqrt(Color);
+            DisneyDistributionGtr2 dist = new DisneyDistributionGtr2(ax, ay);
+            return new MicrofacetTransmissionBtdf<DisneyDistributionGtr2>(t, 1, Eta, dist);
+        }
+
+        private MicrofacetReflectionBrdf<Fresnel.Dielectric, DisneyDistributionGtr2> GetInnerBrdf()
+        {
+            Color3F t = Transmission * Color;
+            var (ax, ay) = AnisAlpha(TransmissionRoughness);
+            Fresnel.Dielectric fresnel = new Fresnel.Dielectric(1, Eta);
+            DisneyDistributionGtr2 dist = new DisneyDistributionGtr2(ax, ay);
+            return new MicrofacetReflectionBrdf<Fresnel.Dielectric, DisneyDistributionGtr2>(t, fresnel, dist);
         }
 
         private DisneyClearcoatBrdf GetClearcoatBrdf()
@@ -372,18 +498,15 @@ namespace Radiantium.Offline.Bxdf
             return new DisneyClearcoatBrdf(Clearcoat, gloss);
         }
 
-        private (float, float, float) GetSampleWeight()
+        private (float, float, float, float) GetSampleWeight()
         {
             float a = Math.Clamp(Color.GetLuminance() * (1 - Metallic), 0.3f, 0.7f);
             float b = 1 - a;
-
-            //float diff = a * (1 - Transmission);
-            //float tran = a * Transmission;
-            float diff = a;
+            float diff = a * (1 - Transmission);
+            float tran = a * Transmission;
             float spec = b * 2 / (2 + Clearcoat);
             float cc = b * Clearcoat / (2 + Clearcoat);
-
-            return (diff, spec, cc);
+            return (diff, tran, spec, cc);
         }
 
         public SeparableBssrdf<NormalizedDiffusionRadialProfile> GetBssrdf(Intersection po)

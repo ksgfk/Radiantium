@@ -74,15 +74,19 @@
           0.5
         ],
         "metallic": 0,
-        "roughness": 1,
-        "specular": 0,
+        "roughness": 0.3,
+        "specular": 1,
         "specular_tint": 0,
         "anisotropic": 0,
         "sheen": 0,
         "sheen_tint": 0,
         "clearcoat": 0,
         "clearcoat_gloss": 0,
-        "scatting_distance": 0.3
+        "scatting_distance": 0,
+        "transmission": 0.75,
+        "transmission_roughness": 0.3,
+        "is_thin": false,
+        "flatness": 0
       },
       "shape": {
         "type": "sphere",

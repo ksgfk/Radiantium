@@ -17,17 +17,35 @@ namespace Radiantium.Offline.Materials
         public Texture2D Clearcoat { get; }
         public Texture2D ClearcoatGloss { get; }
         public Texture2D SpecularScale { get; }
-        public Texture2D Transmission { get; }
         public Texture2D ScattingDistance { get; }
+        public bool IsThin { get; }
+        public Texture2D Transmission { get; }
+        public Texture2D TransmissionRoughness { get; }
+        public Texture2D Flatness { get; }
         public override Material BssrdfAdapter { get; }
         public override BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Diffuse | BxdfType.Glossy;
 
-        public Disney(Texture2D baseColor, Texture2D metallic, Texture2D roughness, Texture2D transmission, Texture2D eta, Texture2D specularScale, Texture2D specularTint, Texture2D anisotropic, Texture2D sheen, Texture2D sheenTint, Texture2D clearcoat, Texture2D clearcoatGloss, Texture2D scattingDistance)
+        public Disney(
+            Texture2D baseColor,
+            Texture2D metallic,
+            Texture2D roughness,
+            Texture2D eta,
+            Texture2D specularScale,
+            Texture2D specularTint,
+            Texture2D anisotropic,
+            Texture2D sheen,
+            Texture2D sheenTint,
+            Texture2D clearcoat,
+            Texture2D clearcoatGloss,
+            Texture2D scattingDistance,
+            bool isThin,
+            Texture2D transmission,
+            Texture2D transmissionRoughness,
+            Texture2D flatness)
         {
             BaseColor = baseColor ?? throw new ArgumentNullException(nameof(baseColor));
             Metallic = metallic ?? throw new ArgumentNullException(nameof(metallic));
             Roughness = roughness ?? throw new ArgumentNullException(nameof(roughness));
-            Transmission = transmission ?? throw new ArgumentNullException(nameof(transmission));
             Eta = eta ?? throw new ArgumentNullException(nameof(eta));
             SpecularScale = specularScale ?? throw new ArgumentNullException(nameof(specularScale));
             SpecularTint = specularTint ?? throw new ArgumentNullException(nameof(specularTint));
@@ -37,7 +55,11 @@ namespace Radiantium.Offline.Materials
             Clearcoat = clearcoat ?? throw new ArgumentNullException(nameof(clearcoat));
             ClearcoatGloss = clearcoatGloss ?? throw new ArgumentNullException(nameof(clearcoatGloss));
             ScattingDistance = scattingDistance ?? throw new ArgumentNullException(nameof(scattingDistance));
+            IsThin = isThin;
+            Transmission = transmission ?? throw new ArgumentNullException(nameof(transmission));
+            TransmissionRoughness = transmissionRoughness ?? throw new ArgumentNullException(nameof(transmissionRoughness));
             BssrdfAdapter = new BssrdfAdapter(Eta);
+            Flatness = flatness ?? throw new ArgumentNullException(nameof(flatness));
         }
 
         private DisneyBsdf CreateBsdf(Vector2 uv)
@@ -54,8 +76,11 @@ namespace Radiantium.Offline.Materials
                 Clearcoat.Sample(uv).R,
                 ClearcoatGloss.Sample(uv).R,
                 SpecularScale.Sample(uv).R,
+                ScattingDistance.Sample(uv),
+                IsThin,
                 Transmission.Sample(uv).R,
-                ScattingDistance.Sample(uv)
+                TransmissionRoughness.Sample(uv).R,
+                Flatness.Sample(uv).R
             );
         }
 
