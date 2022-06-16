@@ -38,7 +38,10 @@ namespace Radiantium.Offline
     {
         public float G;
 
-        public HenyeyGreenstein(float g) { G = g; }
+        public HenyeyGreenstein(float g)
+        {
+            G = Math.Clamp(g, -0.999f, 0.999f);
+        }
 
         public float P(Vector3 wo, Vector3 wi)
         {
