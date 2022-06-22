@@ -62,5 +62,24 @@ namespace Radiantium.Offline.Lights
             }
             return new LightSampleResult(shape.P, li, wi, pdf);
         }
+
+        public override LightEmitResult SampleEmit(Random rand)
+        {
+            ShapeSurfacePoint samplePoint = Shape.Sample(rand, out float pdfPos);
+            Vector3 localW = Normalize(Probability.SquareToCosineHemisphere(rand.NextVec2()));
+            float pdfDir = Probability.SquareToCosineHemispherePdf(localW);
+            Vector3 w = samplePoint.Shading.ToWorld(localW);
+            return new LightEmitResult(samplePoint.P, w, samplePoint.N, samplePoint.UV, Lemit, new LightEmitPdf(pdfPos, pdfDir));
+        }
+
+        public override LightEmitPdf EmitPdf(Vector3 pos, Vector3 dir, Vector3 normal)
+        {
+            Coordinate coord = new Coordinate(normal);
+            ShapeSurfacePoint point = new ShapeSurfacePoint(pos, new Vector2(), coord);
+            float pdfPos = Shape.Pdf(point);
+            Vector3 localDir = coord.ToLocal(dir);
+            float pdfDir = Probability.SquareToCosineHemispherePdf(localDir);
+            return new LightEmitPdf(pdfPos, Coordinate.CosTheta(localDir) < 0 ? 0 : pdfDir);
+        }
     }
 }

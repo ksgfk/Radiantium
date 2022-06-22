@@ -84,19 +84,19 @@ namespace Radiantium.Offline.Materials
             );
         }
 
-        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
+        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
-            return CreateBsdf(inct.UV).Fr(wo, wi);
+            return CreateBsdf(inct.UV).Fr(wo, wi, mode);
         }
 
-        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
+        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
-            return CreateBsdf(inct.UV).Pdf(wo, wi);
+            return CreateBsdf(inct.UV).Pdf(wo, wi, mode);
         }
 
-        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
+        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand, TransportMode mode)
         {
-            return CreateBsdf(inct.UV).Sample(wo, rand);
+            return CreateBsdf(inct.UV).Sample(wo, rand, mode);
         }
 
         public override SampleBssrdfResult SamplePi(Intersection po, Scene scene, Random rand)

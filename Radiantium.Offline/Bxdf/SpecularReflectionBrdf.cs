@@ -13,17 +13,17 @@ namespace Radiantium.Offline.Bxdf
             R = r;
         }
 
-        public Color3F Fr(Vector3 wo, Vector3 wi)
+        public Color3F Fr(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             return new Color3F(0.0f);
         }
 
-        public float Pdf(Vector3 wo, Vector3 wi)
+        public float Pdf(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             return 0.0f;
         }
 
-        public SampleBxdfResult Sample(Vector3 wo, Random rand)
+        public SampleBxdfResult Sample(Vector3 wo, Random rand, TransportMode mode)
         {
             if (Coordinate.AbsCosTheta(wo) == 0)
             {

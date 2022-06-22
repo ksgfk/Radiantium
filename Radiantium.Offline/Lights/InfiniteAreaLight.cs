@@ -97,5 +97,15 @@ namespace Radiantium.Offline.Lights
             Vector3 wi = Vector3.Normalize(pos - inct.P);
             return new LightSampleResult(pos, radiance, wi, pdf);
         }
+
+        public override LightEmitResult SampleEmit(Random rand)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override LightEmitPdf EmitPdf(Vector3 pos, Vector3 dir, Vector3 normal)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

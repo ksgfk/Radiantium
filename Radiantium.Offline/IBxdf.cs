@@ -46,10 +46,10 @@ namespace Radiantium.Offline
     {
         BxdfType Type { get; }
 
-        Color3F Fr(Vector3 wo, Vector3 wi);
+        Color3F Fr(Vector3 wo, Vector3 wi, TransportMode mode);
 
-        SampleBxdfResult Sample(Vector3 wo, Random rand);
+        SampleBxdfResult Sample(Vector3 wo, Random rand, TransportMode mode);
 
-        float Pdf(Vector3 wo, Vector3 wi);
+        float Pdf(Vector3 wo, Vector3 wi, TransportMode mode);
     }
 }

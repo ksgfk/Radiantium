@@ -13,17 +13,17 @@ namespace Radiantium.Offline.Bxdf
             R = r;
         }
 
-        public Color3F Fr(Vector3 wo, Vector3 wi)
+        public Color3F Fr(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             return Coordinate.SameHemisphere(wo, wi) ? R / MathF.PI : Color3F.Black;
         }
 
-        public float Pdf(Vector3 wo, Vector3 wi)
+        public float Pdf(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             return Coordinate.SameHemisphere(wo, wi) ? Coordinate.AbsCosTheta(wi) / MathF.PI : 0.0F;
         }
 
-        public SampleBxdfResult Sample(Vector3 wo, Random rand)
+        public SampleBxdfResult Sample(Vector3 wo, Random rand, TransportMode mode)
         {
             Vector3 wi = Vector3.Normalize(Probability.SquareToCosineHemisphere(rand.NextVec2()));
             if (wo.Z < 0)
@@ -31,7 +31,7 @@ namespace Radiantium.Offline.Bxdf
                 wi.Z *= -1;
             }
             if (!Coordinate.SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
-            float pdf = Pdf(wo, wi);
+            float pdf = Pdf(wo, wi, mode);
             Color3F fr = R / MathF.PI;
             return new SampleBxdfResult(wi, fr, pdf, Type);
         }

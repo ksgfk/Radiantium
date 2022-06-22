@@ -21,7 +21,7 @@ namespace Radiantium.Offline.Bxdf
             Distribution = distribution;
         }
 
-        public Color3F Fr(Vector3 wo, Vector3 wi)
+        public Color3F Fr(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             if (SameHemisphere(wo, wi)) { return new Color3F(); }
             float cosThetaO = CosTheta(wo);
@@ -36,7 +36,7 @@ namespace Radiantium.Offline.Bxdf
             if (Dot(wo, wh) * Dot(wi, wh) > 0) { return new Color3F(); }
             Color3F f = Fresnel.Eval(Dot(wo, wh));
             float sqrtDenom = Dot(wo, wh) + eta * Dot(wi, wh);
-            float factor = 1 / eta;
+            float factor = mode == TransportMode.Radiance ? (1 / eta) : 1;
             float d = Distribution.D(wh);
             float g = Distribution.G(wo, wi);
             return (1 - f) * T *
@@ -44,7 +44,7 @@ namespace Radiantium.Offline.Bxdf
                 (cosThetaI * cosThetaO * sqrtDenom * sqrtDenom));
         }
 
-        public float Pdf(Vector3 wo, Vector3 wi)
+        public float Pdf(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             if (SameHemisphere(wo, wi)) { return 0.0f; }
             bool entering = CosTheta(wo) > 0;
@@ -59,7 +59,7 @@ namespace Radiantium.Offline.Bxdf
             return result;
         }
 
-        public SampleBxdfResult Sample(Vector3 wo, Random rand)
+        public SampleBxdfResult Sample(Vector3 wo, Random rand, TransportMode mode)
         {
             if (wo.Z == 0) { return new SampleBxdfResult(); }
             Vector3 wh = Distribution.SampleWh(wo, rand);
@@ -69,8 +69,8 @@ namespace Radiantium.Offline.Bxdf
             float etaT = entering ? Fresnel.EtaT : Fresnel.EtaI;
             float eta = etaI / etaT;
             if (!Refract(wo, wh, eta, out Vector3 wi)) { return new SampleBxdfResult(); }
-            Color3F btdf = Fr(wo, wi);
-            float pdf = Pdf(wo, wi);
+            Color3F btdf = Fr(wo, wi, mode);
+            float pdf = Pdf(wo, wi, mode);
             if (!btdf.IsValid || float.IsInfinity(pdf)) { return new SampleBxdfResult(); }
             return new SampleBxdfResult(wi, btdf, pdf, Type);
         }

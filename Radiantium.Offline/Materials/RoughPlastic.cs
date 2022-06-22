@@ -51,7 +51,8 @@ namespace Radiantium.Offline.Materials
         }
 
         private Color3F FrImpl<T>(Vector3 wo, Vector3 wi, T dist,
-            (Color3F, float, float) param) where T : IMicrofacetDistribution
+            (Color3F, float, float) param,
+            TransportMode mode) where T : IMicrofacetDistribution
         {
             if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0)
             {
@@ -61,29 +62,30 @@ namespace Radiantium.Offline.Materials
                 }
             }
             var (r, kd, ks) = param;
-            Color3F diffuse = new LambertianReflectionBrdf(r).Fr(wo, wi);
+            Color3F diffuse = new LambertianReflectionBrdf(r).Fr(wo, wi, mode);
             Color3F glossy = new MicrofacetReflectionBrdf<Fresnel.Dielectric, T>(
                 r,
                 new Fresnel.Dielectric(EtaI, EtaT),
                 dist
-            ).Fr(wo, wi);
+            ).Fr(wo, wi, mode);
             Color3F brdf = kd * diffuse + ks * glossy;
             return brdf;
         }
 
-        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
+        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
             var (roughness, anis) = SampleRoughness(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann => FrImpl(wo, wi, new Microfacet.Beckmann(roughness, anis), SampleParams(inct.UV)),
-                MicrofacetDistributionType.GGX => FrImpl(wo, wi, new Microfacet.GGX(roughness, anis), SampleParams(inct.UV)),
+                MicrofacetDistributionType.Beckmann => FrImpl(wo, wi, new Microfacet.Beckmann(roughness, anis), SampleParams(inct.UV), mode),
+                MicrofacetDistributionType.GGX => FrImpl(wo, wi, new Microfacet.GGX(roughness, anis), SampleParams(inct.UV), mode),
                 _ => new Color3F(0.0f),
             };
         }
 
         private float PdfImpl<T>(Vector3 wo, Vector3 wi, T dist,
-            (Color3F, float, float) param) where T : IMicrofacetDistribution
+            (Color3F, float, float) param,
+            TransportMode mode) where T : IMicrofacetDistribution
         {
             if (CosTheta(wo) <= 0 || CosTheta(wi) <= 0)
             {
@@ -94,28 +96,28 @@ namespace Radiantium.Offline.Materials
             }
             var (r, kd, ks) = param;
             float p = GlossyProbability(kd, ks);
-            float diffuse = new LambertianReflectionBrdf(r).Pdf(wo, wi);
+            float diffuse = new LambertianReflectionBrdf(r).Pdf(wo, wi, mode);
             float glossy = new MicrofacetReflectionBrdf<Fresnel.Dielectric, T>(
                 r,
                 new Fresnel.Dielectric(EtaI, EtaT),
                 dist
-            ).Pdf(wo, wi);
+            ).Pdf(wo, wi, mode);
             float pdf = (1 - p) * diffuse + p * glossy;
             return pdf;
         }
 
-        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
+        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
             var (roughness, anis) = SampleRoughness(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann => PdfImpl(wo, wi, new Microfacet.Beckmann(roughness, anis), SampleParams(inct.UV)),
-                MicrofacetDistributionType.GGX => PdfImpl(wo, wi, new Microfacet.GGX(roughness, anis), SampleParams(inct.UV)),
+                MicrofacetDistributionType.Beckmann => PdfImpl(wo, wi, new Microfacet.Beckmann(roughness, anis), SampleParams(inct.UV), mode),
+                MicrofacetDistributionType.GGX => PdfImpl(wo, wi, new Microfacet.GGX(roughness, anis), SampleParams(inct.UV), mode),
                 _ => 0.0f,
             };
         }
 
-        private SampleBxdfResult SampleImpl<T>(Vector3 wo, Vector2 uv, Random rand, T dist)
+        private SampleBxdfResult SampleImpl<T>(Vector3 wo, Vector2 uv, Random rand, T dist, TransportMode mode)
             where T : IMicrofacetDistribution
         {
             if (CosTheta(wo) <= 0)
@@ -132,8 +134,8 @@ namespace Radiantium.Offline.Materials
                 r,
                 new Fresnel.Dielectric(EtaI, EtaT),
                 dist
-            ).Sample(wo, rand);
-            SampleBxdfResult diffuse = new LambertianReflectionBrdf(r).Sample(wo, rand);
+            ).Sample(wo, rand, mode);
+            SampleBxdfResult diffuse = new LambertianReflectionBrdf(r).Sample(wo, rand, mode);
             Vector3 wi;
             BxdfType type;
             if (rand.NextFloat() < p)
@@ -146,18 +148,18 @@ namespace Radiantium.Offline.Materials
                 wi = diffuse.Wi;
                 type = diffuse.Type;
             }
-            float pdf = PdfImpl(wo, wi, dist, param);
-            Color3F fr = FrImpl(wo, wi, dist, param);
+            float pdf = PdfImpl(wo, wi, dist, param, mode);
+            Color3F fr = FrImpl(wo, wi, dist, param, mode);
             return new SampleBxdfResult(wi, fr, pdf, type);
         }
 
-        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
+        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand, TransportMode mode)
         {
             var (roughness, anis) = SampleRoughness(inct.UV);
             return Dist switch
             {
-                MicrofacetDistributionType.Beckmann => SampleImpl(wo, inct.UV, rand, new Microfacet.Beckmann(roughness, anis)),
-                MicrofacetDistributionType.GGX => SampleImpl(wo, inct.UV, rand, new Microfacet.GGX(roughness, anis)),
+                MicrofacetDistributionType.Beckmann => SampleImpl(wo, inct.UV, rand, new Microfacet.Beckmann(roughness, anis), mode),
+                MicrofacetDistributionType.GGX => SampleImpl(wo, inct.UV, rand, new Microfacet.GGX(roughness, anis), mode),
                 _ => new SampleBxdfResult(),
             };
         }

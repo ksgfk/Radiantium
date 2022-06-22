@@ -98,7 +98,8 @@ namespace Radiantium.Core
                 {
                     for (var j = 0; j < width; j++)
                     {
-                        var k = height - i - 1;
+                        //var k = height - i - 1;
+                        var k = i;
                         Color3F color = colorBuffer.GetRGB(j, k);
                         buffer[0] = color.R * Quantum.Max;
                         buffer[1] = color.G * Quantum.Max;

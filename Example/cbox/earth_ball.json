@@ -3,7 +3,8 @@
     "spp": 32
   },
   "integrator": {
-    "type": "path",
+    "type": "gbuffer",
+    "name":"UV",
     "method": "Mis",
     "max_depth": -1,
     "min_depth": 9,

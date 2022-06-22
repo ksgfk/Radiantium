@@ -20,17 +20,17 @@ namespace Radiantium.Offline.Bxdf
             EtaB = etaB;
         }
 
-        public Color3F Fr(Vector3 wo, Vector3 wi)
+        public Color3F Fr(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             return Color3F.Black;
         }
 
-        public float Pdf(Vector3 wo, Vector3 wi)
+        public float Pdf(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             return 0.0f;
         }
 
-        public SampleBxdfResult Sample(Vector3 wo, Random rand)
+        public SampleBxdfResult Sample(Vector3 wo, Random rand, TransportMode mode)
         {
             float f = Fresnel.DielectricFunc(Coordinate.CosTheta(wo), EtaA, EtaB);
             if (rand.NextFloat() < f)
@@ -54,7 +54,10 @@ namespace Radiantium.Offline.Bxdf
                     return new SampleBxdfResult();
                 }
                 Color3F ft = T * (1.0f - f);
-                ft *= (etaI * etaI) / (etaT * etaT);
+                if (mode == TransportMode.Radiance)
+                {
+                    ft *= (etaI * etaI) / (etaT * etaT);
+                }
                 ft /= Coordinate.AbsCosTheta(wi);
                 return new SampleBxdfResult(wi, ft, 1 - f, BxdfType.Transmission | BxdfType.Specular);
             }

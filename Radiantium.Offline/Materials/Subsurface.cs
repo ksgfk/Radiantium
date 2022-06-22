@@ -27,25 +27,25 @@ namespace Radiantium.Offline.Materials
             BssrdfAdapter = new BssrdfAdapter(new ConstColorTexture2D(new Color3F(EtaB / EtaA)));
         }
 
-        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
+        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
             Color3F r = R.Sample(inct.UV);
             Color3F t = T.Sample(inct.UV);
-            return new FresnelSpecularBsdf(r, t, EtaA, EtaB).Fr(wo, wi);
+            return new FresnelSpecularBsdf(r, t, EtaA, EtaB).Fr(wo, wi, mode);
         }
 
-        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
+        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
             Color3F r = R.Sample(inct.UV);
             Color3F t = new Color3F(0.0f);
-            return new FresnelSpecularBsdf(r, t, EtaA, EtaB).Pdf(wo, wi);
+            return new FresnelSpecularBsdf(r, t, EtaA, EtaB).Pdf(wo, wi, mode);
         }
 
-        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
+        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand, TransportMode mode)
         {
             Color3F r = R.Sample(inct.UV);
             Color3F t = T.Sample(inct.UV);
-            SampleBxdfResult sample = new FresnelSpecularBsdf(r, t, EtaA, EtaB).Sample(wo, rand);
+            SampleBxdfResult sample = new FresnelSpecularBsdf(r, t, EtaA, EtaB).Sample(wo, rand, mode);
             Color3F sd = ScattingDistance.Sample(inct.UV);
             if (sd != Color3F.Black)
             {

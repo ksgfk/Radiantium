@@ -87,8 +87,8 @@ namespace Radiantium.Offline.Integrators
                         bounces--;
                         continue;
                     }
-                    radiance += coeff * SampleLightToEstimateDirectSurface(scene, rand, inct, wo, rayEnv);
-                    SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
+                    radiance += coeff * SampleLightToEstimateDirectSurface(scene, rand, inct, rayEnv);
+                    SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand, TransportMode.Radiance);
                     isSpecularPath = (sample.Type & BxdfType.Specular) != 0;
                     if (sample.Pdf > 0.0f)
                     {
@@ -117,7 +117,7 @@ namespace Radiantium.Offline.Integrators
 
         private Color3F SampleLightToEstimateDirectSurface(
             Scene scene, Random rand,
-            Intersection inct, Vector3 wo, Medium? rayEnv)
+            Intersection inct, Medium? rayEnv)
         {
             Color3F result = new Color3F(0.0f);
             switch (Strategy)
@@ -127,7 +127,7 @@ namespace Radiantium.Offline.Integrators
                         float lightPdf = scene.SampleLight(rand, out Light light);
                         if (lightPdf > 0.0f)
                         {
-                            result += EstimateDirectSurface(scene, rand, light, inct, wo, rayEnv) / lightPdf;
+                            result += EstimateDirectSurface(scene, rand, light, inct, rayEnv) / lightPdf;
                         }
                     }
                     break;
@@ -135,7 +135,7 @@ namespace Radiantium.Offline.Integrators
                     {
                         foreach (Light light in scene.Lights)
                         {
-                            result += EstimateDirectSurface(scene, rand, light, inct, wo, rayEnv);
+                            result += EstimateDirectSurface(scene, rand, light, inct, rayEnv);
                         }
                     }
                     break;
@@ -145,14 +145,15 @@ namespace Radiantium.Offline.Integrators
 
         private Color3F EstimateDirectSurface(
             Scene scene, Random rand, Light light,
-            Intersection inct, Vector3 wo, Medium? medium)
+            Intersection inct, Medium? medium)
         {
             Color3F le = new Color3F(0.0f);
+            Vector3 wo = inct.Wr;
             (Vector3 lightP, Vector3 lightWi, float lightPdf, Color3F lightLi) = light.SampleLi(inct, rand);
             if (lightPdf > 0.0f && lightLi != Color3F.Black)
             {
-                Color3F fr = inct.Surface.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
-                float scatteringPdf = inct.Surface.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct);
+                Color3F fr = inct.Surface.Fr(inct.ToLocal(wo), inct.ToLocal(lightWi), inct, TransportMode.Radiance);
+                float scatteringPdf = inct.Surface.Pdf(inct.ToLocal(wo), inct.ToLocal(lightWi), inct, TransportMode.Radiance);
                 if (fr != Color3F.Black)
                 {
                     lightLi *= scene.Transmittance(inct.P, lightP, medium, rand);
@@ -173,7 +174,7 @@ namespace Radiantium.Offline.Integrators
             }
             if (!light.IsDelta)
             {
-                SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand);
+                SampleBxdfResult sample = inct.Surface.Sample(inct.ToLocal(wo), inct, rand, TransportMode.Radiance);
                 Color3F fr = sample.Fr * AbsCosTheta(sample.Wi);
                 float scatteringPdf = sample.Pdf;
                 bool sampledSpecular = (sample.Type & BxdfType.Specular) != 0;

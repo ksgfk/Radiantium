@@ -22,7 +22,7 @@ namespace Radiantium.Offline.Bxdf
             Distribution = distribution;
         }
 
-        public Color3F Fr(Vector3 wo, Vector3 wi)
+        public Color3F Fr(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             if (!SameHemisphere(wo, wi)) { return new Color3F(0.0f); }
             float cosThetaO = AbsCosTheta(wo);
@@ -38,14 +38,14 @@ namespace Radiantium.Offline.Bxdf
             return result;
         }
 
-        public float Pdf(Vector3 wo, Vector3 wi)
+        public float Pdf(Vector3 wo, Vector3 wi, TransportMode mode)
         {
             if (!SameHemisphere(wo, wi)) { return 0; }
             Vector3 wh = Normalize(wo + wi);
             return Distribution.Pdf(wo, wh) / (4 * Dot(wo, wh));
         }
 
-        public SampleBxdfResult Sample(Vector3 wo, Random rand)
+        public SampleBxdfResult Sample(Vector3 wo, Random rand, TransportMode mode)
         {
             if (CosTheta(wo) == 0) { return new SampleBxdfResult(); }
             Vector3 wh = Distribution.SampleWh(wo, rand);
@@ -53,7 +53,7 @@ namespace Radiantium.Offline.Bxdf
             Vector3 wi = Reflect(-wo, wh); //reflect
             if (!SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
             float pdf = Distribution.Pdf(wo, wh) / (4 * Dot(wi, wh));
-            Color3F fr = Fr(wo, wi);
+            Color3F fr = Fr(wo, wi, mode);
             return new SampleBxdfResult(wi, fr, pdf, Type);
         }
     }

@@ -6,7 +6,8 @@ namespace Radiantium.Offline.Integrators
     public enum GBufferType
     {
         Normal,
-        Depth
+        Depth,
+        UV
     }
 
     public class GBufferVisualization : Integrator
@@ -32,6 +33,9 @@ namespace Radiantium.Offline.Integrators
                 case GBufferType.Depth:
                     float depth = inct.T / (ray.MaxT - ray.MinT);
                     return new Color3F(Math.Clamp(depth, 0, 1));
+                case GBufferType.UV:
+                    Vector2 uv = inct.UV;
+                    return new Color3F(uv.X, uv.Y, 0.0f);
                 default:
                     return new Color3F();
             }

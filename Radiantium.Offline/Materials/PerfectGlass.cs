@@ -20,19 +20,19 @@ namespace Radiantium.Offline.Materials
             EtaB = etaB;
         }
 
-        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
+        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
-            return new FresnelSpecularBsdf(R.Sample(inct.UV), T.Sample(inct.UV), EtaA, EtaB).Fr(wo, wi);
+            return new FresnelSpecularBsdf(R.Sample(inct.UV), T.Sample(inct.UV), EtaA, EtaB).Fr(wo, wi, mode);
         }
 
-        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
+        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
-            return new FresnelSpecularBsdf(R.Sample(inct.UV), T.Sample(inct.UV), EtaA, EtaB).Pdf(wo, wi);
+            return new FresnelSpecularBsdf(R.Sample(inct.UV), T.Sample(inct.UV), EtaA, EtaB).Pdf(wo, wi, mode);
         }
 
-        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
+        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand, TransportMode mode)
         {
-            return new FresnelSpecularBsdf(R.Sample(inct.UV), T.Sample(inct.UV), EtaA, EtaB).Sample(wo, rand);
+            return new FresnelSpecularBsdf(R.Sample(inct.UV), T.Sample(inct.UV), EtaA, EtaB).Sample(wo, rand, mode);
         }
     }
 }

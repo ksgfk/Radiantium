@@ -222,22 +222,25 @@ namespace Radiantium.Offline
             Eta = eta ?? throw new ArgumentNullException(nameof(eta));
         }
 
-        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
+        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
             float eta = Eta.Sample(inct.UV).R;
             float cI = 1 - 2 * BssrdfUtility.FresnelMoment(1 / eta);
             float fr = Fresnel.DielectricFunc(CosTheta(wi), 1, eta);
             Color3F f = new Color3F((1 - fr) / (cI * PI));
-            f *= eta * eta;
+            if (mode == TransportMode.Radiance)
+            {
+                f *= eta * eta;
+            }
             return f;
         }
 
-        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
+        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
             return SameHemisphere(wo, wi) ? AbsCosTheta(wi) / PI : 0.0F;
         }
 
-        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
+        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand, TransportMode mode)
         {
             Vector3 wi = Normalize(Probability.SquareToCosineHemisphere(rand.NextVec2()));
             if (wo.Z < 0)
@@ -245,8 +248,8 @@ namespace Radiantium.Offline
                 wi.Z *= -1;
             }
             if (!SameHemisphere(wo, wi)) { return new SampleBxdfResult(); }
-            float pdf = Pdf(wo, wi, inct);
-            Color3F fr = Fr(wo, wi, inct);
+            float pdf = Pdf(wo, wi, inct, mode);
+            Color3F fr = Fr(wo, wi, inct, mode);
             return new SampleBxdfResult(wi, fr, pdf, Type);
         }
     }

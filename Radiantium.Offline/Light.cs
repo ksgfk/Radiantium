@@ -58,6 +58,38 @@ namespace Radiantium.Offline
         }
     }
 
+    public struct LightEmitResult
+    {
+        public Vector3 Pos;
+        public Vector3 Dir;
+        public Vector3 Normal;
+        public Vector2 UV;
+        public Color3F Radiance;
+        public LightEmitPdf Pdf;
+
+        public LightEmitResult(Vector3 pos, Vector3 dir, Vector3 normal, Vector2 uV, Color3F radiance, LightEmitPdf pdf)
+        {
+            Pos = pos;
+            Dir = dir;
+            Normal = normal;
+            UV = uV;
+            Radiance = radiance;
+            Pdf = pdf;
+        }
+    }
+
+    public struct LightEmitPdf
+    {
+        public float PdfPos;
+        public float PdfDir;
+
+        public LightEmitPdf(float pdfPos, float pdfDir)
+        {
+            PdfPos = pdfPos;
+            PdfDir = pdfDir;
+        }
+    }
+
     public abstract class Light
     {
         public abstract Color3F Power { get; }
@@ -74,6 +106,10 @@ namespace Radiantium.Offline
         {
             return new Color3F(0.0f);
         }
+
+        public abstract LightEmitResult SampleEmit(Random rand);
+
+        public abstract LightEmitPdf EmitPdf(Vector3 pos, Vector3 dir, Vector3 normal);
     }
 
     public abstract class AreaLight : Light

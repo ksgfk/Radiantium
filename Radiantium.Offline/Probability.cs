@@ -101,7 +101,7 @@ namespace Radiantium.Offline
 
         public static float SquareToCosineHemispherePdf(Vector3 v)
         {
-            return MathF.Abs(v.Length() - 1.0f) <= float.Epsilon && v.Z >= 0 ? v.Z / (MathF.PI) : 0.0f;
+            return Coordinate.CosTheta(v) / MathF.PI;
         }
 
         public static Vector3 SquareToBeckmann(Vector2 sample, float alpha)

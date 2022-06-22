@@ -16,7 +16,7 @@ namespace Radiantium.Offline.Materials
             IsTwoSide = isTwoSide;
         }
 
-        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct)
+        public override Color3F Fr(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
             if (Coordinate.CosTheta(wo) <= 0 || Coordinate.CosTheta(wi) <= 0)
             {
@@ -25,10 +25,10 @@ namespace Radiantium.Offline.Materials
                     return new Color3F(0.0f);
                 }
             }
-            return new LambertianReflectionBrdf(Kd.Sample(inct.UV)).Fr(wo, wi);
+            return new LambertianReflectionBrdf(Kd.Sample(inct.UV)).Fr(wo, wi, mode);
         }
 
-        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct)
+        public override float Pdf(Vector3 wo, Vector3 wi, Intersection inct, TransportMode mode)
         {
             if (Coordinate.CosTheta(wo) <= 0 || Coordinate.CosTheta(wi) <= 0)
             {
@@ -37,10 +37,10 @@ namespace Radiantium.Offline.Materials
                     return 0.0f;
                 }
             }
-            return new LambertianReflectionBrdf(Kd.Sample(inct.UV)).Pdf(wo, wi);
+            return new LambertianReflectionBrdf(Kd.Sample(inct.UV)).Pdf(wo, wi, mode);
         }
 
-        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand)
+        public override SampleBxdfResult Sample(Vector3 wo, Intersection inct, Random rand, TransportMode mode)
         {
             if (Coordinate.CosTheta(wo) <= 0)
             {
@@ -49,7 +49,7 @@ namespace Radiantium.Offline.Materials
                     return new SampleBxdfResult();
                 }
             }
-            return new LambertianReflectionBrdf(Kd.Sample(inct.UV)).Sample(wo, rand);
+            return new LambertianReflectionBrdf(Kd.Sample(inct.UV)).Sample(wo, rand, mode);
         }
     }
 }
