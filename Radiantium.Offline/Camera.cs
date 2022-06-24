@@ -6,18 +6,6 @@ using static Radiantium.Offline.Coordinate;
 
 namespace Radiantium.Offline
 {
-    public struct CameraWeResult
-    {
-        public Color3F We;
-        public Vector2 Raster;
-
-        public CameraWeResult(Color3F we, Vector2 raster)
-        {
-            We = we;
-            Raster = raster;
-        }
-    }
-
     public struct CameraPdfWeResult
     {
         public float PdfPos;
@@ -33,29 +21,41 @@ namespace Radiantium.Offline
     public struct SampleCameraWiResult
     {
         public Vector3 Pos;
-        public Vector3 Wi;
+        public Vector3 Dir;
+        public float Distance;
+        public Vector3 N;
+        public float Pdf;
         public Color3F We;
-        public float PdfDir;
-        public Vector2 Raster;
+        public Vector2 ScreenPos;
 
-        public SampleCameraWiResult(Vector3 pos, Vector3 wi, Color3F we, float pdfDir, Vector2 raster)
+        public SampleCameraWiResult(Vector3 pos, Vector3 dir, float distance, Vector3 n, float pdf, Color3F we, Vector2 screenPos)
         {
             Pos = pos;
-            Wi = wi;
+            Dir = dir;
+            Distance = distance;
+            N = n;
+            Pdf = pdf;
             We = we;
-            PdfDir = pdfDir;
-            Raster = raster;
+            ScreenPos = screenPos;
         }
+    }
+
+    [Flags]
+    public enum CameraType
+    {
+        DeltaPosition = 0b0001,
+        DeltaDirection = 0b0010
     }
 
     public abstract class Camera
     {
         public abstract int ScreenX { get; }
         public abstract int ScreenY { get; }
+        public abstract CameraType Type { get; }
 
         public abstract Ray3F SampleRay(Vector2 samplePosition);
 
-        public abstract CameraWeResult We(Ray3F ray);
+        public abstract Color3F We(Ray3F ray);
 
         public abstract CameraPdfWeResult PdfWe(Ray3F ray);
 
@@ -82,6 +82,8 @@ namespace Radiantium.Offline
         public Vector3 Up { get; }
         public override int ScreenX { get; }
         public override int ScreenY { get; }
+        public Matrix4x4 VP => _worldToCamera * _cameraToClip;
+        public override CameraType Type => CameraType.DeltaPosition;
 
         public PerspectiveCamera(float fov,
             float near, float far,
@@ -148,9 +150,9 @@ namespace Radiantium.Offline
             Vector3 pMax = Transform(new Vector3(1, 1, 0), _clipToCamera);
             pMin /= pMin.Z;
             pMax /= pMax.Z;
-            float area = MathF.Abs((pMax.X - pMin.X) * (pMax.Y - pMin.Y));
-            _min = new Vector2(pMin.X, pMin.Y);
-            _max = new Vector2(pMax.X, pMax.Y);
+            _min = new Vector2(pMax.X, pMax.Y);
+            _max = new Vector2(pMin.X, pMin.Y);
+            float area = MathF.Abs((_max.X - _min.X) * (_max.Y - _min.Y));
             _normalization = 1 / area;
         }
 
@@ -165,51 +167,53 @@ namespace Radiantium.Offline
             return new Ray3F(o, d, Near * invZ, Far * invZ);
         }
 
-        public float Importance(Vector3 w)
+        public float Importance(Vector3 d) //normalized direction in local camera space
         {
-            float cosTheta = CosTheta(w);
+            float cosTheta = CosTheta(d);
             if (cosTheta <= 0) { return 0; }
             float focus = 1 / cosTheta; //at distance 1 plane
-            Vector2 p = new(w.X * focus, w.Y * focus);
+            Vector2 p = new(d.X * focus, d.Y * focus);
             if (p.X < _min.X || p.X > _max.X || p.Y < _min.Y || p.Y > _max.Y) //check point inside plane
             {
                 return 0.0f;
             }
-            return _normalization * focus * Sqr(focus);
+            return _normalization * focus * focus * focus;
         }
 
-        public bool GetScreenPosition(Vector3 local, out Vector2 pos)
+        public override Color3F We(Ray3F ray)
         {
-            if (CosTheta(local) <= 0) { pos = new Vector2(); return false; }
-            Vector3 ndc = Transform(local, _cameraToClip);
-            if (ndc.X < 0 || ndc.X > 1 || ndc.Y < 0 || ndc.Y > 1)
-            {
-                pos = new Vector2(); return false;
-            }
-            pos = new Vector2(ndc.X, ndc.Y) * new Vector2(ScreenX, ScreenY);
-            return true;
-        }
-
-        public override CameraWeResult We(Ray3F ray)
-        {
-            Vector3 d = Transform(ray.D, _worldToCamera);
-            float importance = Importance(d);
-            if (importance == 0 || !GetScreenPosition(d, out Vector2 screenPos)) { return new CameraWeResult(); }
-            return new CameraWeResult(new Color3F(importance), screenPos);
+            Vector3 local = TransformNormal(ray.D, _worldToCamera);
+            float res = Importance(local);
+            return new Color3F(res);
         }
 
         public override CameraPdfWeResult PdfWe(Ray3F ray)
         {
-            Vector3 d = Transform(ray.D, _worldToCamera);
-            float importance = Importance(d);
-            return new CameraPdfWeResult(1, importance);
+            Vector3 local = TransformNormal(ray.D, _worldToCamera);
+            float pdfDir = Importance(local);
+            float pdfPos = pdfDir == 0.0f ? 0.0f : 1.0f;
+            return new CameraPdfWeResult(pdfPos, pdfDir);
         }
 
         public override SampleCameraWiResult SampleWi(Vector3 pos, Random rand)
         {
-            Vector2 rng = rand.NextVec2();
-            Vector3 samplePos = new Vector3(rng.X, rng.Y, 0);
-            throw new NotImplementedException();
+            Vector3 localTarget = Transform(pos, _worldToCamera);
+            if (localTarget.Z < Near || localTarget.Z > Far) { return new SampleCameraWiResult(); }
+            Vector3 screen = Transform(localTarget, _cameraToClip);
+            screen.X /= screen.Z;
+            screen.Y /= screen.Z;
+            screen.Z = 1;
+            if (screen.X < 0 || screen.X > 1 || screen.Y < 0 || screen.Y > 1) { return new SampleCameraWiResult(); }
+            Vector2 ssPos = new Vector2(screen.X, screen.Y) * new Vector2(ScreenX, ScreenY);
+            float dist = localTarget.Length();
+            float inv = 1 / dist;
+            Vector3 localDir = localTarget * inv;
+            Vector3 samplePos = Transform(new Vector3(0, 0, 0), _cameraToWorld);
+            Vector3 dir = (samplePos - pos) / dist;
+            Vector3 normal = TransformNormal(new Vector3(0, 0, 1), _cameraToWorld);
+            float pdf = 1;
+            float importance = Importance(localDir) * inv * inv;
+            return new SampleCameraWiResult(samplePos, dir, dist, normal, pdf, new Color3F(importance), ssPos);
         }
     }
 }

@@ -9,9 +9,11 @@ namespace Radiantium.Offline
         public Light[] Lights { get; }
         public InfiniteLight[] InfiniteLights { get; }
         public Medium? GlobalMedium { get; }
+        public Camera MainCamera { get; }
 
-        public Scene(Primitive primitive, Light[] lights, InfiniteLight[] infiniteLights, Medium? globalMedium)
+        public Scene(Camera camera ,Primitive primitive, Light[] lights, InfiniteLight[] infiniteLights, Medium? globalMedium)
         {
+            MainCamera = camera ?? throw new ArgumentNullException(nameof(camera));
             Aggregate = primitive ?? throw new ArgumentNullException(nameof(primitive));
             Lights = lights ?? throw new ArgumentNullException(nameof(lights));
             InfiniteLights = infiniteLights ?? throw new ArgumentNullException(nameof(primitive));

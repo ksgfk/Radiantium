@@ -276,6 +276,7 @@ namespace Radiantium.Offline.Config
         public delegate Texture2D Texture2DBuilder(RendererBuilder builder, IConfigParamProvider param);
         public delegate Medium MediumBuilder(RendererBuilder builder, IConfigParamProvider param);
 
+
         public record ModelEntry(string Name, string Location, TriangleModel Model)
         {
             public record Child(string Name, TriangleModel Model);
@@ -406,8 +407,9 @@ namespace Radiantium.Offline.Config
             return _infLightBuilder[param.ReadString("type", null)](this, modelToWorld, param);
         }
 
-        public Integrator CreateIntegrator(IConfigParamProvider param)
+        public Integrator CreateIntegrator(IConfigParamProvider? param)
         {
+            if (param == null) { return null!; }
             if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
             return _integratorBuilder[param.ReadString("type", null)](this, param);
         }
@@ -436,14 +438,25 @@ namespace Radiantium.Offline.Config
 
         public Renderer CreateRenderer(Scene scene, Camera camera, Integrator integrator, IConfigParamProvider? param)
         {
-            int sampleCount = 256;
-            int maxTask = -1;
-            if (param != null)
+            if (param == null)
             {
-                sampleCount = param.ReadInt32("spp", 256);
-                maxTask = param.ReadInt32("threads", -1);
+                return new DefaultRenderer(scene, camera, integrator, 256, -1);
             }
-            return new Renderer(scene, camera, integrator, sampleCount, maxTask);
+            int sampleCount = param.ReadInt32("spp", 256);
+            int maxTask = param.ReadInt32("threads", -1);
+            if (!param.HasKey("type"))
+            {
+                return new DefaultRenderer(scene, camera, integrator, sampleCount, maxTask);
+            }
+            string type = param.ReadString("type", string.Empty);
+            if (type == "adjoint_particle")
+            {
+                int maxDepth = param.ReadInt32("max_depth", -1);
+                int minDepth = param.ReadInt32("min_depth", 3);
+                float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
+                return new AdjointParticleRenderer(scene, camera, null!, sampleCount, maxTask, maxDepth, minDepth, rrThreshold);
+            }
+            throw new ArgumentOutOfRangeException($"no renderer type {type}");
         }
 
         public ResultOutput CreateOutput(IConfigParamProvider? param)
@@ -917,11 +930,11 @@ namespace Radiantium.Offline.Config
 
             Aggregate aggregate = CreateAccelerator(primitives, _sceneAccelConfig);
 
-            Scene scene = new Scene(aggregate, lights.ToArray(), infiniteLights.ToArray(), _globalMediumObject);
+            Camera camera = CreateCamera(_cameraConfig!);
+
+            Scene scene = new Scene(camera, aggregate, lights.ToArray(), infiniteLights.ToArray(), _globalMediumObject);
 
             Integrator integrator = CreateIntegrator(_integratorConfig!);
-
-            Camera camera = CreateCamera(_cameraConfig!);
 
             Renderer renderer = CreateRenderer(scene, camera, integrator, _rendererConfig);
 

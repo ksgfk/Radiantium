@@ -42,7 +42,10 @@ namespace Radiantium.Cli
             {
                 builder.SetRenderer(config.GetSubParam("renderer"));
             }
-            builder.SetIntegrator(config.GetSubParam("integrator"));
+            if (config.HasKey("integrator"))
+            {
+                builder.SetIntegrator(config.GetSubParam("integrator"));
+            }
             IConfigParamProvider cameraConfig = config.GetSubParam("camera");
             builder.SetCamera(cameraConfig);
             if (cameraConfig.HasKey("medium"))

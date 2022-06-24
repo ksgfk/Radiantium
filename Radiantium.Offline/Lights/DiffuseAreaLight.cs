@@ -69,7 +69,7 @@ namespace Radiantium.Offline.Lights
             Vector3 localW = Normalize(Probability.SquareToCosineHemisphere(rand.NextVec2()));
             float pdfDir = Probability.SquareToCosineHemispherePdf(localW);
             Vector3 w = samplePoint.Shading.ToWorld(localW);
-            return new LightEmitResult(samplePoint.P, w, samplePoint.N, samplePoint.UV, Lemit, new LightEmitPdf(pdfPos, pdfDir));
+            return new LightEmitResult(samplePoint.P, Normalize(w), samplePoint.N, samplePoint.UV, Lemit, new LightEmitPdf(pdfPos, pdfDir));
         }
 
         public override LightEmitPdf EmitPdf(Vector3 pos, Vector3 dir, Vector3 normal)

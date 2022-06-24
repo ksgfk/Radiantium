@@ -4,6 +4,22 @@ using System.Numerics;
 
 namespace Radiantium.Offline
 {
+    public abstract class Renderer
+    {
+        public abstract ColorBuffer RenderTarget { get; }
+        public abstract bool IsComplete { get; }
+        public abstract bool IsSuccess { get; }
+        public abstract int CompleteBlockCount { get; }
+        public abstract int AllBlockCount { get; }
+        public abstract TimeSpan RenderUseTime { get; }
+        public abstract int SampleCount { get; }
+
+        public abstract event Action<RenderBlock>? CompleteBlock;
+
+        public abstract Task Start();
+        public abstract void Stop();
+    }
+
     public struct RenderBlock
     {
         public int OffsetX;
@@ -12,9 +28,9 @@ namespace Radiantium.Offline
         public int SizeY;
     }
 
-    public class Renderer
+    public class DefaultRenderer : Renderer
     {
-        private class RenderBlockGenerator
+        protected class RenderBlockGenerator
         {
             public enum Direction : int
             {
@@ -109,31 +125,31 @@ namespace Radiantium.Offline
             }
         }
 
-        readonly Scene _scene;
-        readonly Camera _camera;
-        readonly Integrator _integrator;
-        readonly ColorBuffer _renderTarget;
-        readonly ThreadLocal<Random> _rnd;
+        protected readonly Scene _scene;
+        protected readonly Camera _camera;
+        protected readonly Integrator _integrator;
+        protected readonly ColorBuffer _renderTarget;
+        protected readonly ThreadLocal<Random> _rnd;
         readonly CancellationTokenSource _token;
-        readonly int _sampleCount;
+        protected readonly int _sampleCount;
         readonly int _maxTask;
-        readonly RenderBlockGenerator _gen;
+        protected readonly RenderBlockGenerator _gen;
         readonly Stopwatch _timer;
         bool _isRendering;
         bool _isSuccess;
-        int _nowCount;
+        protected int _nowCount;
 
-        public ColorBuffer RenderTarget => _renderTarget;
-        public bool IsComplete => _nowCount == _gen.BlockCount;
-        public bool IsSuccess => _isSuccess;
-        public int CompleteBlockCount => _nowCount;
-        public int AllBlockCount => _gen.BlockCount;
-        public TimeSpan RenderUseTime => _timer.Elapsed;
-        public int SampleCount => _sampleCount;
+        public override ColorBuffer RenderTarget => _renderTarget;
+        public override bool IsComplete => _nowCount == _gen.BlockCount;
+        public override bool IsSuccess => _isSuccess;
+        public override int CompleteBlockCount => _nowCount;
+        public override int AllBlockCount => _gen.BlockCount;
+        public override TimeSpan RenderUseTime => _timer.Elapsed;
+        public override int SampleCount => _sampleCount;
 
-        public event Action<RenderBlock>? CompleteBlock;
+        public override event Action<RenderBlock>? CompleteBlock;
 
-        public Renderer(Scene scene, Camera camera, Integrator integrator, int sampleCount, int maxTask = -1)
+        public DefaultRenderer(Scene scene, Camera camera, Integrator integrator, int sampleCount, int maxTask = -1)
         {
             _scene = scene;
             _camera = camera;
@@ -150,7 +166,7 @@ namespace Radiantium.Offline
             _isSuccess = false;
         }
 
-        public Task Start()
+        public override Task Start()
         {
             return Task.Factory.StartNew(Render, _token.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
@@ -166,11 +182,12 @@ namespace Radiantium.Offline
             _timer.Restart();
             var option = GetOption();
             ParallelLoopResult result = Parallel.For(0, _gen.BlockCount, option, RenderTask);
+            AfterRender();
             _timer.Stop();
             _isSuccess = result.IsCompleted;
         }
 
-        private void RenderTask(int range, ParallelLoopState state)
+        protected virtual void RenderTask(int range, ParallelLoopState state)
         {
             if (!_gen.Next(out RenderBlock block))
             {
@@ -213,7 +230,7 @@ namespace Radiantium.Offline
             CompleteBlock?.Invoke(block);
         }
 
-        public void Stop() { _token.Cancel(); }
+        public override void Stop() { _token.Cancel(); }
 
         private ParallelOptions GetOption()
         {
@@ -225,5 +242,7 @@ namespace Radiantium.Offline
             result.CancellationToken = _token.Token;
             return result;
         }
+
+        protected virtual void AfterRender() { }
     }
 }

@@ -1,9 +1,9 @@
 {
   "renderer": {
-    "spp": 64
-  },
-  "integrator": {
-    "type": "path"
+    "type": "adjoint_particle",
+    "spp": 2048,
+    "threads": -1,
+    "min_depth": 7
   },
   "camera": {
     "type": "perspective",
