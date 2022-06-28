@@ -16,15 +16,9 @@ namespace Radiantium.Cli
             }
             (Renderer renderer, ResultOutput output) = GetRenderer(args);
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
-            System.Timers.Timer timer = new System.Timers.Timer(1000);
-            ConsoleProgressBar bar = new ConsoleProgressBar(renderer.AllBlockCount);
-            renderer.CompleteBlock += _ => bar.Increase();
-            timer.Elapsed += (_, _) => bar.Draw();
-            timer.Start();
-            bar.Start();
-            Task task = renderer.Start().ContinueWith(t => { timer.Stop(); bar.Stop(); });
-            task.Wait();
-            Logger.Info($"[CLI] -> render used time: {renderer.RenderUseTime.TotalMilliseconds} ms");
+            Task renderTask = renderer.Start();
+            renderTask.Wait();
+            Logger.Info($"[CLI] -> render used time: {renderer.ElapsedTime.TotalMilliseconds} ms");
             output.Save(renderer);
         }
 
@@ -143,7 +137,8 @@ namespace Radiantium.Cli
                     builder.SetEntityMedium(index, entity.GetSubParam("medium"));
                 }
             }
-            return builder.Build();
+            Renderer renderer = builder.Build();
+            return (renderer, builder.Output);
         }
     }
 }

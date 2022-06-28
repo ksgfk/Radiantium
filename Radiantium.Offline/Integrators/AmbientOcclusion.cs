@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace Radiantium.Offline.Integrators
 {
-    public class AmbientOcclusion : Integrator
+    public class AmbientOcclusion : MonteCarloIntegrator
     {
         public bool IsCosWeight { get; }
 

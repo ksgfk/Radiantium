@@ -7,56 +7,21 @@ using static System.MathF;
 
 namespace Radiantium.Offline.Integrators
 {
-    public class AdjointParticleRenderer : DefaultRenderer //TODO: reforge renderer
+    public class AdjointParticleIntegrator : IIntegrator
     {
         public int MaxDepth { get; }
         public int MinDepth { get; }
         public float RRThreshold { get; }
-        public int ParticleEmit => _sampleCount;
+        public string TargetRendererName => "adjoint_particle";
 
-        public AdjointParticleRenderer(
-            Scene scene,
-            Camera camera,
-            Integrator integrator,
-            int sampleCount,
-            int maxTask,
-            int maxDepth,
-            int minDepth,
-            float rrThreshold) : base(
-                scene,
-                camera,
-                integrator,
-                sampleCount,
-                maxTask)
+        public AdjointParticleIntegrator(int maxDepth, int minDepth, float rrThreshold)
         {
             MaxDepth = maxDepth;
             MinDepth = minDepth;
             RRThreshold = rrThreshold;
         }
 
-        protected override void RenderTask(int range, ParallelLoopState state)
-        {
-            if (!_gen.Next(out _))
-            {
-                return;
-            }
-            Random rand = _rnd.Value!;
-            try
-            {
-                for (int t = 0; t < ParticleEmit; t++)
-                {
-                    Trace(_scene, rand);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Exception(e);
-                state.Stop();
-            }
-            Interlocked.Add(ref _nowCount, 1);
-        }
-
-        private void Trace(Scene scene, Random rand)
+        public void Trace(ColorBuffer renderTarget, Scene scene, Random rand)
         {
             float selectPdf = scene.SampleLight(rand, out Light light);
             if (selectPdf == 0.0f) { return; }
@@ -75,9 +40,9 @@ namespace Radiantium.Offline.Integrators
                         Vector2 ssPos = sample.ScreenPos;
                         int x = (int)Floor(ssPos.X);
                         int y = (int)Floor(ssPos.Y);
-                        lock (RenderTarget)
+                        lock (renderTarget)
                         {
-                            RenderTarget.RefRGB(x, y) += color;
+                            renderTarget.RefRGB(x, y) += color;
                         }
                     }
                 }
@@ -113,9 +78,9 @@ namespace Radiantium.Offline.Integrators
                         Vector2 ssPos = sample.ScreenPos;
                         int x = (int)Floor(ssPos.X);
                         int y = (int)Floor(ssPos.Y);
-                        lock (RenderTarget)
+                        lock (renderTarget)
                         {
-                            RenderTarget.RefRGB(x, y) += color;
+                            renderTarget.RefRGB(x, y) += color;
                         }
                     }
                 }
@@ -129,19 +94,6 @@ namespace Radiantium.Offline.Integrators
                     break;
                 }
                 lightRay = inct.SpawnRay(inct.ToWorld(wi));
-            }
-        }
-
-        protected override void AfterRender()
-        {
-            float pathCount = AllBlockCount * ParticleEmit;
-            float v = (float)_camera.ScreenX * _camera.ScreenY / pathCount;
-            for (int x = 0; x < _camera.ScreenX; x++)
-            {
-                for (int y = 0; y < _camera.ScreenY; y++)
-                {
-                    RenderTarget.RefRGB(x, y) *= v;
-                }
             }
         }
     }

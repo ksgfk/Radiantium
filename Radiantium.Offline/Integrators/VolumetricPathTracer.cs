@@ -7,7 +7,7 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Integrators
 {
-    public class VolumetricPathTracer : Integrator
+    public class VolumetricPathTracer : MonteCarloIntegrator
     {
         public int MaxDepth { get; }
         public int MinDepth { get; }

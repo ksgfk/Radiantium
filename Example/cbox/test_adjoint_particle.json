@@ -1,8 +1,10 @@
 {
   "renderer": {
+    "particle_count": 5000000,
+    "threads": -1
+  },
+  "integrator": {
     "type": "adjoint_particle",
-    "spp": 2048,
-    "threads": -1,
     "min_depth": 7
   },
   "camera": {

@@ -1,0 +1,234 @@
+{
+  "renderer": {
+    "particle_count": 10000000,
+    "threads": -1
+  },
+  "integrator": {
+    "type": "adjoint_particle"
+  },
+  "camera": {
+    "type": "perspective",
+    "screen": [
+      768,
+      512
+    ],
+    "origin": [
+      0,
+      6,
+      27.5
+    ],
+    "target": [
+      0,
+      -1.5,
+      2.5
+    ],
+    "fov": 25
+  },
+  "accel": {
+    "type": "bvh"
+  },
+  "output": {},
+  "assets": [
+    {
+      "type": "model",
+      "name": "plate1",
+      "location": "../assets/veach_mi/plate1.obj"
+    },
+    {
+      "type": "model",
+      "name": "plate2",
+      "location": "../assets/veach_mi/plate2.obj"
+    },
+    {
+      "type": "model",
+      "name": "plate3",
+      "location": "../assets/veach_mi/plate3.obj"
+    },
+    {
+      "type": "model",
+      "name": "plate4",
+      "location": "../assets/veach_mi/plate4.obj"
+    },
+    {
+      "type": "model",
+      "name": "floor",
+      "location": "../assets/veach_mi/floor.obj"
+    }
+  ],
+  "scene": [
+    {
+      "shape": {
+        "type": "sphere",
+        "radius": 0.2,
+        "center": [
+          -1.25,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "type": "diffuse",
+        "kd": 0
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          100,
+          100,
+          100
+        ]
+      }
+    },
+    {
+      "shape": {
+        "type": "sphere",
+        "radius": 0.05,
+        "center": [
+          -3.75,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "type": "diffuse",
+        "kd": 0
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          800,
+          800,
+          800
+        ]
+      }
+    },
+    {
+      "shape": {
+        "type": "sphere",
+        "radius": 0.5,
+        "center": [
+          1.25,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "type": "diffuse",
+        "kd": 0
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          11.1111,
+          11.1111,
+          11.1111
+        ]
+      }
+    },
+    {
+      "shape": {
+        "type": "sphere",
+        "radius": 0.8,
+        "center": [
+          3.75,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "type": "diffuse",
+        "kd": 0
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          3,
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "shape": {
+        "type": "sphere",
+        "radius": 0.7,
+        "center": [
+          0,
+          4,
+          3
+        ]
+      },
+      "material": {
+        "type": "diffuse",
+        "kd": 0
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          100,
+          100,
+          100
+        ]
+      }
+    },
+    {
+      "shape": {
+        "type": "model",
+        "name": "plate1"
+      },
+      "material": {
+        "type": "rough_metal",
+        "roughness": 0.0707,
+        "is_two_side": true
+      }
+    },
+    {
+      "shape": {
+        "type": "model",
+        "name": "plate2"
+      },
+      "material": {
+        "type": "rough_metal",
+        "roughness": 0.14142,
+        "is_two_side": true
+      }
+    },
+    {
+      "shape": {
+        "type": "model",
+        "name": "plate3"
+      },
+      "material": {
+        "type": "rough_metal",
+        "roughness": 0.2236,
+        "is_two_side": true
+      }
+    },
+    {
+      "shape": {
+        "type": "model",
+        "name": "plate4"
+      },
+      "material": {
+        "type": "rough_metal",
+        "roughness": 0.31622,
+        "is_two_side": true
+      }
+    },
+    {
+      "shape": {
+        "type": "model",
+        "name": "floor"
+      },
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "is_two_side": true
+      }
+    }
+  ]
+}

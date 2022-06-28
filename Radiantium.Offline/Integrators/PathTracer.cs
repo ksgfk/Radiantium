@@ -19,7 +19,7 @@ namespace Radiantium.Offline.Integrators
         All
     }
 
-    public class PathTracer : Integrator
+    public class PathTracer : MonteCarloIntegrator
     {
         public int MaxDepth { get; }
         public int MinDepth { get; }

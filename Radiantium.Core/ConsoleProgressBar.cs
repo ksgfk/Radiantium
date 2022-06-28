@@ -36,6 +36,14 @@
             }
         }
 
+        public void SetValue(int value)
+        {
+            lock (this)
+            {
+                _current = value;
+            }
+        }
+
         public void Draw()
         {
             lock (this)

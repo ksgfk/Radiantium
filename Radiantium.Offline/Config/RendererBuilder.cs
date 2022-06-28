@@ -5,6 +5,7 @@ using Radiantium.Offline.Integrators;
 using Radiantium.Offline.Lights;
 using Radiantium.Offline.Materials;
 using Radiantium.Offline.Mediums;
+using Radiantium.Offline.Renderers;
 using Radiantium.Offline.Shapes;
 using Radiantium.Offline.Textures;
 using System.Diagnostics;
@@ -16,6 +17,19 @@ namespace Radiantium.Offline.Config
     {
         public static void SetDefaultBuilders(this RendererBuilder builder)
         {
+            builder.AddRendererBuilder("block_based", (builder, param) =>
+            {
+                int sampleCount = param.ReadInt32("spp", 256);
+                int blockSize = param.ReadInt32("block_size", 32);
+                int maxTask = param.ReadInt32("threads", -1);
+                return new BlockBasedRenderer(builder.SceneInstance, (MonteCarloIntegrator)builder.IntegratorInstance, sampleCount, blockSize, maxTask);
+            });
+            builder.AddRendererBuilder("adjoint_particle", (builder, param) =>
+            {
+                int particleCount = param.ReadInt32("particle_count", 16384);
+                int maxTask = param.ReadInt32("threads", -1);
+                return new AdjointParticleRenderer(builder.SceneInstance, (AdjointParticleIntegrator)builder.IntegratorInstance, particleCount, maxTask);
+            });
             builder.AddShapeBuilder("sphere", (_, mat, param) =>
             {
                 Vector3 center = param.ReadVec3Float("center", new Vector3(0));
@@ -39,6 +53,13 @@ namespace Radiantium.Offline.Config
                 float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
                 LightSampleStrategy strategy = Enum.Parse<LightSampleStrategy>(param.ReadString("strategy", "Uniform"));
                 return new VolumetricPathTracer(maxDepth, minDepth, rrThreshold, strategy);
+            });
+            builder.AddIntegratorBuilder("adjoint_particle", (_, param) =>
+            {
+                int maxDepth = param.ReadInt32("max_depth", -1);
+                int minDepth = param.ReadInt32("min_depth", 3);
+                float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
+                return new AdjointParticleIntegrator(maxDepth, minDepth, rrThreshold);
             });
             builder.AddIntegratorBuilder("gbuffer", (_, param) =>
             {
@@ -272,10 +293,10 @@ namespace Radiantium.Offline.Config
         public delegate Material MaterialBuilder(RendererBuilder builder, Dictionary<string, ImageEntry> images, IConfigParamProvider param);
         public delegate AreaLight AreaLightBuilder(RendererBuilder builder, Shape shape, IConfigParamProvider param);
         public delegate InfiniteLight InfiniteLightBuilder(RendererBuilder builder, Matrix4x4 modelToWorld, IConfigParamProvider param);
-        public delegate Integrator IntegratorBuilder(RendererBuilder builder, IConfigParamProvider param);
+        public delegate IIntegrator IntegratorBuilder(RendererBuilder builder, IConfigParamProvider param);
         public delegate Texture2D Texture2DBuilder(RendererBuilder builder, IConfigParamProvider param);
         public delegate Medium MediumBuilder(RendererBuilder builder, IConfigParamProvider param);
-
+        public delegate Renderer RendererBuildDelegate(RendererBuilder builder, IConfigParamProvider param);
 
         public record ModelEntry(string Name, string Location, TriangleModel Model)
         {
@@ -324,6 +345,7 @@ namespace Radiantium.Offline.Config
         readonly Dictionary<string, IntegratorBuilder> _integratorBuilder;
         readonly Dictionary<string, Texture2DBuilder> _tex2dBuilder;
         readonly Dictionary<string, MediumBuilder> _mediumBuilder;
+        readonly Dictionary<string, RendererBuildDelegate> _rendererBuilder;
 
         readonly List<IConfigParamProvider> _modelConfigs;
         readonly List<IConfigParamProvider> _imageConfigs;
@@ -342,10 +364,21 @@ namespace Radiantium.Offline.Config
         Aggregate[] _inst = null!;
         Medium? _globalMediumObject;
 
+        Aggregate _aggregate;
+        Camera _mainCamera;
+        Scene _scene;
+        IIntegrator _integrator;
+        ResultOutput _resultOutput;
+
         public IReadOnlyDictionary<string, ModelEntry> LoadedModels => _models;
         public IReadOnlyDictionary<string, ImageEntry> LoadedImages => _images;
         public IReadOnlyList<Aggregate> CompleteIns => _inst;
         public Medium? GlobalMediumObject => _globalMediumObject;
+        public Aggregate AggregateInstance => _aggregate;
+        public Camera MainCamera => _mainCamera;
+        public Scene SceneInstance => _scene;
+        public IIntegrator IntegratorInstance => _integrator;
+        public ResultOutput Output => _resultOutput;
 
         public RendererBuilder(string searchPath, string workSpaceName)
         {
@@ -360,12 +393,19 @@ namespace Radiantium.Offline.Config
             _integratorBuilder = new Dictionary<string, IntegratorBuilder>();
             _tex2dBuilder = new Dictionary<string, Texture2DBuilder>();
             _mediumBuilder = new Dictionary<string, MediumBuilder>();
+            _rendererBuilder = new Dictionary<string, RendererBuildDelegate>();
 
             _modelConfigs = new List<IConfigParamProvider>();
             _imageConfigs = new List<IConfigParamProvider>();
             _instances = new List<InstancedPrimitivesEntry>();
             _root = new List<SceneEntityEntry>();
             _entities = new List<SceneEntityEntry>();
+
+            _aggregate = null!;
+            _mainCamera = null!;
+            _scene = null!;
+            _integrator = null!;
+            _resultOutput = null!;
         }
 
         public Shape CreateShape(Matrix4x4 modelToWorld, IConfigParamProvider param)
@@ -407,7 +447,7 @@ namespace Radiantium.Offline.Config
             return _infLightBuilder[param.ReadString("type", null)](this, modelToWorld, param);
         }
 
-        public Integrator CreateIntegrator(IConfigParamProvider? param)
+        public IIntegrator CreateIntegrator(IConfigParamProvider? param)
         {
             if (param == null) { return null!; }
             if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
@@ -436,27 +476,18 @@ namespace Radiantium.Offline.Config
             }
         }
 
-        public Renderer CreateRenderer(Scene scene, Camera camera, Integrator integrator, IConfigParamProvider? param)
+        public Renderer CreateRenderer(IConfigParamProvider? param)
         {
+            Renderer renderer;
             if (param == null)
             {
-                return new DefaultRenderer(scene, camera, integrator, 256, -1);
+                renderer = new BlockBasedRenderer(_scene, (MonteCarloIntegrator)_integrator, 256, 32, -1);
             }
-            int sampleCount = param.ReadInt32("spp", 256);
-            int maxTask = param.ReadInt32("threads", -1);
-            if (!param.HasKey("type"))
+            else
             {
-                return new DefaultRenderer(scene, camera, integrator, sampleCount, maxTask);
+                renderer = _rendererBuilder[_integrator.TargetRendererName](this, param);
             }
-            string type = param.ReadString("type", string.Empty);
-            if (type == "adjoint_particle")
-            {
-                int maxDepth = param.ReadInt32("max_depth", -1);
-                int minDepth = param.ReadInt32("min_depth", 3);
-                float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
-                return new AdjointParticleRenderer(scene, camera, null!, sampleCount, maxTask, maxDepth, minDepth, rrThreshold);
-            }
-            throw new ArgumentOutOfRangeException($"no renderer type {type}");
+            return renderer;
         }
 
         public ResultOutput CreateOutput(IConfigParamProvider? param)
@@ -774,6 +805,11 @@ namespace Radiantium.Offline.Config
             _mediumBuilder.Add(name, builder);
         }
 
+        public void AddRendererBuilder(string name, RendererBuildDelegate builder)
+        {
+            _rendererBuilder.Add(name, builder);
+        }
+
         public TriangleModel FindTriangleModel(IConfigParamProvider param)
         {
             if (!param.HasKey("name")) { throw new ArgumentException("no key name"); }
@@ -796,7 +832,7 @@ namespace Radiantium.Offline.Config
             return model;
         }
 
-        public (Renderer, ResultOutput) Build()
+        public Renderer Build()
         {
             _models = _modelConfigs.AsParallel().Select(param =>
             {
@@ -928,19 +964,14 @@ namespace Radiantium.Offline.Config
                 }
             }
 
-            Aggregate aggregate = CreateAccelerator(primitives, _sceneAccelConfig);
+            _aggregate = CreateAccelerator(primitives, _sceneAccelConfig);
+            _mainCamera = CreateCamera(_cameraConfig!);
+            _scene = new Scene(_mainCamera, _aggregate, lights.ToArray(), infiniteLights.ToArray(), _globalMediumObject);
+            _integrator = CreateIntegrator(_integratorConfig!);
+            _resultOutput = CreateOutput(_outputConfig);
 
-            Camera camera = CreateCamera(_cameraConfig!);
-
-            Scene scene = new Scene(camera, aggregate, lights.ToArray(), infiniteLights.ToArray(), _globalMediumObject);
-
-            Integrator integrator = CreateIntegrator(_integratorConfig!);
-
-            Renderer renderer = CreateRenderer(scene, camera, integrator, _rendererConfig);
-
-            ResultOutput output = CreateOutput(_outputConfig);
-
-            return (renderer, output);
+            Renderer renderer = CreateRenderer(_rendererConfig);
+            return renderer;
         }
     }
 }

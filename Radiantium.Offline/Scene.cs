@@ -11,7 +11,7 @@ namespace Radiantium.Offline
         public Medium? GlobalMedium { get; }
         public Camera MainCamera { get; }
 
-        public Scene(Camera camera ,Primitive primitive, Light[] lights, InfiniteLight[] infiniteLights, Medium? globalMedium)
+        public Scene(Camera camera, Primitive primitive, Light[] lights, InfiniteLight[] infiniteLights, Medium? globalMedium)
         {
             MainCamera = camera ?? throw new ArgumentNullException(nameof(camera));
             Aggregate = primitive ?? throw new ArgumentNullException(nameof(primitive));

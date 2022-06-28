@@ -1,8 +1,8 @@
 using Radiantium.Core;
 using System.Numerics;
 using static Radiantium.Core.MathExt;
-using static System.Numerics.Vector3;
 using static Radiantium.Offline.Coordinate;
+using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline
 {

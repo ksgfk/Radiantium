@@ -10,7 +10,7 @@ namespace Radiantium.Offline.Integrators
         UV
     }
 
-    public class GBufferVisualization : Integrator
+    public class GBufferVisualization : MonteCarloIntegrator
     {
         public GBufferType Name { get; }
 
