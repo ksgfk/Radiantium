@@ -5,11 +5,39 @@ namespace Radiantium.Offline
 {
     public abstract class Primitive
     {
+        /// <summary>
+        /// 材质
+        /// </summary>
         public abstract Material? Material { get; }
+
+        /// <summary>
+        /// 灯光
+        /// </summary>
         public abstract AreaLight? Light { get; set; }
+
+        /// <summary>
+        /// 世界空间下的包围盒
+        /// </summary>
         public abstract BoundingBox3F WorldBound { get; }
+
+        /// <summary>
+        /// 参与介质
+        /// </summary>
         public abstract MediumAdapter Medium { get; }
+
+        /// <summary>
+        /// 光线求交
+        /// </summary>
+        /// <param name="ray">光线</param>
+        /// <returns>是否存在交点</returns>
         public abstract bool Intersect(Ray3F ray);
+
+        /// <summary>
+        /// 光线求交
+        /// </summary>
+        /// <param name="ray">光线</param>
+        /// <param name="inct">返回交点信息</param>
+        /// <returns>是否存在交点</returns>
         public abstract bool Intersect(Ray3F ray, out Intersection inct);
     }
 
@@ -49,6 +77,9 @@ namespace Radiantium.Offline
         }
     }
 
+    /// <summary>
+    /// 多个图元聚合, 是空间加速结构的基类
+    /// </summary>
     public abstract class Aggregate : Primitive
     {
         public sealed override Material? Material => throw new NotSupportedException("aggregate can't have material");

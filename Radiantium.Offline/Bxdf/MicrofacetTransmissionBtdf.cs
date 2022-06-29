@@ -6,6 +6,7 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Bxdf
 {
+    //金属没有透射, 所以菲涅尔直接使用电介质版本
     public struct MicrofacetTransmissionBtdf<TMicrofacet> : IBxdf
         where TMicrofacet : IMicrofacetDistribution
     {

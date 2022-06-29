@@ -1,9 +1,11 @@
 {
   "renderer": {
-    "spp": 16
+    "particle_count": 5000000,
+    "threads": -1
   },
   "integrator": {
-    "type": "path"
+    "type": "adjoint_particle",
+    "min_depth": 7
   },
   "camera": {
     "type": "perspective",
@@ -50,9 +52,10 @@
       "location": "../assets/cbox/leftwall.obj"
     },
     {
-      "type": "model",
-      "name": "light",
-      "location": "../assets/cbox/light.obj"
+      "type": "image",
+      "name": "sky",
+      "location": "../assets/gothic_manor_02_2k.exr",
+      "is_flip_y": false
     }
   ],
   "scene": [
@@ -100,24 +103,7 @@
     },
     {
       "material": {
-        "type": "diffuse"
-      },
-      "shape": {
-        "type": "model",
-        "name": "light"
-      },
-      "light": {
-        "type": "diffuse_area",
-        "le": [
-          40,
-          40,
-          40
-        ]
-      }
-    },
-    {
-      "material": {
-        "type": "diffuse"
+        "type": "perfect_glass"
       },
       "shape": {
         "type": "sphere",
@@ -131,7 +117,7 @@
     },
     {
       "material": {
-        "type": "diffuse"
+        "type": "perfect_mirror"
       },
       "shape": {
         "type": "sphere",
@@ -141,6 +127,28 @@
           0.35,
           -0.25
         ]
+      }
+    },
+    {
+      "light": {
+        "type": "infinite",
+        "le": {
+          "type": "image",
+          "name": "sky",
+          "sampler": {
+            "filter": "Linear"
+          }
+        }
+      },
+      "transform": {
+        "rotation": {
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "angle": 50
+        }
       }
     }
   ]

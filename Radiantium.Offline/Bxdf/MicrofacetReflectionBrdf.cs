@@ -5,6 +5,7 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Bxdf
 {
+    //TFresnel要求菲涅尔项, TMicrofacet要求一个微表面分布
     public struct MicrofacetReflectionBrdf<TFresnel, TMicrofacet> : IBxdf
         where TFresnel : IFresnel
         where TMicrofacet : IMicrofacetDistribution

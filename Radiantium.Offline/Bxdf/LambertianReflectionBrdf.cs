@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace Radiantium.Offline.Bxdf
 {
-    public struct LambertianReflectionBrdf : IBxdf
+    public struct LambertianReflectionBrdf : IBxdf //或许可以弄个flag控制采样是均匀的还是带cos权重的?
     {
         public Color3F R;
         public BxdfType Type => BxdfType.Reflection | BxdfType.Diffuse;

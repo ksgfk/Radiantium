@@ -46,10 +46,28 @@ namespace Radiantium.Offline
     {
         BxdfType Type { get; }
 
+        /// <summary>
+        /// 评估 双向反射/透射/散射分布函数值
+        /// </summary>
+        /// <param name="wo">入射方向</param>
+        /// <param name="wi">出射方向</param>
+        /// <param name="mode">光线传输方法</param>
         Color3F Fr(Vector3 wo, Vector3 wi, TransportMode mode);
 
+        /// <summary>
+        /// 采样一个出射方向
+        /// </summary>
+        /// <param name="wo">入射方向</param>
+        /// <param name="rand">随机数发生器</param>
+        /// <param name="mode">光线传输方法</param>
         SampleBxdfResult Sample(Vector3 wo, Random rand, TransportMode mode);
 
+        /// <summary>
+        /// 入射与出射方向的概率密度
+        /// </summary>
+        /// <param name="wo">入射方向</param>
+        /// <param name="wi">出射方向</param>
+        /// <param name="mode">光线传输方法</param>
         float Pdf(Vector3 wo, Vector3 wi, TransportMode mode);
     }
 }

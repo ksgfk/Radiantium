@@ -8,6 +8,8 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Bxdf
 {
+    //TODO: 不建议使用, 有很多未能解决的问题, 放弃了
+
     internal struct DisneyRetroBrdf : IBxdf
     {
         public Color3F R;

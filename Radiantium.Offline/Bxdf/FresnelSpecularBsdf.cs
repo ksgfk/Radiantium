@@ -4,10 +4,11 @@ using static Radiantium.Core.MathExt;
 
 namespace Radiantium.Offline.Bxdf
 {
+    //使用菲涅尔控制反射与折射的BSDF
     public struct FresnelSpecularBsdf : IBxdf
     {
-        public Color3F R;
-        public Color3F T;
+        public Color3F R; //反射颜色
+        public Color3F T; //透射颜色
         public float EtaA;
         public float EtaB;
         public BxdfType Type => BxdfType.Reflection | BxdfType.Transmission | BxdfType.Specular;

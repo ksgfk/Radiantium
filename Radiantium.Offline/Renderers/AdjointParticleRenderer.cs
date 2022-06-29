@@ -131,7 +131,7 @@ namespace Radiantium.Offline.Renderers
                     {
                         break;
                     }
-                    _integrator.Trace(RenderTarget, _scene, rand);
+                    _integrator.EmitParticle(RenderTarget, _scene, rand);
                     Interlocked.Increment(ref _emitParticleCount);
                 }
                 Interlocked.Increment(ref _completedTaskCount);
@@ -150,8 +150,10 @@ namespace Radiantium.Offline.Renderers
             _prograssBarDispatcher.Stop();
             _prograssBar.Stop();
 
-            if (_emitParticleCount != _particleCount) { throw new Exception(); }
             Camera camera = _scene.MainCamera;
+
+            if (_emitParticleCount != _particleCount) { throw new Exception(); }
+
             float pathCount = _emitParticleCount;
             float v = (float)camera.ScreenX * camera.ScreenY / pathCount;
             for (int x = 0; x < camera.ScreenX; x++)
@@ -159,6 +161,14 @@ namespace Radiantium.Offline.Renderers
                 for (int y = 0; y < camera.ScreenY; y++)
                 {
                     RenderTarget.RefRGB(x, y) *= v;
+                }
+            }
+
+            for (int x = 0; x < camera.ScreenX; x++)
+            {
+                for (int y = 0; y < camera.ScreenY; y++)
+                {
+                    RenderTarget.RefRGB(x, y) += _integrator.CameraTraceLight(camera.SampleRay(new(x, y)), _scene);
                 }
             }
 

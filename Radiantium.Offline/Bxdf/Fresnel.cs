@@ -45,6 +45,8 @@ namespace Radiantium.Offline.Bxdf
             public Color3F Eval(float cosI) { return ConductorFunc(cosI, EtaI, EtaT, K); }
         }
 
+        //电介质菲涅尔
+        //https://github.com/mmp/pbrt-v3/blob/master/src/core/reflection.cpp#L47
         public static float DielectricFunc(float cosThetaI, float etaI, float etaT)
         {
             cosThetaI = Math.Clamp(cosThetaI, -1, 1);
@@ -65,6 +67,8 @@ namespace Radiantium.Offline.Bxdf
             return (rparl * rparl + rperp * rperp) / 2;
         }
 
+        //导体菲涅尔
+        //https://github.com/mmp/pbrt-v3/blob/master/src/core/reflection.cpp#L71
         public static Color3F ConductorFunc(float cosThetaI, Color3F etai, Color3F etat, Color3F k)
         {
             cosThetaI = Math.Clamp(cosThetaI, -1, 1);

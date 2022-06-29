@@ -49,16 +49,32 @@ namespace Radiantium.Offline
 
     public abstract class Camera
     {
+        /// <summary>
+        /// 摄像机x轴分辨率
+        /// </summary>
         public abstract int ScreenX { get; }
+
+        /// <summary>
+        /// 摄像机y轴分辨率
+        /// </summary>
         public abstract int ScreenY { get; }
         public abstract CameraType Type { get; }
 
+        /// <summary>
+        /// 在屏幕空间采样一条世界坐标系下的射线
+        /// </summary>
+        /// <param name="samplePosition">屏幕空间坐标</param>
         public abstract Ray3F SampleRay(Vector2 samplePosition);
 
         public abstract Color3F We(Ray3F ray);
 
         public abstract CameraPdfWeResult PdfWe(Ray3F ray);
 
+        /// <summary>
+        /// 根据世界空间下的一个坐标获取摄像机响应参数
+        /// </summary>
+        /// <param name="pos">世界空间坐标</param>
+        /// <param name="rand">随机数发生器</param>
         public abstract SampleCameraWiResult SampleWi(Vector3 pos, Random rand);
     }
 

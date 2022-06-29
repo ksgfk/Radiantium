@@ -62,7 +62,7 @@ namespace Radiantium.Offline
         SampleRadialResult SampleSr(int channel, float rand);
     }
 
-    //http://http://graphics.pixar.com/library/ApproxBSSRDF/paper.pdf
+    //http://graphics.pixar.com/library/ApproxBSSRDF/paper.pdf
     public struct NormalizedDiffusionRadialProfile : IRadialProfileFunction
     {
         public Color3F A;

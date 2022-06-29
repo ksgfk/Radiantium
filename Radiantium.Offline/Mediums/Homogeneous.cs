@@ -29,7 +29,7 @@ namespace Radiantium.Offline.Mediums
             return tr;
         }
 
-        public override MediumSampleResult Sample(Ray3F ray, Random rand)
+        public override SampleMediumResult Sample(Ray3F ray, Random rand)
         {
             int channel = rand.Next(3);
             Color3F sigmaT = SigmaT;
@@ -46,7 +46,7 @@ namespace Radiantium.Offline.Mediums
                 tr.B = Exp(-sigmaT.B * sampledDistance);
                 float pdf = (tr.R * sigmaT.R + tr.G * sigmaT.G + tr.B * sigmaT.B) / 3;
                 if (pdf == 0) { pdf = 0.0001f; }
-                return new MediumSampleResult(p, -ray.D, tr * SigmaS / pdf, t);
+                return new SampleMediumResult(p, -ray.D, tr * SigmaS / pdf, t);
             }
             else
             {
@@ -56,7 +56,7 @@ namespace Radiantium.Offline.Mediums
                 tr.B = Exp(-SigmaT.B * distSurf);
                 float pdf = (tr.R + tr.G + tr.B) / 3;
                 if (pdf == 0) { pdf = 0.0001f; }
-                return new MediumSampleResult(tr / pdf);
+                return new SampleMediumResult(tr / pdf);
             }
         }
 
@@ -65,7 +65,7 @@ namespace Radiantium.Offline.Mediums
             return new HenyeyGreenstein(G).P(wo, wi);
         }
 
-        public override PhaseFunctionSampleResult SampleWi(Vector3 wo, Random rand)
+        public override SamplePhaseFunctionResult SampleWi(Vector3 wo, Random rand)
         {
             return new HenyeyGreenstein(G).SampleWi(wo, rand);
         }

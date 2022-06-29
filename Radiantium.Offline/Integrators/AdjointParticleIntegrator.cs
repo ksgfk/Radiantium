@@ -21,7 +21,7 @@ namespace Radiantium.Offline.Integrators
             RRThreshold = rrThreshold;
         }
 
-        public void Trace(ColorBuffer renderTarget, Scene scene, Random rand)
+        public void EmitParticle(ColorBuffer renderTarget, Scene scene, Random rand)
         {
             float selectPdf = scene.SampleLight(rand, out Light light);
             if (selectPdf == 0.0f) { return; }
@@ -29,24 +29,6 @@ namespace Radiantium.Offline.Integrators
             if (emit.Radiance == Black) { return; }
             Camera camera = scene.MainCamera;
             Color3F coeff = emit.Radiance * AbsDot(emit.Dir, emit.Normal) / (selectPdf * emit.Pdf.PdfPos * emit.Pdf.PdfDir);
-            if ((camera.Type & CameraType.DeltaPosition) != 0)
-            {
-                SampleCameraWiResult sample = camera.SampleWi(emit.Pos, rand);
-                if (sample.Pdf > 0 && sample.We != Black)
-                {
-                    if (!scene.IsOccluded(sample.Pos, emit.Pos))
-                    {
-                        Color3F color = coeff * sample.We / sample.Pdf;
-                        Vector2 ssPos = sample.ScreenPos;
-                        int x = (int)Floor(ssPos.X);
-                        int y = (int)Floor(ssPos.Y);
-                        lock (renderTarget)
-                        {
-                            renderTarget.RefRGB(x, y) += color;
-                        }
-                    }
-                }
-            }
             Ray3F lightRay = new Ray3F(emit.Pos, emit.Dir, 0.0001f);
             for (int bounces = 1; ; bounces++)
             {
@@ -72,7 +54,7 @@ namespace Radiantium.Offline.Integrators
                 {
                     if (!scene.IsOccluded(sample.Pos, inct.P))
                     {
-                        Color3F f = inct.Surface.Fr(inct.ToLocal(inct.Wr), inct.ToLocal(sample.Dir), inct, TransportMode.Importance);
+                        Color3F f = inct.Surface.Fr(inct.ToLocal(inct.Wr), inct.ToLocal(sample.Dir), inct, TransportMode.Radiance);
                         float absCos = AbsCosTheta(inct.ToLocal(sample.Dir));
                         Color3F color = coeff * f * sample.We * absCos / sample.Pdf;
                         Vector2 ssPos = sample.ScreenPos;
@@ -95,6 +77,11 @@ namespace Radiantium.Offline.Integrators
                 }
                 lightRay = inct.SpawnRay(inct.ToWorld(wi));
             }
+        }
+
+        public Color3F CameraTraceLight(Ray3F ray, Scene scene)
+        {
+            return scene.Intersect(ray, out Intersection inct) ? inct.Le(-ray.D) : scene.EvalAllInfiniteLights(ray);
         }
     }
 }

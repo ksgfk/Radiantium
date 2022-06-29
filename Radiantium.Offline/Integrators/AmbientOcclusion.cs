@@ -3,6 +3,10 @@ using System.Numerics;
 
 namespace Radiantium.Offline.Integrators
 {
+    //环境光遮蔽
+    //假设所有表面都是漫反射, 并从所有方向接收均匀的光照
+    //L(x) = ∫ V * (cosTheta / PI) d omega_i
+    //V是可见性
     public class AmbientOcclusion : MonteCarloIntegrator
     {
         public bool IsCosWeight { get; }

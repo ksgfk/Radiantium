@@ -28,20 +28,20 @@ namespace Radiantium.Offline
             return new LightEvalParam(inct.P, inct.T);
         }
 
-        public static implicit operator LightEvalParam(MediumSampleResult msr)
+        public static implicit operator LightEvalParam(SampleMediumResult msr)
         {
             return new LightEvalParam(msr.P, msr.T);
         }
     }
 
-    public struct LightSampleResult
+    public struct SampleLightResult
     {
         public Vector3 P;
         public Color3F Li;
         public Vector3 Wi;
         public float Pdf;
 
-        public LightSampleResult(Vector3 p, Color3F li, Vector3 wi, float pdf)
+        public SampleLightResult(Vector3 p, Color3F li, Vector3 wi, float pdf)
         {
             P = p;
             Li = li;
@@ -92,23 +92,44 @@ namespace Radiantium.Offline
 
     public abstract class Light
     {
+        /// <summary>
+        /// 光源总功率
+        /// </summary>
         public abstract Color3F Power { get; }
 
         public abstract LightType Type { get; }
 
+        /// <summary>
+        /// 光源是不是delta分布
+        /// </summary>
         public bool IsDelta => (Type & LightType.DeltaPosition) != 0 || (Type & LightType.DeltaDirection) != 0;
 
-        public abstract LightSampleResult SampleLi(LightEvalParam inct, Random rand);
+        /// <summary>
+        /// 采样光源入射
+        /// </summary>
+        public abstract SampleLightResult SampleLi(LightEvalParam inct, Random rand);
 
+        /// <summary>
+        /// 光源入射的概率密度
+        /// </summary>
         public abstract float PdfLi(LightEvalParam inct, Vector3 wi);
 
+        /// <summary>
+        /// 光源自发光
+        /// </summary>
         public virtual Color3F Le(Ray3F ray)
         {
             return new Color3F(0.0f);
         }
 
+        /// <summary>
+        /// 采样光源出射
+        /// </summary>
         public abstract LightEmitResult SampleEmit(Random rand);
 
+        /// <summary>
+        /// 光源出射的概率密度
+        /// </summary>
         public abstract LightEmitPdf EmitPdf(Vector3 pos, Vector3 dir, Vector3 normal);
     }
 
@@ -116,6 +137,9 @@ namespace Radiantium.Offline
     {
         public sealed override LightType Type => LightType.Area;
 
+        /// <summary>
+        /// 面光源发光
+        /// </summary>
         public abstract Color3F L(Intersection inct, Vector3 w);
     }
 
@@ -125,6 +149,9 @@ namespace Radiantium.Offline
         public Vector3 WorldCenter { get; private set; }
         public sealed override LightType Type => LightType.Infinite;
 
+        /// <summary>
+        /// 预处理无限远光源
+        /// </summary>
         public virtual void Preprocess(Scene scene)
         {
             BoundingBox3F bound = scene.Aggregate.WorldBound;

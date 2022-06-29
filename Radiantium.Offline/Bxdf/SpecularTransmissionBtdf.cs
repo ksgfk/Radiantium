@@ -5,6 +5,7 @@ using static Radiantium.Offline.Coordinate;
 
 namespace Radiantium.Offline.Bxdf
 {
+    //完美透射
     public struct SpecularTransmissionBtdf : IBxdf
     {
         public Color3F T;

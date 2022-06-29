@@ -129,7 +129,7 @@ namespace Radiantium.Offline.Materials
             Color3F r = R.Sample(uv);
             Color3F t = this.T.Sample(uv);
             Vector3 wh = dist.SampleWh(wo, rand);
-            float f = Fresnel.DielectricFunc(Dot(wo, wh), EtaA, EtaB);
+            float f = Fresnel.DielectricFunc(Dot(wo, wh), EtaA, EtaB); //以菲涅尔作为权重进行采样
             if (rand.NextFloat() < f)
             {
                 Vector3 wi = Reflect(-wo, wh);
@@ -152,7 +152,7 @@ namespace Radiantium.Offline.Materials
                 {
                     if (Dot(wo, wh) * Dot(wi, wh) > 0) { return new SampleBxdfResult(); }
                 }
-                else
+                else //处理全反射, 测试下来应该没太大问题
                 {
                     wi = Reflect(-wo, wh);
                     eta = 1;

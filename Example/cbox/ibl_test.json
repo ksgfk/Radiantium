@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 32
+    "spp": 256
   },
   "integrator": {
     "type": "path",
@@ -107,7 +107,7 @@
     },
     {
       "material": {
-        "type": "diffuse"
+        "type": "perfect_glass"
       },
       "shape": {
         "type": "sphere",
@@ -121,7 +121,7 @@
     },
     {
       "material": {
-        "type": "diffuse"
+        "type": "perfect_mirror"
       },
       "shape": {
         "type": "sphere",

@@ -6,6 +6,9 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Integrators
 {
+    //渲染方程:
+    //Lo(p, wo) = Le(p, wo) + ∫ f(p, wo, wi) * Li(p, wi) * cosTheta d wi
+
     public enum PathSampleMethod
     {
         Bxdf,
@@ -19,6 +22,7 @@ namespace Radiantium.Offline.Integrators
         All
     }
 
+    //路径追踪
     public class PathTracer : MonteCarloIntegrator
     {
         public int MaxDepth { get; }
@@ -36,7 +40,7 @@ namespace Radiantium.Offline.Integrators
             Strategy = strategy;
         }
 
-        public Color3F OnlySampleBxdf(Ray3F ray, Scene scene, Random rand)
+        public Color3F OnlySampleBxdf(Ray3F ray, Scene scene, Random rand) //只有BxDF采样
         {
             Color3F radiance = new(0.0f);
             Color3F coeff = new(1.0f);
@@ -58,10 +62,13 @@ namespace Radiantium.Offline.Integrators
                     continue;
                 }
                 Vector3 wo = -ray.D;
+                //只有击中光源, 这条路径才有有效贡献, 所以击中光源的概率对最终结果影响很大
+                //一些delta分布的路径很难击中光源
                 if (inct.IsLight)
                 {
                     radiance += coeff * inct.Le(wo);
                 }
+                //采样一个出射方向
                 (Vector3 wi, Color3F fr, float pdf, BxdfType _) = inct.Surface.Sample(inct.ToLocal(-ray.D), inct, rand, TransportMode.Radiance);
                 if (pdf > 0.0f)
                 {
@@ -72,7 +79,7 @@ namespace Radiantium.Offline.Integrators
                     break;
                 }
                 ray = inct.SpawnRay(inct.ToWorld(wi));
-                if (bounces > MinDepth)
+                if (bounces > MinDepth) //轮盘赌
                 {
                     float q = Min(MaxElement(coeff), RRThreshold);
                     if (rand.NextFloat() > q)
@@ -94,6 +101,10 @@ namespace Radiantium.Offline.Integrators
             {
                 bool isHit = scene.Intersect(ray, out Intersection inct);
                 Vector3 wo = -ray.D;
+                //bounces == 0: 如果从摄像机出发的射线击中了光源 (或者没击中的话, 看看环境光)
+                //isSpecularPath: 如果这条路径是delta分布的BxDF, 无法在光源上采样
+                //  (因为对于一个特定的入射方向, 只有一个确定的出射方向可以有贡献, 这时候在光源上采样到这个出射方向的概率是0)
+                //  只能凭运气, 如果击中光源了这条路径才有有效贡献
                 if (bounces == 0 || isSpecularPath)
                 {
                     if (isHit)
@@ -169,7 +180,7 @@ namespace Radiantium.Offline.Integrators
                 {
                     return new Color3F(0);
                 }
-                if (scene.IsOccluded(inct.P, p))
+                if (scene.IsOccluded(inct.P, p)) //光源和着色点之间被阻挡, 当然就没有贡献了
                 {
                     return new Color3F(0.0f);
                 }
@@ -230,7 +241,7 @@ namespace Radiantium.Offline.Integrators
                     break;
                 }
                 ray = inct.SpawnRay(inct.ToWorld(sample.Wi));
-                if (sample.HasSubsurface && sample.HasTransmission)
+                if (sample.HasSubsurface && sample.HasTransmission) //TODO: BSSRDF未完成
                 {
                     ref readonly Intersection po = ref inct;
                     SampleBssrdfResult samSss = inct.Surface.SamplePi(po, scene, rand);
@@ -258,6 +269,7 @@ namespace Radiantium.Offline.Integrators
             }
             return radiance;
 
+            //多重重要性采样
             static Color3F SampleLightToEstimateDirect(
                 Scene scene, Random rand,
                 Intersection inct,
@@ -301,10 +313,11 @@ namespace Radiantium.Offline.Integrators
             {
                 Vector3 wo = inct.Wr;
                 Color3F le = new Color3F(0.0f);
+                //在光源上采样, 这部分和NEE基本一致, 只不过pdf将光源的pdf和BxDF的pdf结合起来
                 (Vector3 lightP, Vector3 lightWi, float lightPdf, Color3F lightLi) = light.SampleLi(inct, rand);
                 if (lightPdf > 0.0f && lightLi != Color3F.Black)
                 {
-                    Color3F fr;
+                    Color3F fr; //如果BxDF是delta分布, 直接计算f固定返回黑色, 也就是光源对这条路径没有贡献
                     float scatteringPdf;
                     if (bssrdfAdapter == null)
                     {
@@ -318,9 +331,11 @@ namespace Radiantium.Offline.Integrators
                     }
                     if (fr != Color3F.Black)
                     {
-                        if (!scene.IsOccluded(inct.P, lightP))
+                        if (!scene.IsOccluded(inct.P, lightP)) //光源和着色点之间没被阻挡
                         {
                             fr *= Coordinate.AbsCosTheta(inct.ToLocal(lightWi));
+                            //BxDF采样不可能采样到delta分布的光源
+                            //所以如果这个光源是delta分布, 这条路径只有光源pdf有贡献
                             if (light.IsDelta)
                             {
                                 le += fr * lightLi / lightPdf;
@@ -333,7 +348,7 @@ namespace Radiantium.Offline.Integrators
                         }
                     }
                 }
-                if (!light.IsDelta)
+                if (!light.IsDelta) //BxDF采样不可能采样到delta分布的光源, 所以除去这种可能性
                 {
                     SampleBxdfResult sample;
                     if (bssrdfAdapter == null)
@@ -350,6 +365,7 @@ namespace Radiantium.Offline.Integrators
                     if (fr != Color3F.Black && scatteringPdf > 0)
                     {
                         float weight = 1;
+                        //这条路径不是delta分布的, 才结合两种采样的pdf, 否则只有BxDF的pdf工作
                         if (!sampledSpecular)
                         {
                             float bxdfToLightPdf = light.PdfLi(inct, inct.ToWorld(sample.Wi));
@@ -362,7 +378,7 @@ namespace Radiantium.Offline.Integrators
                         Ray3F toLight = inct.SpawnRay(inct.ToWorld(sample.Wi));
                         bool isHit = scene.Intersect(toLight, out Intersection lightInct);
                         Color3F li = new Color3F(0);
-                        if (isHit)
+                        if (isHit) //需要击中光源才对这条路径有贡献
                         {
                             if (lightInct.IsLight && lightInct.Light == light)
                             {

@@ -2,7 +2,7 @@
 
 namespace Radiantium.Offline.Accelerators
 {
-    public class Naive : Aggregate
+    public class Naive : Aggregate //这没啥好写的, 就是暴力遍历所有图元
     {
         public IReadOnlyList<Primitive> Primitives { get; }
         public override BoundingBox3F WorldBound { get; }

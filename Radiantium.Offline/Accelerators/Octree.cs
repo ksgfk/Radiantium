@@ -5,18 +5,18 @@ using System.Runtime.InteropServices;
 
 namespace Radiantium.Offline.Accelerators
 {
-    public class Octree : Aggregate
+    public class Octree : Aggregate //理论上, 这是一颗稀疏+松散八叉树
     {
-        public const int StackSize = 256;
+        public const int StackSize = 256; //该常数控制求交时, 临时stackalloc栈大小, 不能设的太大
 
-        private class Node
+        private class Node //建树时节点
         {
             public BoundingBox3F Box;
             public List<Primitive>? Primitives;
             public Node[]? Children;
         }
 
-        private class Leaf
+        private class Leaf //储存最终每个叶节点包含图元
         {
             public Primitive[] Primitives;
             public Leaf(Primitive[] primitives)
@@ -25,12 +25,12 @@ namespace Radiantium.Offline.Accelerators
             }
         }
 
-        [StructLayout(LayoutKind.Explicit, Size = 32)]
+        [StructLayout(LayoutKind.Explicit, Size = 32)] //我们希望手动控制结构体布局
         private struct LinearNode
         {
             [FieldOffset(0)] public BoundingBox3F Bound;
-            [FieldOffset(24)] public int NodeCount;
-            [FieldOffset(24)] public int LeafIndex;
+            [FieldOffset(24)] public int NodeCount; //中间节点包含的子节点数量
+            [FieldOffset(24)] public int LeafIndex; //叶节点数据下标
             [FieldOffset(28)] public int NextHead; //-1: leaf, >=0: node
         }
 
@@ -54,7 +54,7 @@ namespace Radiantium.Offline.Accelerators
             {
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
-                BoundingBox3F bound = new BoundingBox3F();
+                BoundingBox3F bound = new BoundingBox3F(); //计算根节点包围盒
                 List<int> idx = new List<int>(primitives.Count);
                 for (int i1 = 0; i1 < primitives.Count; i1++)
                 {
@@ -63,7 +63,7 @@ namespace Radiantium.Offline.Accelerators
                     idx.Add(i1);
                 }
                 Node root = RecursionBuild(primitives, idx, bound, bound, 0)!;
-                if (root == null)
+                if (root == null) //一个节点都无法建立, 就创建一颗空树
                 {
                     _leaf = new List<Leaf>();
                     _tree = Array.Empty<LinearNode>();
@@ -73,7 +73,7 @@ namespace Radiantium.Offline.Accelerators
                     _leaf = new List<Leaf>(_leafCount);
                     _tree = new LinearNode[_nodeCount];
                     int allocNode = 1;
-                    FlattenNode(root, 0, ref allocNode);
+                    FlattenNode(root, 0, ref allocNode); //线性化二叉树, 同时转化为稀疏八叉树, 数组内稠密排列
                     _leaf.TrimExcess();
                     if (allocNode != _nodeCount) { throw new NotSupportedException("maybe a bug"); }
                 }
@@ -87,7 +87,7 @@ namespace Radiantium.Offline.Accelerators
                 Logger.Info($"    memory used {(32.0f * _nodeCount) / 1024 / 1024} MB");
             }
             long after = GC.GetTotalMemory(true);
-            //we don't know how many bytes a managed object used
+            //我们无法精确统计managed内存使用情况
             Logger.Info($"    possible used memory {(after - before) / 1024.0f / 1024} MB (reference only)");
             Logger.Release();
         }
@@ -95,7 +95,7 @@ namespace Radiantium.Offline.Accelerators
         public override bool Intersect(Ray3F ray)
         {
             if (_tree.Length == 0) { return false; }
-            if (!_tree[0].Bound.Intersect(ray)) //first we test root node
+            if (!_tree[0].Bound.Intersect(ray))
             {
                 return false;
             }
@@ -106,9 +106,9 @@ namespace Radiantium.Offline.Accelerators
                 int idx = q.Peek();
                 q.Pop();
                 ref readonly LinearNode n = ref _tree[idx];
-                if (n.NextHead == -1) //leaf
+                if (n.NextHead == -1)
                 {
-                    foreach (Primitive p in _leaf[n.LeafIndex].Primitives) //test primitives
+                    foreach (Primitive p in _leaf[n.LeafIndex].Primitives)
                     {
                         if (p.Intersect(ray))
                         {
@@ -116,7 +116,7 @@ namespace Radiantium.Offline.Accelerators
                         }
                     }
                 }
-                else //node
+                else
                 {
                     for (int i = 0; i < n.NodeCount; i++)
                     {
@@ -137,7 +137,7 @@ namespace Radiantium.Offline.Accelerators
                 inct = default;
                 return false;
             }
-            if (!_tree[0].Bound.Intersect(ray))
+            if (!_tree[0].Bound.Intersect(ray)) //如果射线不与根节点相交, 那它一定不与任何节点相交
             {
                 inct = default;
                 return false;
@@ -153,9 +153,9 @@ namespace Radiantium.Offline.Accelerators
                 int idx = q.Peek();
                 q.Pop();
                 ref readonly LinearNode n = ref _tree[idx];
-                if (n.NextHead == -1) //leaf
+                if (n.NextHead == -1) //叶节点
                 {
-                    foreach (Primitive p in _leaf[n.LeafIndex].Primitives) //test primitives
+                    foreach (Primitive p in _leaf[n.LeafIndex].Primitives) //精确求交
                     {
                         if (p.Intersect(ray, out Intersection thisInct))
                         {
@@ -168,9 +168,9 @@ namespace Radiantium.Offline.Accelerators
                         }
                     }
                 }
-                else //node
+                else
                 {
-                    for (int i = 0; i < n.NodeCount; i++) //TODO: sort by T?
+                    for (int i = 0; i < n.NodeCount; i++) //TODO: 根据子节点相交距离插入栈中? 但是排序后它更慢了
                     {
                         if (_tree[n.NextHead + i].Bound.Intersect(ray))
                         {
@@ -227,14 +227,14 @@ namespace Radiantium.Offline.Accelerators
         private Node? RecursionBuild(
             IReadOnlyList<Primitive> primitives,
             List<int> primIndex,
-            BoundingBox3F innerBound,
-            BoundingBox3F outBound,
+            BoundingBox3F innerBound, //代表八叉树节点包围盒
+            BoundingBox3F outBound, //代表正好包含范围内所有图元的真实包围盒
             int depth)
         {
             int cnt = primIndex.Count;
             if (cnt == 0) { return null; }
-            _nowDepth = Math.Max(_nowDepth, depth);
-            if (cnt <= _maxCount || depth >= _maxDepth)
+            _nowDepth = Math.Max(_nowDepth, depth); //更新最大深度
+            if (cnt <= _maxCount || depth >= _maxDepth) //如果没超过一个节点最大容纳数量, 或者超过树最大深度, 就创建叶节点
             {
                 List<Primitive> leafData = new List<Primitive>(primIndex.Count);
                 foreach (int i in primIndex)
@@ -248,11 +248,11 @@ namespace Radiantium.Offline.Accelerators
                 _nodeCount++;
                 return leaf;
             }
-            Vector3 center = innerBound.Center;
-            Span<BoundingBox3F> inner = stackalloc BoundingBox3F[8];
-            Span<BoundingBox3F> outer = stackalloc BoundingBox3F[8];
-            List<int>[] childData = new List<int>[8];
-            float extendLen = (_outBound - 1) * 0.5f;
+            Vector3 center = innerBound.Center; //包围盒中心
+            Span<BoundingBox3F> inner = stackalloc BoundingBox3F[8]; //八叉树 子包围盒
+            Span<BoundingBox3F> outer = stackalloc BoundingBox3F[8]; //松散八叉树 子包围盒
+            List<int>[] childData = new List<int>[8]; //八个子节点包含图元索引
+            float extendLen = (_outBound - 1) * 0.5f; //计算松散八叉树允许的扩展范围
             for (int i = 0; i < 8; i++)
             {
                 inner[i] = new BoundingBox3F(center);
@@ -262,13 +262,14 @@ namespace Radiantium.Offline.Accelerators
                 outer[i] = new BoundingBox3F(min, max);
                 childData[i] = new List<int>();
             }
-            foreach (int i in primIndex)
+            foreach (int i in primIndex) //遍历所有图元, 进行包围盒包含测试
             {
-                BoundingBox3F thisObjBound = primitives[i].WorldBound;
-                Vector3 centerPoint = thisObjBound.Center;
+                BoundingBox3F thisObjBound = primitives[i].WorldBound; //图元包围盒
+                Vector3 centerPoint = thisObjBound.Center; //图元中心
                 bool isInsert = false;
                 for (int j = 0; j < 8; j++)
                 {
+                    //如果图元中心在八叉树内, 并且图元包围盒在松散八叉树允许的包围盒内, 就将它插入这个节点
                     if (inner[j].Contains(centerPoint) && outer[j].Contains(thisObjBound))
                     {
                         childData[j].Add(i);
@@ -276,9 +277,9 @@ namespace Radiantium.Offline.Accelerators
                         break;
                     }
                 }
-                if (!isInsert) //primitive too big
+                if (!isInsert) //没有一个松散节点可以插入, 说明这个节点实在太大了
                 {
-                    for (int j = 0; j < 8; j++)
+                    for (int j = 0; j < 8; j++) //只能将它放入所有覆盖了这个图元的节点
                     {
                         if (inner[j].Overlaps(thisObjBound))
                         {
@@ -287,7 +288,7 @@ namespace Radiantium.Offline.Accelerators
                     }
                 }
             }
-            for (int i = 0; i < 8; i++) //recalculate bounding box
+            for (int i = 0; i < 8; i++) //决定好插入的子节点后, 重新计算松散八叉树的包围盒, 精确收缩
             {
                 BoundingBox3F realBound = new BoundingBox3F();
                 for (int j = 0; j < childData[i].Count; j++)
@@ -296,10 +297,10 @@ namespace Radiantium.Offline.Accelerators
                 }
                 outer[i] = realBound;
             }
-            Node node = new Node();
+            Node node = new Node(); //创建中间节点
             node.Box = outBound;
             node.Children = new Node[8];
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++) //递归八个子节点建树
             {
                 node.Children[i] = RecursionBuild(primitives, childData[i], inner[i], outer[i], depth + 1)!;
             }
@@ -323,7 +324,7 @@ namespace Radiantium.Offline.Accelerators
             else
             {
                 int notNullChild = 0;
-                for (int i = 0; i < node.Children.Length; i++)
+                for (int i = 0; i < node.Children.Length; i++) //先计算一下非空子节点数量
                 {
                     if (node.Children[i] != null)
                     {
@@ -332,8 +333,8 @@ namespace Radiantium.Offline.Accelerators
                 }
                 linear.NodeCount = notNullChild;
                 linear.NextHead = all;
-                all += notNullChild;
-                for (int i = 0, j = 0; i < node.Children.Length || j != notNullChild; i++)
+                all += notNullChild; //为非空子节点分配空间
+                for (int i = 0, j = 0; i < node.Children.Length || j != notNullChild; i++) //递归非空子节点
                 {
                     if (node.Children[i] != null)
                     {

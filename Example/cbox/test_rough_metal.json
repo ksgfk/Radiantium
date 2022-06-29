@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 256
+    "spp": 32
   },
   "integrator": {
     "type": "path"
@@ -107,7 +107,7 @@
     {
       "material": {
         "type": "rough_metal",
-        "roughness": 0.3,
+        "roughness": 0,
         "dist": "GGX",
         "metal_type": "Au"
       },
@@ -124,7 +124,7 @@
     {
       "material": {
         "type": "rough_metal",
-        "roughness": 0.3,
+        "roughness": 0,
         "dist": "Beckmann",
         "metal_type": "Cu"
       },

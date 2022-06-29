@@ -13,6 +13,15 @@ using System.Numerics;
 
 namespace Radiantium.Offline.Config
 {
+    //建造者构建Renderer过程:
+    // 1. 收集各组件构造者信息: Add...Builder系列函数 (具体可以看 RendererBuilderExtension 例子)
+    // 2. 用户传入配置信息: Add..., Set...系列函数 (具体可以看Radiantium.Cli.Program.cs的例子)
+    // 3. 并行加载资源 (模型, 图片)
+    // 4. 并行创建实例化
+    // 5. 广度优先遍历场景物体, 计算模型矩阵 (Model Matrix)
+    // 6. 遍历所有场景物体, 创建图元或灯光
+    // 7. 创建加速结构, 创建其他对象
+
     public static class RendererBuilderExtension
     {
         public static void SetDefaultBuilders(this RendererBuilder builder)

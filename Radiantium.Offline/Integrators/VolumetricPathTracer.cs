@@ -7,6 +7,9 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline.Integrators
 {
+    //带体积的渲染方程:
+    //  Lo = Tr * L + ∫ Tr * sigma_s * Li dt
+    //可以处理体积的路径追踪
     public class VolumetricPathTracer : MonteCarloIntegrator
     {
         public int MaxDepth { get; }
@@ -27,7 +30,7 @@ namespace Radiantium.Offline.Integrators
             Color3F radiance = new(0.0f);
             Color3F coeff = new(1.0f);
             bool isSpecularPath = true;
-            Medium? rayEnv = scene.GlobalMedium;
+            Medium? rayEnv = scene.GlobalMedium; //当前射线路径上的体积, null表示这条路径上没有
             for (int bounces = 0; ; bounces++)
             {
                 Vector3 wo = -ray.D;
@@ -36,30 +39,30 @@ namespace Radiantium.Offline.Integrators
                     break;
                 }
                 bool isHit = scene.Intersect(ray, out Intersection inct);
-                MediumSampleResult msr = new MediumSampleResult { IsSampleMedium = false };
+                SampleMediumResult msr = new SampleMediumResult { IsSampleMedium = false };
                 if (rayEnv != null)
                 {
                     Ray3F realRay = new Ray3F(ray.O, ray.D, ray.MinT, isHit ? inct.T : float.MaxValue);
-                    msr = rayEnv.Sample(realRay, rand);
-                    coeff *= msr.Tr;
+                    msr = rayEnv.Sample(realRay, rand); //如果当前路径上有体积, 就在路径上采样一个点, 作为着色点
+                    coeff *= msr.Tr; //体积的透射程度会影响这条路径
                 }
                 if (coeff == Color3F.Black)
                 {
                     break;
                 }
-                if (msr.IsSampleMedium)
+                if (msr.IsSampleMedium) //路径上有体积, 且采样一个点成功了
                 {
                     if (bounces >= MaxDepth)
                     {
                         break;
                     }
                     Medium envMedium = rayEnv!;
-                    radiance += coeff * SampleLightToEstimateDirectMedium(scene, rand, msr, envMedium);
-                    PhaseFunctionSampleResult sample = envMedium.SampleWi(wo, rand);
+                    radiance += coeff * SampleLightToEstimateDirectMedium(scene, rand, msr, envMedium); //计算该点着色
+                    SamplePhaseFunctionResult sample = envMedium.SampleWi(wo, rand); //根据相函数采样游走方向
                     ray = new Ray3F(msr.P, sample.Wi, ray.MinT);
                     isSpecularPath = false;
                 }
-                else
+                else //否则回退到普通路径追踪上
                 {
                     if (bounces == 0 || isSpecularPath)
                     {
@@ -143,6 +146,8 @@ namespace Radiantium.Offline.Integrators
             return result;
         }
 
+        //与普通路径追踪基本一致
+        //如果路径上有体积, 还需要计算透射率对路径贡献的影响
         private Color3F EstimateDirectSurface(
             Scene scene, Random rand, Light light,
             Intersection inct, Medium? medium)
@@ -215,7 +220,7 @@ namespace Radiantium.Offline.Integrators
 
         private Color3F SampleLightToEstimateDirectMedium(
             Scene scene, Random rand,
-            MediumSampleResult msr, Medium medium)
+            SampleMediumResult msr, Medium medium)
         {
             Color3F result = new Color3F();
             switch (Strategy)
@@ -241,9 +246,12 @@ namespace Radiantium.Offline.Integrators
             return result;
         }
 
+        //与普通路径追踪基本一致
+        //如果路径上有体积, 还需要计算透射率对路径贡献的影响
+        //BxDF换成了计算相函数
         private Color3F EstimateDirectMedium(
             Scene scene, Random rand, Light light,
-            MediumSampleResult msr, Medium medium)
+            SampleMediumResult msr, Medium medium)
         {
             Color3F le = new Color3F(0.0f);
             (Vector3 lightP, Vector3 lightWi, float lightPdf, Color3F lightLi) = light.SampleLi(msr, rand);
@@ -271,7 +279,7 @@ namespace Radiantium.Offline.Integrators
             }
             if (!light.IsDelta)
             {
-                PhaseFunctionSampleResult sample = medium.SampleWi(msr.Wo, rand);
+                SamplePhaseFunctionResult sample = medium.SampleWi(msr.Wo, rand);
                 Color3F f = new Color3F(sample.P);
                 float scatteringPdf = sample.P;
                 if (scatteringPdf > 0)

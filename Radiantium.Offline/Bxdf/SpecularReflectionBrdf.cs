@@ -3,6 +3,7 @@ using System.Numerics;
 
 namespace Radiantium.Offline.Bxdf
 {
+    //完美反射, 就是镜子
     public struct SpecularReflectionBrdf : IBxdf
     {
         public Color3F R;

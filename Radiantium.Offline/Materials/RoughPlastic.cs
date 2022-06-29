@@ -5,8 +5,8 @@ using static Radiantium.Offline.Coordinate;
 
 namespace Radiantium.Offline.Materials
 {
-    //for energy conservation. the sum of Kd and Ks should not be greater than 1
-    //how did mitsuba2 do it :(
+    //为了能量守恒, Kd和Ks的和不能超过1
+    //TODO: 或许pbrt里有较为正确的实现
     public class RoughPlastic : Material
     {
         public Texture2D R { get; }

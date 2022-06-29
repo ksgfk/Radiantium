@@ -5,12 +5,12 @@ using static System.Numerics.Vector3;
 
 namespace Radiantium.Offline
 {
-    public struct PhaseFunctionSampleResult
+    public struct SamplePhaseFunctionResult
     {
         public float P;
         public Vector3 Wi;
 
-        public PhaseFunctionSampleResult(float p, Vector3 wi)
+        public SamplePhaseFunctionResult(float p, Vector3 wi)
         {
             P = p;
             Wi = wi;
@@ -19,9 +19,19 @@ namespace Radiantium.Offline
 
     public interface IPhaseFunction
     {
+        /// <summary>
+        /// 评估相位函数
+        /// </summary>
+        /// <param name="wo">入射方向</param>
+        /// <param name="wi">出射方向</param>
         float P(Vector3 wo, Vector3 wi);
 
-        PhaseFunctionSampleResult SampleWi(Vector3 wo, Random rand);
+        /// <summary>
+        /// 根据入射方向, 采样一个出射结果
+        /// </summary>
+        /// <param name="wo">入射方向</param>
+        /// <param name="rand">随机数发生器</param>
+        SamplePhaseFunctionResult SampleWi(Vector3 wo, Random rand);
     }
 
     public static class PhaseFunctionUtility
@@ -49,7 +59,7 @@ namespace Radiantium.Offline
             return p;
         }
 
-        public PhaseFunctionSampleResult SampleWi(Vector3 wo, Random rand)
+        public SamplePhaseFunctionResult SampleWi(Vector3 wo, Random rand)
         {
             Vector2 rng = rand.NextVec2();
             float cosTheta;
@@ -67,7 +77,7 @@ namespace Radiantium.Offline
             Coordinate coord = new Coordinate(wo);
             Vector3 wi = SphericalDirection(sinTheta, cosTheta, phi, coord.X, coord.Y, coord.Z);
             float p = PhaseFunctionUtility.HenyeyGreenstein(cosTheta, G);
-            return new PhaseFunctionSampleResult(p, wi);
+            return new SamplePhaseFunctionResult(p, wi);
         }
     }
 }

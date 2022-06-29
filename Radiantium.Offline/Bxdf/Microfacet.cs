@@ -12,28 +12,30 @@ namespace Radiantium.Offline.Bxdf
         GGX
     }
 
+    //omega_h 是 halfway vector, 也就是入射与出射方向夹角的一半方向
+    //表示微表面法线
     public interface IMicrofacetDistribution
     {
         float AlphaX { get; }
 
         float AlphaY { get; }
 
-        float D(Vector3 wh);
+        float D(Vector3 wh); //分布函数 D(omega_h)
 
-        float Lambda(Vector3 w);
+        float Lambda(Vector3 w); //Shadowing-masking auxiliary 函数, 它测量每个可见的微表面上, 被遮蔽的面积
 
-        Vector3 SampleWh(Vector3 wo, Random rand);
+        Vector3 SampleWh(Vector3 wo, Random rand); //采样 omega_h
 
         float Pdf(Vector3 wo, Vector3 wh);
 
-        float G(Vector3 wo, Vector3 wi);
+        float G(Vector3 wo, Vector3 wi); //Shadowing-masking 函数
 
-        public float G1(Vector3 w)
+        public float G1(Vector3 w) //Smith’s masking-shadowing function
         {
             return 1 / (1 + Lambda(w));
         }
 
-        public float SmithG2(Vector3 wo, Vector3 wi)
+        public float SmithG(Vector3 wo, Vector3 wi) //高度相关Smith’s masking-shadowing function
         {
             return 1 / (1 + Lambda(wo) + Lambda(wi));
         }
@@ -148,24 +150,24 @@ namespace Radiantium.Offline.Bxdf
             return (-1 + Sqrt(1.0f + alpha2Tan2Theta)) / 2;
         }
 
-        public static float SmithG2Beckmann(Vector3 wo, Vector3 wi, float alphaX, float alphaY)
+        public static float SmithGBeckmann(Vector3 wo, Vector3 wi, float alphaX, float alphaY)
         {
             return 1.0f / (1.0f + LambdaBeckmann(wo, alphaX, alphaY) + LambdaBeckmann(wi, alphaX, alphaY));
         }
 
-        public static float SmithG2GGX(Vector3 wo, Vector3 wi, float alphaX, float alphaY)
+        public static float SmithGGGX(Vector3 wo, Vector3 wi, float alphaX, float alphaY)
         {
             return 1.0f / (1.0f + LambdaGGX(wo, alphaX, alphaY) + LambdaGGX(wi, alphaX, alphaY));
         }
 
-        public static float SmithG2BeckmannMaskingShadowing(Vector3 wo, Vector3 wi, float alphaX, float alphaY)
+        public static float SmithGBeckmannMaskingShadowing(Vector3 wo, Vector3 wi, float alphaX, float alphaY)
         {
             float o = 1 / (1 + LambdaBeckmann(wo, alphaX, alphaY));
             float i = 1 / (1 + LambdaBeckmann(wi, alphaX, alphaY));
             return o * i;
         }
 
-        public static float SmithG2GGXMaskingShadowing(Vector3 wo, Vector3 wi, float alphaX, float alphaY)
+        public static float SmithGGGXMaskingShadowing(Vector3 wo, Vector3 wi, float alphaX, float alphaY)
         {
             float o = 1 / (1 + LambdaGGX(wo, alphaX, alphaY));
             float i = 1 / (1 + LambdaGGX(wi, alphaX, alphaY));

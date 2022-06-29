@@ -153,5 +153,24 @@ namespace Radiantium.Offline
             float cosTheta2 = cosTheta * cosTheta;
             return (alpha2 * cosTheta) / (MathF.Pow(1.0f + cosTheta2 * (alpha2 - 1.0f), 2) * MathF.PI);
         }
+
+        public static Vector2 SquareToConcentricDisk(Vector2 u)
+        {
+            Vector2 uOffset = 2.0f * u - new Vector2(1, 1);
+            if (uOffset.X == 0 && uOffset.Y == 0) { return new Vector2(0, 0); }
+            float theta, r;
+            if (MathF.Abs(uOffset.X) > MathF.Abs(uOffset.Y))
+            {
+                r = uOffset.X;
+                theta = (MathF.PI / 4) * (uOffset.Y / uOffset.X);
+            }
+            else
+            {
+                r = uOffset.Y;
+                theta = (MathF.PI / 2) - (MathF.PI / 4) * (uOffset.X / uOffset.Y);
+            }
+            (float sinTheta, float cosTheta) = MathF.SinCos(theta);
+            return r * new Vector2(cosTheta, sinTheta);
+        }
     }
 }

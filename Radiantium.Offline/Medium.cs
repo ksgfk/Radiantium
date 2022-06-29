@@ -21,7 +21,7 @@ namespace Radiantium.Offline
         public MediumAdapter(Medium? same) : this(same, same) { }
     }
 
-    public struct MediumSampleResult
+    public struct SampleMediumResult
     {
         public Vector3 P;
         public Vector3 Wo;
@@ -29,7 +29,7 @@ namespace Radiantium.Offline
         public float T;
         public bool IsSampleMedium;
 
-        public MediumSampleResult(Color3F tr)
+        public SampleMediumResult(Color3F tr)
         {
             Tr = tr;
             IsSampleMedium = false;
@@ -38,7 +38,7 @@ namespace Radiantium.Offline
             T = default;
         }
 
-        public MediumSampleResult(Vector3 p, Vector3 wo, Color3F tr, float t)
+        public SampleMediumResult(Vector3 p, Vector3 wo, Color3F tr, float t)
         {
             P = p;
             Wo = wo;
@@ -51,8 +51,8 @@ namespace Radiantium.Offline
     public abstract class Medium : IPhaseFunction
     {
         public abstract Color3F Tr(Ray3F ray, Random rand);
-        public abstract MediumSampleResult Sample(Ray3F ray, Random rand);
+        public abstract SampleMediumResult Sample(Ray3F ray, Random rand);
         public abstract float P(Vector3 wo, Vector3 wi);
-        public abstract PhaseFunctionSampleResult SampleWi(Vector3 wo, Random rand);
+        public abstract SamplePhaseFunctionResult SampleWi(Vector3 wo, Random rand);
     }
 }

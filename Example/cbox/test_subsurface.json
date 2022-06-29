@@ -1,6 +1,6 @@
 {
   "renderer": {
-    "spp": 64
+    "spp": 512
   },
   "integrator": {
     "type": "path"
@@ -118,7 +118,7 @@
     {
       "material": {
         "type": "subsurface",
-        "scatting_distance": 0.01,
+        "scatting_distance": 0.5,
         "t": 1,
         "r": 1,
         "a": 0.5
