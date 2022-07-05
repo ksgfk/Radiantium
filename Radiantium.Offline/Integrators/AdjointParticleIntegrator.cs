@@ -54,7 +54,7 @@ namespace Radiantium.Offline.Integrators
                 {
                     if (!scene.IsOccluded(sample.Pos, inct.P))
                     {
-                        Color3F f = inct.Surface.Fr(inct.ToLocal(inct.Wr), inct.ToLocal(sample.Dir), inct, TransportMode.Radiance);
+                        Color3F f = inct.Surface.Fr(inct.ToLocal(inct.Wr), inct.ToLocal(sample.Dir), inct, TransportMode.Importance);
                         float absCos = AbsCosTheta(inct.ToLocal(sample.Dir));
                         Color3F color = coeff * f * sample.We * absCos / sample.Pdf;
                         Vector2 ssPos = sample.ScreenPos;

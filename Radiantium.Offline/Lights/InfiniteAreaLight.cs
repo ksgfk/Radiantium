@@ -1,7 +1,7 @@
 ﻿using Radiantium.Core;
 using System.Numerics;
-using static System.MathF;
 using static Radiantium.Core.MathExt;
+using static System.MathF;
 
 namespace Radiantium.Offline.Lights
 {

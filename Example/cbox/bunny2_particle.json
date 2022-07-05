@@ -1,0 +1,146 @@
+{
+  "renderer": {
+    "particle_count": 5000000
+  },
+  "integrator": {
+    "type": "adjoint_particle",
+    "min_depth": 12
+  },
+  "camera": {
+    "type": "perspective",
+    "screen": [
+      800,
+      600
+    ],
+    "fov": 27.7856,
+    "far": 100,
+    "origin": [
+      0,
+      0.919769,
+      5.41159
+    ],
+    "target": [
+      0,
+      0.893051,
+      4.41198
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ]
+  },
+  "accel": {
+    "type": "bvh"
+  },
+  "output": {},
+  "assets": [
+    {
+      "type": "model",
+      "name": "walls",
+      "location": "../assets/cbox/walls.obj"
+    },
+    {
+      "type": "model",
+      "name": "rightwall",
+      "location": "../assets/cbox/rightwall.obj"
+    },
+    {
+      "type": "model",
+      "name": "leftwall",
+      "location": "../assets/cbox/leftwall.obj"
+    },
+    {
+      "type": "model",
+      "name": "light",
+      "location": "../assets/cbox/light.obj"
+    },
+    {
+      "type": "model",
+      "name": "bunny",
+      "location": "../assets/bunny.obj"
+    }
+  ],
+  "scene": [
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.725,
+          0.71,
+          0.68
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "walls"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.161,
+          0.133,
+          0.427
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "rightwall"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "kd": [
+          0.630,
+          0.065,
+          0.05
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "leftwall"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse"
+      },
+      "shape": {
+        "type": "model",
+        "name": "light"
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          40,
+          40,
+          40
+        ]
+      }
+    },
+    {
+      "shape": {
+        "type": "model",
+        "name": "bunny"
+      },
+      "transform": {
+        "position": [
+          0.0,
+          0.1,
+          0.0
+        ],
+        "scale": [
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "material": {
+        "type": "perfect_glass"
+      }
+    }
+  ]
+}

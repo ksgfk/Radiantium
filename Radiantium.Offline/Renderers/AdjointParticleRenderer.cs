@@ -152,8 +152,7 @@ namespace Radiantium.Offline.Renderers
 
             Camera camera = _scene.MainCamera;
 
-            if (_emitParticleCount != _particleCount) { throw new Exception(); }
-
+            if (_emitParticleCount != _particleCount) { throw new InvalidOperationException("maybe a bug"); }
             float pathCount = _emitParticleCount;
             float v = (float)camera.ScreenX * camera.ScreenY / pathCount;
             for (int x = 0; x < camera.ScreenX; x++)

@@ -7,6 +7,7 @@ namespace Radiantium.Offline.Materials
 {
     //为了能量守恒, Kd和Ks的和不能超过1
     //TODO: 或许pbrt里有较为正确的实现
+    //TODO: 看看这篇 https://github.com/zhiwei-c/Monte-Carlo-Path-Tracing/blob/main/cpu_version/src/bsdfs/plastic.h
     public class RoughPlastic : Material
     {
         public Texture2D R { get; }
