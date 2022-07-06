@@ -93,9 +93,6 @@ namespace Radiantium.Offline
         public float Fov { get; }
         public float Near { get; }
         public float Far { get; }
-        public Vector3 Origin { get; }
-        public Vector3 Target { get; }
-        public Vector3 Up { get; }
         public override int ScreenX { get; }
         public override int ScreenY { get; }
         public Matrix4x4 VP => _worldToCamera * _cameraToClip;
@@ -109,15 +106,26 @@ namespace Radiantium.Offline
             Fov = fov;
             Near = near;
             Far = far;
-            Origin = origin;
-            Target = target;
-            Up = up;
             ScreenX = screenX;
             ScreenY = screenY;
-            Update();
+            Matrix4x4 v = LookAtLeftHand(origin, target, up); //构建 相机 局部坐标系 到 世界坐标系 的变换矩阵
+            Update(v);
         }
 
-        private void Update()
+        public PerspectiveCamera(float fov,
+            float near, float far,
+            Matrix4x4 cameraToWorld,
+            int screenX, int screenY)
+        {
+            Fov = fov;
+            Near = near;
+            Far = far;
+            ScreenX = screenX;
+            ScreenY = screenY;
+            Update(cameraToWorld);
+        }
+
+        private void Update(Matrix4x4 cameraToWorld)
         {
             _invResolve = new Vector2(1.0f) / new Vector2(ScreenX, ScreenY);
             _aspect = ScreenX / (float)ScreenY;
@@ -155,9 +163,8 @@ namespace Radiantium.Offline
                 throw new ArgumentException("can't create invert mat");
             }
 
-            Matrix4x4 v = LookAtLeftHand(Origin, Target, Up);
-            _cameraToWorld = v;//构建 相机 局部坐标系 到 世界坐标系 的变换矩阵
-            if (!Matrix4x4.Invert(v, out _worldToCamera))
+            _cameraToWorld = cameraToWorld;
+            if (!Matrix4x4.Invert(cameraToWorld, out _worldToCamera))
             {
                 throw new ArgumentException("can't create invert mat");
             }

@@ -111,7 +111,7 @@ namespace Radiantium.Offline.Config
             {
                 MathExt.IndexerUnsafe(ref result.M11, i) = node[i].GetSingle();
             }
-            return result;
+            return Matrix4x4.Transpose(result);
         }
 
         public string ReadString(string key, string? defaultValue)

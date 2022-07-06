@@ -471,15 +471,28 @@ namespace Radiantium.Offline.Config
             {
                 case "perspective":
                     (int x, int y) = param.ReadVec2Int32("screen", (1280, 720));
-                    return new PerspectiveCamera(
-                        fov: param.ReadFloat("fov", 60),
-                        near: param.ReadFloat("near", 0.001f),
-                        far: param.ReadFloat("far", 1000.0f),
-                        origin: param.ReadVec3Float("origin", new Vector3(0, 0, 3)),
-                        target: param.ReadVec3Float("target", new Vector3(0)),
-                        up: param.ReadVec3Float("up", new Vector3(0, 1, 0)),
-                        screenX: x,
-                        screenY: y);
+                    if (param.HasKey("origin"))
+                    {
+                        return new PerspectiveCamera(
+                            fov: param.ReadFloat("fov", 60),
+                            near: param.ReadFloat("near", 0.001f),
+                            far: param.ReadFloat("far", 1000.0f),
+                            origin: param.ReadVec3Float("origin", new Vector3(0, 0, 3)),
+                            target: param.ReadVec3Float("target", new Vector3(0)),
+                            up: param.ReadVec3Float("up", new Vector3(0, 1, 0)),
+                            screenX: x,
+                            screenY: y);
+                    }
+                    else
+                    {
+                        return new PerspectiveCamera(
+                            fov: param.ReadFloat("fov", 60),
+                            near: param.ReadFloat("near", 0.001f),
+                            far: param.ReadFloat("far", 1000.0f),
+                            cameraToWorld: param.ReadMat4("to_world", Matrix4x4.Identity),
+                            screenX: x,
+                            screenY: y);
+                    }
                 default:
                     throw new ArgumentOutOfRangeException($"no camera {name}");
             }
