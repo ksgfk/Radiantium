@@ -1,0 +1,360 @@
+{
+  "renderer": {
+    "particle_count": 10000000
+  },
+  "integrator": {
+    "type": "adjoint_particle",
+    "min_depth": 7
+  },
+  "camera": {
+    "type": "perspective",
+    "screen": [
+      1024,
+      1024
+    ],
+    "fov": 35,
+    "far": 100,
+    "to_world": [
+      -0.00500708,
+      -0.00467005,
+      -0.999977,
+      16.2155,
+      0,
+      0.999989,
+      -0.00467011,
+      4.05167,
+      0.999987,
+      -2.34659e-005,
+      -0.00502464,
+      0.0114864,
+      0,
+      0,
+      0,
+      1
+    ]
+  },
+  "accel": {
+    "type": "bvh"
+  },
+  "output": {},
+  "assets": [
+    {
+      "type": "model",
+      "name": "lampshade",
+      "location": "../assets/veach_bidir/Mesh007.obj"
+    },
+    {
+      "type": "model",
+      "name": "disk",
+      "location": "../assets/veach_bidir/Mesh004.obj"
+    },
+    {
+      "type": "model",
+      "name": "rect",
+      "location": "../assets/rect.obj"
+    },
+    {
+      "type": "model",
+      "name": "lamppost",
+      "location": "../assets/veach_bidir/Mesh001.obj"
+    },
+    {
+      "type": "model",
+      "name": "lampstand",
+      "location": "../assets/veach_bidir/Mesh005.obj"
+    },
+    {
+      "type": "model",
+      "name": "light_grip",
+      "location": "../assets/veach_bidir/Mesh008.obj"
+    },
+    {
+      "type": "model",
+      "name": "glass",
+      "location": "../assets/veach_bidir/Mesh002.obj"
+    },
+    {
+      "type": "model",
+      "name": "table_1",
+      "location": "../assets/veach_bidir/Mesh011.obj"
+    },
+    {
+      "type": "model",
+      "name": "table_2",
+      "location": "../assets/veach_bidir/Mesh003.obj"
+    },
+    {
+      "type": "model",
+      "name": "table_3",
+      "location": "../assets/veach_bidir/Mesh009.obj"
+    },
+    {
+      "type": "model",
+      "name": "table_4",
+      "location": "../assets/veach_bidir/Mesh006.obj"
+    },
+    {
+      "type": "model",
+      "name": "table",
+      "location": "../assets/veach_bidir/Mesh000.obj"
+    },
+    {
+      "type": "model",
+      "name": "box",
+      "location": "../assets/veach_bidir/Mesh010.obj"
+    }
+  ],
+  "scene": [
+    {
+      "material": {
+        "type": "rough_metal",
+        "metal_type": {
+          "eta": [
+            2.8656,
+            2.11918,
+            1.94008
+          ],
+          "k": [
+            3.03233,
+            2.05611,
+            1.61629
+          ]
+        },
+        "is_two_side": true,
+        "roughness": 0.5,
+        "dist": "Beckmann"
+      },
+      "shape": {
+        "type": "model",
+        "name": "lampshade"
+      }
+    },
+    {
+      "material": {
+        "type": "rough_metal",
+        "metal_type": {
+          "eta": [
+            2.8656,
+            2.11918,
+            1.94008
+          ],
+          "k": [
+            3.03233,
+            2.05611,
+            1.61629
+          ]
+        },
+        "is_two_side": true,
+        "roughness": 0.5,
+        "dist": "Beckmann"
+      },
+      "shape": {
+        "type": "model",
+        "name": "lamppost"
+      }
+    },
+    {
+      "material": {
+        "type": "rough_metal",
+        "metal_type": {
+          "eta": [
+            2.8656,
+            2.11918,
+            1.94008
+          ],
+          "k": [
+            3.03233,
+            2.05611,
+            1.61629
+          ]
+        },
+        "is_two_side": true,
+        "roughness": 0.5,
+        "dist": "Beckmann"
+      },
+      "shape": {
+        "type": "model",
+        "name": "lampstand"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": 0.5
+      },
+      "shape": {
+        "type": "model",
+        "name": "disk"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": 0.5
+      },
+      "shape": {
+        "type": "model",
+        "name": "rect"
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          523.258,
+          523.258,
+          523.258
+        ]
+      },
+      "transform": {
+        "rotation": [
+          -1.20536e-008,
+          0.275755,
+          1.20536e-008,
+          -2.48161,
+          0,
+          -6.64767e-009,
+          0.152081,
+          6,
+          0.275754,
+          1.20536e-008,
+          5.2688e-016,
+          2.5894,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": 0.5
+      },
+      "shape": {
+        "type": "model",
+        "name": "rect"
+      },
+      "light": {
+        "type": "diffuse_area",
+        "le": [
+          12048.2,
+          8605.84,
+          6196.21
+        ]
+      },
+      "transform": {
+        "rotation": [
+          -0.0101082,
+          0.067068,
+          0.00138972,
+          -2.69082,
+          -0.0610016,
+          -0.0070995,
+          -0.00842772,
+          5.10417,
+          -0.0282857,
+          -0.00865658,
+          0.0176788,
+          -3.77057,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": 0.5
+      },
+      "shape": {
+        "type": "model",
+        "name": "light_grip"
+      }
+    },
+    {
+      "material": {
+        "type": "perfect_glass"
+      },
+      "shape": {
+        "type": "model",
+        "name": "glass"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": 0.5
+      },
+      "shape": {
+        "type": "model",
+        "name": "table_1"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": 0.5
+      },
+      "shape": {
+        "type": "model",
+        "name": "table_2"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": 0.5
+      },
+      "shape": {
+        "type": "model",
+        "name": "table_3"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": 0.5
+      },
+      "shape": {
+        "type": "model",
+        "name": "table_4"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": [
+          0.32963,
+          0.257976,
+          0.150292
+        ]
+      },
+      "shape": {
+        "type": "model",
+        "name": "table"
+      }
+    },
+    {
+      "material": {
+        "type": "diffuse",
+        "is_two_side": true,
+        "kd": 0.5
+      },
+      "shape": {
+        "type": "model",
+        "name": "box"
+      }
+    }
+  ]
+}

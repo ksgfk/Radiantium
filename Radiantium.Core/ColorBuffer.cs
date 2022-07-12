@@ -82,5 +82,15 @@ namespace Radiantium.Core
         {
             return new Span<float>(_buffer, GetIndex(x, y), _channel);
         }
+
+        public void AtomicAddRGB(int x, int y, Color3F color)
+        {
+            int idx = GetIndex(x, y);
+            for (int i = 0; i < 3; i++)
+            {
+                float v = Color3F.IndexerUnsafe(ref color, i);
+                MathExt.InterlockedAdd(ref _buffer[idx + i], v);
+            }
+        }
     }
 }

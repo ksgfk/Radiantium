@@ -23,14 +23,16 @@ namespace Radiantium.Offline
 
     public struct SampleMediumResult
     {
+        public Medium Medium;
         public Vector3 P;
         public Vector3 Wo;
         public Color3F Tr;
         public float T;
         public bool IsSampleMedium;
 
-        public SampleMediumResult(Color3F tr)
+        public SampleMediumResult(Medium medium, Color3F tr)
         {
+            Medium = medium;
             Tr = tr;
             IsSampleMedium = false;
             P = default;
@@ -38,8 +40,9 @@ namespace Radiantium.Offline
             T = default;
         }
 
-        public SampleMediumResult(Vector3 p, Vector3 wo, Color3F tr, float t)
+        public SampleMediumResult(Medium medium, Vector3 p, Vector3 wo, Color3F tr, float t)
         {
+            Medium = medium;
             P = p;
             Wo = wo;
             Tr = tr;

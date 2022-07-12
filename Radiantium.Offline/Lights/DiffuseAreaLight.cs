@@ -12,13 +12,15 @@ namespace Radiantium.Offline.Lights
 
         public Color3F LightEmit { get; }
         public Shape Shape { get; }
+        public MediumAdapter Mediums { get; }
         public override Color3F Power => LightEmit * _surfaceArea * PI;
 
-        public DiffuseAreaLight(Shape shape, Color3F lemit)
+        public DiffuseAreaLight(Shape shape, Color3F lemit, MediumAdapter mediums)
         {
             Shape = shape ?? throw new ArgumentNullException(nameof(shape));
             LightEmit = lemit;
             _surfaceArea = Shape.SurfaceArea;
+            Mediums = mediums;
         }
 
         public override Color3F L(Intersection inct, Vector3 w)
@@ -82,6 +84,11 @@ namespace Radiantium.Offline.Lights
             Vector3 localDir = coord.ToLocal(dir);
             float pdfDir = Probability.SquareToCosineHemispherePdf(localDir);
             return new LightEmitPdf(pdfPos, Coordinate.CosTheta(localDir) < 0 ? 0 : pdfDir);
+        }
+
+        public override Medium? GetMedium(Vector3 n, Vector3 dir)
+        {
+            return (Dot(n, dir) > 0) ? Mediums.Outside : Mediums.Inside;
         }
     }
 }

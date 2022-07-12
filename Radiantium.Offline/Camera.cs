@@ -227,7 +227,7 @@ namespace Radiantium.Offline
             screen.Y /= screen.Z;
             screen.Z = 1;
             if (screen.X < 0 || screen.X > 1 || screen.Y < 0 || screen.Y > 1) { return new SampleCameraWiResult(); }
-            Vector2 ssPos = new Vector2(screen.X, screen.Y) * new Vector2(ScreenX, ScreenY);
+            Vector2 ssPos = new Vector2(screen.X, screen.Y) * new Vector2(ScreenX - 1, ScreenY - 1);
             float dist = localTarget.Length();
             float inv = 1 / dist;
             Vector3 localDir = localTarget * inv;

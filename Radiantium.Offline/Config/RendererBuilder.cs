@@ -39,6 +39,13 @@ namespace Radiantium.Offline.Config
                 int maxTask = param.ReadInt32("threads", -1);
                 return new AdjointParticleRenderer(builder.SceneInstance, (AdjointParticleIntegrator)builder.IntegratorInstance, particleCount, maxTask);
             });
+            builder.AddRendererBuilder("bdpt", (builder, param) =>
+            {
+                int sampleCount = param.ReadInt32("spp", 256);
+                int blockSize = param.ReadInt32("block_size", 32);
+                int maxTask = param.ReadInt32("threads", -1);
+                return new BidirectionalPathTracingRenderer(builder.SceneInstance, (BidirectionalPathTracer)builder.IntegratorInstance, sampleCount, blockSize, maxTask);
+            });
             builder.AddShapeBuilder("sphere", (_, mat, param) =>
             {
                 Vector3 center = param.ReadVec3Float("center", new Vector3(0));
@@ -69,6 +76,12 @@ namespace Radiantium.Offline.Config
                 int minDepth = param.ReadInt32("min_depth", 3);
                 float rrThreshold = param.ReadFloat("rr_threshold", 0.99f);
                 return new AdjointParticleIntegrator(maxDepth, minDepth, rrThreshold);
+            });
+            builder.AddIntegratorBuilder("bdpt", (_, param) =>
+            {
+                int maxDepth = param.ReadInt32("max_depth", 7);
+                int minDepth = param.ReadInt32("min_depth", 5);
+                return new BidirectionalPathTracer(maxDepth, minDepth);
             });
             builder.AddIntegratorBuilder("gbuffer", (_, param) =>
             {
@@ -200,10 +213,10 @@ namespace Radiantium.Offline.Config
                 float etaB = param.ReadFloat("etaB", 1.5046f);
                 return new Subsurface(r, t, a, scatting, etaA, etaB);
             });
-            builder.AddAreaLightBuilder("diffuse_area", (_, shape, param) =>
+            builder.AddAreaLightBuilder("diffuse_area", (_, shape, medium, param) =>
             {
                 Vector3 le = param.ReadVec3Float("le", new Vector3(1));
-                return new DiffuseAreaLight(shape, new Color3F(le));
+                return new DiffuseAreaLight(shape, new Color3F(le), medium);
             });
             builder.AddInfiniteLightBuilder("infinite", (builder, mat, param) =>
             {
@@ -300,7 +313,7 @@ namespace Radiantium.Offline.Config
         public delegate Aggregate AccelBuilder(RendererBuilder builder, IReadOnlyList<Primitive> primitives, IConfigParamProvider param);
         public delegate Shape ShapeBuilder(RendererBuilder builder, Matrix4x4 modelToWorld, IConfigParamProvider param);
         public delegate Material MaterialBuilder(RendererBuilder builder, Dictionary<string, ImageEntry> images, IConfigParamProvider param);
-        public delegate AreaLight AreaLightBuilder(RendererBuilder builder, Shape shape, IConfigParamProvider param);
+        public delegate AreaLight AreaLightBuilder(RendererBuilder builder, Shape shape, MediumAdapter mediums, IConfigParamProvider param);
         public delegate InfiniteLight InfiniteLightBuilder(RendererBuilder builder, Matrix4x4 modelToWorld, IConfigParamProvider param);
         public delegate IIntegrator IntegratorBuilder(RendererBuilder builder, IConfigParamProvider param);
         public delegate Texture2D Texture2DBuilder(RendererBuilder builder, IConfigParamProvider param);
@@ -444,10 +457,10 @@ namespace Radiantium.Offline.Config
             return _materialBuilder[param.ReadString("type", null)](this, _images, param);
         }
 
-        public AreaLight CreateAreaLight(Shape shape, IConfigParamProvider param)
+        public AreaLight CreateAreaLight(Shape shape, IConfigParamProvider param, MediumAdapter medium)
         {
             if (!param.HasKey("type")) { throw new ArgumentException("no key type"); }
-            return _areaLightBuilder[param.ReadString("type", null)](this, shape, param);
+            return _areaLightBuilder[param.ReadString("type", null)](this, shape, medium, param);
         }
 
         public InfiniteLight CreateInfiniteLight(Matrix4x4 modelToWorld, IConfigParamProvider param)
@@ -952,7 +965,7 @@ namespace Radiantium.Offline.Config
                         Shape shape = CreateShape(e.ModelToWorld, param);
                         GeometricPrimitive prim = new GeometricPrimitive(shape, material, mediums)
                         {
-                            Light = e.LightConfig == null ? null : CreateAreaLight(shape, e.LightConfig)
+                            Light = e.LightConfig == null ? null : CreateAreaLight(shape, e.LightConfig, mediums)
                         };
                         if (prim.Light != null)
                         {
@@ -969,7 +982,7 @@ namespace Radiantium.Offline.Config
                         {
                             GeometricPrimitive prim = new GeometricPrimitive(triangle, material, mediums)
                             {
-                                Light = e.LightConfig == null ? null : CreateAreaLight(triangle, e.LightConfig)
+                                Light = e.LightConfig == null ? null : CreateAreaLight(triangle, e.LightConfig, mediums)
                             };
                             if (prim.Light != null)
                             {

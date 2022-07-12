@@ -67,14 +67,24 @@ namespace Radiantium.Offline
         public Color3F Radiance;
         public LightEmitPdf Pdf;
 
-        public LightEmitResult(Vector3 pos, Vector3 dir, Vector3 normal, Vector2 uV, Color3F radiance, LightEmitPdf pdf)
+        public LightEmitResult(Vector3 pos, Vector3 dir, Vector3 normal, Vector2 uv, Color3F radiance, LightEmitPdf pdf)
         {
             Pos = pos;
             Dir = dir;
             Normal = normal;
-            UV = uV;
+            UV = uv;
             Radiance = radiance;
             Pdf = pdf;
+        }
+
+        public void Deconstruct(out Vector3 pos, out Vector3 dir, out Vector3 normal, out Vector2 uv, out Color3F radiance, out LightEmitPdf pdf)
+        {
+            pos = Pos;
+            dir = Dir;
+            normal = Normal;
+            uv = UV;
+            radiance = Radiance;
+            pdf = Pdf;
         }
     }
 
@@ -87,6 +97,12 @@ namespace Radiantium.Offline
         {
             PdfPos = pdfPos;
             PdfDir = pdfDir;
+        }
+
+        public void Deconstruct(out float pdfPos, out float pdfDir)
+        {
+            pdfPos = PdfPos;
+            pdfDir = PdfDir;
         }
     }
 
@@ -103,6 +119,11 @@ namespace Radiantium.Offline
         /// 光源是不是delta分布
         /// </summary>
         public bool IsDelta => (Type & LightType.DeltaPosition) != 0 || (Type & LightType.DeltaDirection) != 0;
+
+        /// <summary>
+        /// 光源是不是无穷远光
+        /// </summary>
+        public bool IsInfinite => (Type & LightType.Infinite) != 0 || (Type & LightType.DeltaDirection) != 0;
 
         /// <summary>
         /// 采样光源入射
@@ -131,6 +152,11 @@ namespace Radiantium.Offline
         /// 光源出射的概率密度
         /// </summary>
         public abstract LightEmitPdf EmitPdf(Vector3 pos, Vector3 dir, Vector3 normal);
+
+        /// <summary>
+        /// 获取光源所在的介质
+        /// </summary>
+        public abstract Medium? GetMedium(Vector3 n, Vector3 dir);
     }
 
     public abstract class AreaLight : Light
@@ -158,6 +184,11 @@ namespace Radiantium.Offline
             WorldCenter = bound.Center;
             float length = bound.Diagonal.Length();
             WorldRadius = length / 2.0f;
+        }
+
+        public override Medium? GetMedium(Vector3 n, Vector3 dir)
+        {
+            return null; //无限远光源的介质默认从scene获取
         }
     }
 }
